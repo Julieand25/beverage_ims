@@ -15,7 +15,6 @@ class RecipeScreen extends StatelessWidget {
     final recipeProvider = context.watch<RecipeProvider>();
     final inventoryProvider = context.watch<InventoryProvider>();
     const backgroundColor = Color(0xFFF9F9F9);
-    const primaryGreen = Color(0xFF5BA154);
     const textDark = Color(0xFF2C3E50);
 
     final recipes = recipeProvider.filteredRecipes(inventoryProvider.items);
@@ -48,31 +47,62 @@ class RecipeScreen extends StatelessWidget {
             ),
           ),
         ),
-        actions: [
-          IconButton(
-            icon:
-                const Icon(Icons.add_circle, color: primaryGreen, size: 28),
-            onPressed: () => _showRecipeDialog(context),
+
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Resipi Minuman',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle,
+                      color: Color(0xFF5BA154), size: 28),
+                  onPressed: () => _showRecipeDialog(context),
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              'Tetapkan sukatan',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+          ),
+          Expanded(
+            child: recipes.isEmpty
+                ? Center(
+                    child: Text(
+                      'Tiada resipi dijumpai',
+                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    ),
+                  )
+                : ListView.builder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: recipes.length,
+                    itemBuilder: (context, index) => _RecipeCard(
+                      recipe: recipes[index],
+                      inventory: inventoryProvider.items,
+                      onTap: () => _showDetailSheet(context, recipes[index]),
+                      onDelete: () =>
+                          _confirmDelete(context, recipes[index]),
+                    ),
+                  ),
           ),
         ],
       ),
-      body: recipes.isEmpty
-          ? Center(
-              child: Text(
-                'Tiada resipi dijumpai',
-                style: TextStyle(color: Colors.grey[400], fontSize: 14),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: recipes.length,
-              itemBuilder: (context, index) => _RecipeCard(
-                recipe: recipes[index],
-                inventory: inventoryProvider.items,
-                onTap: () => _showDetailSheet(context, recipes[index]),
-                onDelete: () => _confirmDelete(context, recipes[index]),
-              ),
-            ),
     );
   }
 
