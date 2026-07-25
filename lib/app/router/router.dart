@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/dashboard_screen.dart';
 import '../../screens/inventory_screen.dart';
 import '../../screens/recipe_screen.dart';
+import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
@@ -41,7 +41,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/laporan',
-              builder: (context, state) => const SizedBox.shrink(),
+              builder: (context, state) => const ReportScreen(),
             ),
           ],
         ),

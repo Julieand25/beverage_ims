@@ -77,6 +77,28 @@ class Translations {
   String get perCup => isMs ? '/cawan' : '/cup';
   String get totalCostLabel => isMs ? 'Jumlah Kos' : 'Total Cost';
 
+  // Report
+  String get reportTitle => isMs ? 'Laporan' : 'Reports';
+  String get dailyReport => isMs ? 'Laporan Harian' : 'Daily Report';
+  String get stockHistory => isMs ? 'Sejarah Stok' : 'Stock History';
+  String get monthlySummary => isMs ? 'Ringkasan Bulanan' : 'Monthly Summary';
+  String get dailySales => isMs ? 'Jumlah Jualan' : 'Total Sales';
+  String get dailyCost => isMs ? 'Kos Bahan Modal' : 'Cost of Goods';
+  String get dailyProfit => isMs ? 'Untung Kasar' : 'Gross Profit';
+  String get dailyCups => isMs ? 'Cawan Terjual' : 'Cups Sold';
+  String get menuRank => isMs ? 'Menu Paling Laris' : 'Best Selling Menu';
+  String get rankLabel => isMs ? 'Kedudukan' : 'Rank';
+  String get revenue => isMs ? 'Hasil' : 'Revenue';
+  String get restockEntry => isMs ? 'Restok Masuk' : 'Restock In';
+  String get deductionEntry => isMs ? 'Jualan Keluar' : 'Sales Out';
+  String get monthlyRevenue => isMs ? 'Jumlah Pendapatan' : 'Total Revenue';
+  String get legendRevenue => isMs ? 'Pendapatan Kasar' : 'Gross Revenue';
+  String get legendCost => isMs ? 'Kos Bahan' : 'Ingredient Cost';
+  String get week1 => isMs ? 'Mng 1' : 'Wk 1';
+  String get week2 => isMs ? 'Mng 2' : 'Wk 2';
+  String get week3 => isMs ? 'Mng 3' : 'Wk 3';
+  String get week4 => isMs ? 'Mng 4' : 'Wk 4';
+
   // Settings
   String get appearance => isMs ? 'Penampilan' : 'Appearance';
   String get theme => isMs ? 'Tema' : 'Theme';
