@@ -439,7 +439,7 @@ class _TopMenuItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(iconEmoji, style: const TextStyle(fontSize: 26)),
+          Text(iconEmoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
