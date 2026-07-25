@@ -4,6 +4,16 @@ import '../app/translations.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
+  // Method to trigger the popup dialog matching your image
+  void _showRecordSaleDialog(BuildContext context, Translations t) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const _RecordSaleModal();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
@@ -161,7 +171,7 @@ class DashboardScreen extends StatelessWidget {
                     qty: '300g',
                     statusText: t.low,
                     statusColor: Colors.orange,
-                    statusBgColor: Color(0xFFFFF3E0),
+                    statusBgColor: const Color(0xFFFFF3E0),
                   ),
                   const Divider(height: 16),
                   _StockItemRow(
@@ -177,10 +187,11 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
+            // Record Sale Button triggers the Modal Pop-up
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () => _showRecordSaleDialog(context, t),
                 icon: const Icon(Icons.add, color: Colors.white),
                 label: Text(
                   t.recordSale,
@@ -255,6 +266,328 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// POPUP DIALOG: Rekod Jualan
+// ---------------------------------------------------------------------------
+class _RecordSaleModal extends StatefulWidget {
+  const _RecordSaleModal();
+
+  @override
+  State<_RecordSaleModal> createState() => _RecordSaleModalState();
+}
+
+class _RecordSaleModalState extends State<_RecordSaleModal> {
+  String selectedMenu = 'Matcha Latte (RM 8.00)';
+  String selectedUnit = 'Cup';
+  final TextEditingController quantityController = TextEditingController(text: '20');
+  final TextEditingController priceController = TextEditingController(text: '8.00');
+
+  double get totalSales {
+    final double qty = double.tryParse(quantityController.text) ?? 0;
+    final double price = double.tryParse(priceController.text) ?? 0;
+    return qty * price;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const textDark = Color(0xFF2C3E50);
+    const borderColor = Color(0xFFE2E8F0);
+    const saveButtonColor = Color(0xFFFF7B89);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row with Title and Close Icon
+              Stack(
+                children: [
+                  const Center(
+                    child: Text(
+                      'Rekod Jualan',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textDark,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: -2,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(
+                        Icons.close,
+                        color: Color(0xFFA0AEC0),
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Pilih Menu Label & Dropdown
+              const Text(
+                'Pilih Menu',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: borderColor),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedMenu,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF718096)),
+                    style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w500),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedMenu = newValue;
+                        });
+                      }
+                    },
+                    items: <String>[
+                      'Matcha Latte (RM 8.00)',
+                      'Milk Tea (RM 7.00)',
+                      'Americano (RM 5.00)'
+                    ].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Kuantiti Terjual Fields (Quantity + Unit)
+              const Text(
+                'Kuantiti Terjual',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  // Quantity Input Field
+                  Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: quantityController,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Unit Dropdown Field
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: borderColor),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedUnit,
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF718096)),
+                          style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w500),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                selectedUnit = newValue;
+                              });
+                            }
+                          },
+                          items: <String>['Cup', 'Botol', 'Peket']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Harga Jual Seunit Field
+              const Text(
+                'Harga Jual Seunit (RM)',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: priceController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (_) => setState(() {}),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
+                decoration: InputDecoration(
+                  fillColor: const Color(0xFFF7FAFC),
+                  filled: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: borderColor),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Total Calculation Container (Jumlah Jualan)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFDF0),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFFF5C0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Jumlah Jualan',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF718096),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'RM ${totalSales.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: textDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Save Button (Simpan Rekod)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: saveButtonColor,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Simpan Rekod',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Automatic Stock Deduction Notice Container
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE6FFFA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFB2F5EA)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF319795), width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        size: 14,
+                        color: Color(0xFF319795),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Stok bahan akan ditolak mengikut resipi secara automatik.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C7A7B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// EXISTING HELPER WIDGETS
+// ---------------------------------------------------------------------------
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
