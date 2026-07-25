@@ -7,12 +7,25 @@ import '../app/translations.dart';
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({super.key});
 
+  // Open the "Tambah / Edit Stok" dialog matched to image_aceec4.png
+  void _showRestockDialog(BuildContext context, {InventoryItem? selectedItem}) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext ctx) {
+        return _RestockDialog(initialItem: selectedItem);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final provider = context.watch<InventoryProvider>();
+
     const backgroundColor = Color(0xFFF9F9F9);
     const primaryGreen = Color(0xFF5BA154);
+    const pinkAccent = Color(0xFFFF7B89);
     const textDark = Color(0xFF2C3E50);
 
     return Scaffold(
@@ -20,38 +33,77 @@ class InventoryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: backgroundColor,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: textDark),
-          onPressed: () {},
+          icon: const Icon(Icons.arrow_back_ios_new, color: textDark, size: 20),
+          onPressed: () {
+            if (Navigator.canPop(context)) Navigator.pop(context);
+          },
         ),
-        title: SizedBox(
-          height: 36,
-          child: TextField(
-            onChanged: (v) => provider.setSearchQuery(v),
-            decoration: InputDecoration(
-              hintText: t.searchItem,
-              hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-              prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-            ),
+        title: const Text(
+          'Inventori Bahan',
+          style: TextStyle(
+            color: textDark,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle, color: primaryGreen, size: 28),
-            onPressed: () => _showAddItemDialog(context),
-          ),
-        ],
       ),
       body: Column(
         children: [
+          // Search Bar + Filter Icon + Pink Plus Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    child: TextField(
+                      onChanged: (v) => provider.setSearchQuery(v),
+                      decoration: InputDecoration(
+                        hintText: t.searchItem ?? 'Cari bahan...',
+                        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.tune, color: textDark, size: 22),
+                  onPressed: () {},
+                ),
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () => _showAddItemDialog(context),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: pinkAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 24),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Category Pills Filter
           _CategoryPills(provider: provider),
+
+          const SizedBox(height: 8),
+
+          // List of Ingredients / Stock Items
           Expanded(
             child: provider.filteredItems.isEmpty
                 ? Center(
@@ -69,8 +121,10 @@ class InventoryScreen extends StatelessWidget {
                           onTap: () => _showRestockDialog(context),
                         );
                       }
-                      return _InventoryCard(
-                        item: provider.filteredItems[index],
+                      final item = provider.filteredItems[index];
+                      return GestureDetector(
+                        onTap: () => _showRestockDialog(context, selectedItem: item),
+                        child: _InventoryCard(item: item),
                       );
                     },
                   ),
@@ -153,82 +207,13 @@ class InventoryScreen extends StatelessWidget {
               onPressed: () {
                 if (nameCtrl.text.trim().isEmpty) return;
                 context.read<InventoryProvider>().addItem(
-                  name: nameCtrl.text.trim(),
-                  category: category,
-                  unit: unit,
-                  stock: double.tryParse(stockCtrl.text) ?? 0,
-                  minStock: double.tryParse(minStockCtrl.text) ?? 0,
-                  costPerUnit: double.tryParse(costCtrl.text) ?? 0,
-                );
-                Navigator.pop(ctx);
-              },
-              child: Text(t.save, style: const TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRestockDialog(BuildContext context) {
-    final t = Translations.of(context);
-    final qtyCtrl = TextEditingController();
-    final costCtrl = TextEditingController();
-    final noteCtrl = TextEditingController();
-    final provider = context.read<InventoryProvider>();
-    var selectedId = provider.items.isNotEmpty ? provider.items.first.id : null;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(t.addStock, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                InputDecorator(
-                  decoration: _dialogInputDecoration(t.item),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedId,
-                      isDense: true,
-                      isExpanded: true,
-                      items: provider.items
-                          .map((i) => DropdownMenuItem(
-                                value: i.id,
-                                child: Text('${i.name} (${i.stock.toStringAsFixed(0)} ${_unitLabel(i.unit)})'),
-                              ))
-                          .toList(),
-                      onChanged: (v) => setDialogState(() => selectedId = v),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _dialogField(t.addedQty, qtyCtrl, isNumber: true),
-                const SizedBox(height: 12),
-                _dialogField(t.totalCost, costCtrl, isNumber: true),
-                const SizedBox(height: 12),
-                _dialogField(t.note, noteCtrl),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
-              onPressed: () {
-                if (selectedId == null) return;
-                final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
-                final totalCost = double.tryParse(costCtrl.text) ?? 0;
-                if (addedQty <= 0) return;
-                provider.restockItem(
-                  itemId: selectedId!,
-                  addedQty: addedQty,
-                  totalCost: totalCost,
-                );
+                      name: nameCtrl.text.trim(),
+                      category: category,
+                      unit: unit,
+                      stock: double.tryParse(stockCtrl.text) ?? 0,
+                      minStock: double.tryParse(minStockCtrl.text) ?? 0,
+                      costPerUnit: double.tryParse(costCtrl.text) ?? 0,
+                    );
                 Navigator.pop(ctx);
               },
               child: Text(t.save, style: const TextStyle(color: Colors.white)),
@@ -240,27 +225,348 @@ class InventoryScreen extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// RESTOCK & EDIT DIALOG SCREEN (Matching image_aceec4.png)
+// ---------------------------------------------------------------------------
+class _RestockDialog extends StatefulWidget {
+  final InventoryItem? initialItem;
+  const _RestockDialog({this.initialItem});
+
+  @override
+  State<_RestockDialog> createState() => _RestockDialogState();
+}
+
+class _RestockDialogState extends State<_RestockDialog> {
+  String? selectedItemId;
+  late TextEditingController qtyCtrl;
+  late TextEditingController costCtrl;
+  late TextEditingController dateCtrl;
+  late TextEditingController noteCtrl;
+  String selectedUnit = 'Kotak';
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = context.read<InventoryProvider>();
+
+    if (widget.initialItem != null) {
+      selectedItemId = widget.initialItem!.id;
+      qtyCtrl = TextEditingController(text: widget.initialItem!.stock.toStringAsFixed(0));
+      costCtrl = TextEditingController(text: widget.initialItem!.costPerUnit.toStringAsFixed(2));
+      selectedUnit = _unitLabel(widget.initialItem!.unit);
+    } else {
+      selectedItemId = provider.items.isNotEmpty ? provider.items.first.id : null;
+      qtyCtrl = TextEditingController(text: '10');
+      costCtrl = TextEditingController(text: '7.80');
+    }
+
+    dateCtrl = TextEditingController(text: '16/07/2026');
+    noteCtrl = TextEditingController(text: 'Dibeli dari Eco Shop');
+  }
+
+  @override
+  void dispose() {
+    qtyCtrl.dispose();
+    costCtrl.dispose();
+    dateCtrl.dispose();
+    noteCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<InventoryProvider>();
+    const textDark = Color(0xFF2C3E50);
+    const primaryGreen = Color(0xFF5BA154);
+    const borderColor = Color(0xFFE2E8F0);
+    const inputBgColor = Color(0xFFFAFAFA);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title Header with Close Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 24),
+                const Text(
+                  'Tambah Stok',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: textDark,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(Icons.close, color: Colors.grey, size: 22),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // Field 1: Pilih Bahan Dropdown
+            const Text(
+              'Pilih Bahan',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: inputBgColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedItemId,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                  style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w600),
+                  items: provider.items.map((item) {
+                    return DropdownMenuItem<String>(
+                      value: item.id,
+                      child: Text(item.name),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      selectedItemId = val;
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Field 2: Kuantiti + Unit Dropdown
+            const Text(
+              'Kuantiti',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: qtyCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      fillColor: inputBgColor,
+                      filled: true,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: borderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: borderColor),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: inputBgColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedUnit,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                        style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w600),
+                        items: <String>['Kotak', 'g', 'kg', 'ml', 'L', 'unit'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => selectedUnit = val);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Field 3: Harga Beli Seunit (RM)
+            const Text(
+              'Harga Beli Seunit (RM)',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: costCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                fillColor: inputBgColor,
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Field 4: Tarikh Beli
+            const Text(
+              'Tarikh Beli',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: dateCtrl,
+              readOnly: true,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (pickedDate != null) {
+                  setState(() {
+                    dateCtrl.text =
+                        "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
+                  });
+                }
+              },
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                fillColor: inputBgColor,
+                filled: true,
+                suffixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.grey, size: 20),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Field 5: Nota (pilihan)
+            const Text(
+              'Nota (pilihan)',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: noteCtrl,
+              style: const TextStyle(fontSize: 14, color: textDark),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                fillColor: inputBgColor,
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: borderColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Save Button (Simpan)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (selectedItemId != null) {
+                    final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
+                    final cost = double.tryParse(costCtrl.text) ?? 0;
+                    if (addedQty > 0) {
+                      provider.restockItem(
+                        itemId: selectedItemId!,
+                        addedQty: addedQty,
+                        totalCost: addedQty * cost,
+                      );
+                    }
+                  }
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Simpan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Category Pills UI
+// ---------------------------------------------------------------------------
 class _CategoryPills extends StatelessWidget {
   final InventoryProvider provider;
   const _CategoryPills({required this.provider});
 
   @override
   Widget build(BuildContext context) {
-    final t = Translations.of(context);
     const primaryGreen = Color(0xFF5BA154);
 
     final pills = [
-      _PillData(t.all, null),
-      _PillData(t.ingredients, ItemCategory.bahan),
-      _PillData(t.packaging, ItemCategory.pembungkusan),
-      _PillData(t.others, ItemCategory.lain),
+      _PillData('Semua', null),
+      _PillData('Bahan', ItemCategory.bahan),
+      _PillData('Pembungkusan', ItemCategory.pembungkusan),
+      _PillData('Lain-lain', ItemCategory.lain),
     ];
 
     return SizedBox(
-      height: 48,
+      height: 38,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         children: pills.map((p) {
           final selected = provider.selectedCategory == p.category;
           return Padding(
@@ -268,18 +574,19 @@ class _CategoryPills extends StatelessWidget {
             child: GestureDetector(
               onTap: () => provider.setCategory(p.category),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
-                  color: selected ? primaryGreen : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  color: selected ? primaryGreen : const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
-                  p.label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? Colors.white : const Color(0xFF2C3E50),
+                child: Center(
+                  child: Text(
+                    p.label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: selected ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ),
               ),
@@ -297,41 +604,52 @@ class _PillData {
   const _PillData(this.label, this.category);
 }
 
+// ---------------------------------------------------------------------------
+// Inventory Card (Matching image_ad4254.png)
+// ---------------------------------------------------------------------------
 class _InventoryCard extends StatelessWidget {
   final InventoryItem item;
   const _InventoryCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    final t = Translations.of(context);
     const textDark = Color(0xFF2C3E50);
-    const primaryGreen = Color(0xFF5BA154);
-    const softRedBg = Color(0xFFFDF0F0);
-    const softGreenBg = Color(0xFFEAF5EA);
+    const softGreenBg = Color(0xFFE8F5E9);
+    const textGreen = Color(0xFF4CAF50);
+    const softOrangeBg = Color(0xFFFFF3E0);
+    const textOrange = Color(0xFFFB8C00);
 
-    final iconData = _categoryIcon(item.category);
-    final bgColor = item.isLowStock ? softRedBg : softGreenBg;
-    final statusColor = item.isLowStock ? Colors.red : primaryGreen;
-    final statusText = item.isLowStock ? t.lowStock : t.sufficient;
+    final isLow = item.isLowStock;
+    final statusBgColor = isLow ? softOrangeBg : softGreenBg;
+    final statusTextColor = isLow ? textOrange : textGreen;
+    final statusText = isLow ? 'Rendah' : 'Cukup';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
+          // Emoji / Icon Graphic Box
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(iconData, color: statusColor, size: 20),
+            child: Text(
+              _itemEmoji(item.name),
+              style: const TextStyle(fontSize: 26),
+            ),
           ),
           const SizedBox(width: 12),
+
+          // Name & Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,50 +657,52 @@ class _InventoryCard extends StatelessWidget {
                 Text(
                   item.name,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                     fontSize: 14,
                     color: textDark,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${t.stockValue}: RM ${item.stockValue.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 2),
                 Text(
-                  'RM ${item.costPerUnit.toStringAsFixed(3)}/${_unitLabel(item.unit)}',
+                  'Harga: RM${item.costPerUnit.toStringAsFixed(2)} / ${_unitLabel(item.unit)}',
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+
+          // Status Badge + Chevron Arrow Right
+          Row(
             children: [
-              Text(
-                '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: textDark,
-                ),
-              ),
-              const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(6),
+                  color: statusBgColor,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   statusText,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: statusColor,
+                    color: statusTextColor,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.chevron_right,
+                color: Colors.grey,
+                size: 20,
               ),
             ],
           ),
@@ -390,23 +710,35 @@ class _InventoryCard extends StatelessWidget {
       ),
     );
   }
+
+  // Returns emoji based on item name for custom visual presentation
+  String _itemEmoji(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('susu')) return '🥛';
+    if (lower.contains('matcha')) return '🍵';
+    if (lower.contains('pearl')) return '🧋';
+    if (lower.contains('gula') || lower.contains('sirap')) return '🍾';
+    if (lower.contains('cawan') || lower.contains('cup')) return '🥤';
+    if (lower.contains('straw')) return '🥤';
+    return '📦';
+  }
 }
 
+// Restock Banner at bottom of list
 class _RestockBanner extends StatelessWidget {
   final VoidCallback onTap;
   const _RestockBanner({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final t = Translations.of(context);
     const primaryGreen = Color(0xFF5BA154);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16, top: 4),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20, top: 4),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
@@ -416,14 +748,14 @@ class _RestockBanner extends StatelessWidget {
               color: const Color(0xFFF0F6FF),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.local_shipping_outlined, color: Colors.blue, size: 24),
+            child: const Icon(Icons.local_shipping_outlined, color: Colors.blue, size: 22),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          const Expanded(
             child: Text(
-              t.restock,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
+              'Restock Bahan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
                 fontSize: 14,
                 color: Color(0xFF2C3E50),
               ),
@@ -433,12 +765,13 @@ class _RestockBanner extends StatelessWidget {
             onPressed: onTap,
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryGreen,
+              elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             ),
-            child: Text(
-              '+ ${t.addStock}',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            child: const Text(
+              '+ Tambah Stok',
+              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -447,17 +780,7 @@ class _RestockBanner extends StatelessWidget {
   }
 }
 
-IconData _categoryIcon(ItemCategory category) {
-  switch (category) {
-    case ItemCategory.bahan:
-      return Icons.inventory_2_outlined;
-    case ItemCategory.pembungkusan:
-      return Icons.inventory_outlined;
-    case ItemCategory.lain:
-      return Icons.category_outlined;
-  }
-}
-
+// Helpers
 String _unitLabel(ItemUnit unit) {
   switch (unit) {
     case ItemUnit.g:
