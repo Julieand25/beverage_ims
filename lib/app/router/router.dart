@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/dashboard_screen.dart';
+import '../../screens/inventory_screen.dart';
+import '../../screens/recipe_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
@@ -23,7 +25,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/inventori',
-              builder: (context, state) => const SizedBox.shrink(),
+              builder: (context, state) => const InventoryScreen(),
             ),
           ],
         ),
@@ -31,7 +33,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/resipi',
-              builder: (context, state) => const SizedBox.shrink(),
+              builder: (context, state) => const RecipeScreen(),
             ),
           ],
         ),

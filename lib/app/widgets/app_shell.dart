@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../translations.dart';
 
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -8,6 +9,7 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     const primaryGreen = Color(0xFF5BA154);
 
     return Scaffold(
@@ -20,27 +22,27 @@ class AppShell extends StatelessWidget {
         selectedLabelStyle: const TextStyle(fontSize: 12),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         onTap: (index) => navigationShell.goBranch(index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Dashboard',
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: t.dashboard,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            label: 'Inventori',
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: t.inventory,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            label: 'Resipi',
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: t.recipe,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            label: 'Laporan',
+            icon: const Icon(Icons.bar_chart_outlined),
+            label: t.report,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Tetapan',
+            icon: const Icon(Icons.settings_outlined),
+            label: t.settings,
           ),
         ],
       ),

@@ -1,0 +1,26 @@
+enum ItemCategory { bahan, pembungkusan, lain }
+
+enum ItemUnit { g, ml, unit, kg, l }
+
+class InventoryItem {
+  final String id;
+  String name;
+  ItemCategory category;
+  ItemUnit unit;
+  double stock;
+  double minStock;
+  double costPerUnit;
+
+  InventoryItem({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.unit,
+    required this.stock,
+    required this.minStock,
+    required this.costPerUnit,
+  });
+
+  bool get isLowStock => stock <= minStock;
+  double get stockValue => stock * costPerUnit;
+}

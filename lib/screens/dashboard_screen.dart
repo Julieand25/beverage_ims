@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import '../app/translations.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Custom color constants extracted from the design
+    final t = Translations.of(context);
     const backgroundColor = Color(0xFFF9F9F9);
     const primaryGreen = Color(0xFF5BA154);
     const softGreenBg = Color(0xFFEAF5EA);
@@ -36,7 +37,6 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section: Greeting + Avatar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -44,23 +44,23 @@ class DashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Text(
-                          'Hai, Farisha!',
-                          style: TextStyle(
+                          t.greeting,
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: textDark,
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Text('👋'),
+                        const SizedBox(width: 4),
+                        const Text('👋'),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Semoga jualan hari ini laris!',
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    Text(
+                      t.greetingSubtitle,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -72,7 +72,6 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Top Stat Cards Grid (2x2)
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -80,12 +79,12 @@ class DashboardScreen extends StatelessWidget {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 3.0,
-              children: const [
+              children: [
                 _StatCard(
                   icon: Icons.receipt_long,
                   iconColor: primaryGreen,
                   bgColor: softGreenBg,
-                  title: 'Jualan Hari Ini',
+                  title: t.salesToday,
                   value: 'RM 485.00',
                   valueColor: primaryGreen,
                 ),
@@ -93,15 +92,15 @@ class DashboardScreen extends StatelessWidget {
                   icon: Icons.monetization_on_outlined,
                   iconColor: pinkAccent,
                   bgColor: softPurpleBg,
-                  title: 'Untung Kasar',
+                  title: t.grossProfit,
                   value: 'RM 286.50',
                   valueColor: pinkAccent,
                 ),
                 _StatCard(
                   icon: Icons.local_cafe_outlined,
-                  iconColor: Color(0xFF8E44AD),
+                  iconColor: const Color(0xFF8E44AD),
                   bgColor: softPurpleBg,
-                  title: 'Cawan Terjual',
+                  title: t.cupsSold,
                   value: '68 cup',
                   valueColor: textDark,
                 ),
@@ -109,7 +108,7 @@ class DashboardScreen extends StatelessWidget {
                   icon: Icons.inventory_2_outlined,
                   iconColor: Colors.blue,
                   bgColor: softBlueBg,
-                  title: 'Nilai Inventori',
+                  title: t.inventoryValue,
                   value: 'RM 1,250.00',
                   valueColor: Colors.blue,
                 ),
@@ -117,13 +116,12 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Status Stok Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'STATUS STOK',
-                  style: TextStyle(
+                Text(
+                  t.stockStatus,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -131,9 +129,9 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: () {},
-                  child: const Text(
-                    'Lihat Semua >',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  child: Text(
+                    t.viewAll,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
               ],
@@ -147,30 +145,30 @@ class DashboardScreen extends StatelessWidget {
               ),
               padding: const EdgeInsets.all(12),
               child: Column(
-                children: const [
+                children: [
                   _StockItemRow(
                     iconPath: '🥛',
                     name: 'Susu UHT',
                     qty: '2 kotak',
-                    statusText: 'Hampir Habis',
+                    statusText: t.nearlyOut,
                     statusColor: Colors.red,
                     statusBgColor: softRedBg,
                   ),
-                  Divider(height: 16),
+                  const Divider(height: 16),
                   _StockItemRow(
                     iconPath: '🍵',
                     name: 'Matcha Powder',
                     qty: '300g',
-                    statusText: 'Rendah',
+                    statusText: t.low,
                     statusColor: Colors.orange,
                     statusBgColor: Color(0xFFFFF3E0),
                   ),
-                  Divider(height: 16),
+                  const Divider(height: 16),
                   _StockItemRow(
                     iconPath: '🧋',
                     name: 'Pearl',
                     qty: '500g',
-                    statusText: 'Hampir Habis',
+                    statusText: t.nearlyOut,
                     statusColor: Colors.red,
                     statusBgColor: softRedBg,
                   ),
@@ -179,15 +177,14 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Action Button: + Rekod Jualan
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Rekod Jualan',
-                  style: TextStyle(
+                label: Text(
+                  t.recordSale,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -204,13 +201,12 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Menu Terlaris Hari Ini Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'MENU TERLARIS HARI INI',
-                  style: TextStyle(
+                Text(
+                  t.bestSellingMenu,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -218,16 +214,15 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: () {},
-                  child: const Text(
-                    'Lihat Laporan >',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  child: Text(
+                    t.viewReport,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
 
-            // Horizontal Menu Items List
             SizedBox(
               height: 90,
               child: ListView(
@@ -260,7 +255,6 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-// Custom Widget for Top Statistic Cards
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -326,7 +320,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// Custom Widget for Stock Alert Items
 class _StockItemRow extends StatelessWidget {
   final String iconPath;
   final String name;
@@ -385,7 +378,6 @@ class _StockItemRow extends StatelessWidget {
   }
 }
 
-// Custom Widget for Top Selling Items (Horizontal scroll)
 class _TopMenuItemCard extends StatelessWidget {
   final String iconEmoji;
   final String title;
