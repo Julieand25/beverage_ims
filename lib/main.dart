@@ -1,22 +1,8 @@
 import 'package:flutter/material.dart';
-import 'screens/dashboard_screen.dart';
+import 'app/app.dart';
+
+export 'app/app.dart';
 
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Beverage IMS',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const DashboardScreen(),
-    );
-  }
+  runApp(const App());
 }
