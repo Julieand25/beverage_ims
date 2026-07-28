@@ -154,7 +154,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Divider(height: 16),
+                  Divider(height: 16, thickness: 0.5),
                   _StockItemRow(
                     iconPath: '🥛',
                     name: 'Susu UHT',
@@ -163,7 +163,7 @@ class DashboardScreen extends StatelessWidget {
                     statusColor: Colors.red,
                     statusBgColor: softRedBg,
                   ),
-                  const Divider(height: 16),
+                  Divider(height: 16, thickness: 0.5),
                   _StockItemRow(
                     iconPath: '🍵',
                     name: 'Matcha Powder',
@@ -172,7 +172,7 @@ class DashboardScreen extends StatelessWidget {
                     statusColor: Colors.orange,
                     statusBgColor: const Color(0xFFFFF3E0),
                   ),
-                  const Divider(height: 16),
+                  Divider(height: 16, thickness: 0.5),
                   _StockItemRow(
                     iconPath: '🧋',
                     name: 'Pearl',
