@@ -126,28 +126,6 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  t.stockStatus,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
-                    t.viewAll,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -156,6 +134,27 @@ class DashboardScreen extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        t.stockStatus,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: textDark,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Text(
+                          t.viewAll,
+                          style: const TextStyle(fontSize: 12, color: textDark),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 16),
                   _StockItemRow(
                     iconPath: '🥛',
                     name: 'Susu UHT',
@@ -674,24 +673,35 @@ class _StockItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(iconPath, style: const TextStyle(fontSize: 20)),
-        const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: Color(0xFF2C3E50),
-            ),
+          flex: 3,
+          child: Row(
+            children: [
+              Text(iconPath, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        Text(
-          qty,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        Expanded(
+          flex: 2,
+          child: Text(
+            qty,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ),
-        const SizedBox(width: 12),
-        Container(
+        Expanded(
+          flex: 2,
+          child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: statusBgColor,
@@ -705,6 +715,7 @@ class _StockItemRow extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+        ),
         ),
       ],
     );
