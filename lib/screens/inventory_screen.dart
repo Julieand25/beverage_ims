@@ -76,12 +76,7 @@ class InventoryScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.tune, color: textDark, size: 22),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
                 GestureDetector(
                   onTap: () => _showAddItemDialog(context),
                   child: Container(
