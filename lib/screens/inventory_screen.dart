@@ -49,8 +49,10 @@ class InventoryScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // Search Bar + Filter Icon + Pink Plus Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
@@ -100,31 +102,30 @@ class InventoryScreen extends StatelessWidget {
 
           // List of Ingredients / Stock Items
           Expanded(
-            child: provider.filteredItems.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tiada barang dijumpai',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: provider.filteredItems.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == provider.filteredItems.length) {
-                        return _RestockBanner(
-                          onTap: () => _showRestockDialog(context),
+            child: ClipRect(
+              clipBehavior: Clip.hardEdge,
+              child: provider.filteredItems.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Tiada barang dijumpai',
+                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: provider.filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = provider.filteredItems[index];
+                        return GestureDetector(
+                          onTap: () => _showRestockDialog(context, selectedItem: item),
+                          child: _InventoryCard(item: item),
                         );
-                      }
-                      final item = provider.filteredItems[index];
-                      return GestureDetector(
-                        onTap: () => _showRestockDialog(context, selectedItem: item),
-                        child: _InventoryCard(item: item),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      },
+                    ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -716,62 +717,6 @@ class _InventoryCard extends StatelessWidget {
     if (lower.contains('cawan') || lower.contains('cup')) return '🥤';
     if (lower.contains('straw')) return '🥤';
     return '📦';
-  }
-}
-
-// Restock Banner at bottom of list
-class _RestockBanner extends StatelessWidget {
-  final VoidCallback onTap;
-  const _RestockBanner({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5BA154);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20, top: 4),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F6FF),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.local_shipping_outlined, color: Colors.blue, size: 22),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Restock Bahan',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Color(0xFF2C3E50),
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: onTap,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryGreen,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            ),
-            child: const Text(
-              '+ Tambah Stok',
-              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
