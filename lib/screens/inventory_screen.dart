@@ -33,15 +33,9 @@ class InventoryScreen extends StatelessWidget {
         backgroundColor: backgroundColor,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: textDark, size: 20),
-          onPressed: () {
-            if (Navigator.canPop(context)) Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Inventori Bahan',
-          style: TextStyle(
+        title: Text(
+          t.inventoryTitle,
+          style: const TextStyle(
             color: textDark,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -58,18 +52,27 @@ class InventoryScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                PopupMenuButton<ItemCategory?>(
+                PopupMenuButton<String>(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 32),
-                  icon: provider.selectedCategory != null
-                      ? const Icon(Icons.filter_list_alt, color: pinkAccent, size: 22)
-                      : const Icon(Icons.filter_list, color: textDark, size: 22),
-                  onSelected: (v) => provider.setCategory(v),
+                  icon: const Icon(Icons.filter_list, color: textDark, size: 22),
+                  onSelected: (v) {
+                    switch (v) {
+                      case '_all':
+                        provider.setCategory(null);
+                      case 'bahan':
+                        provider.setCategory(ItemCategory.bahan);
+                      case 'pembungkusan':
+                        provider.setCategory(ItemCategory.pembungkusan);
+                      case 'lain':
+                        provider.setCategory(ItemCategory.lain);
+                    }
+                  },
                   itemBuilder: (_) => const [
-                    PopupMenuItem<ItemCategory?>(value: null, child: Text('Semua')),
-                    PopupMenuItem<ItemCategory?>(value: ItemCategory.bahan, child: Text('Bahan')),
-                    PopupMenuItem<ItemCategory?>(value: ItemCategory.pembungkusan, child: Text('Pembungkusan')),
-                    PopupMenuItem<ItemCategory?>(value: ItemCategory.lain, child: Text('Lain-lain')),
+                    PopupMenuItem<String>(value: '_all', child: Text('Semua')),
+                    PopupMenuItem<String>(value: 'bahan', child: Text('Bahan')),
+                    PopupMenuItem<String>(value: 'pembungkusan', child: Text('Pembungkusan')),
+                    PopupMenuItem<String>(value: 'lain', child: Text('Lain-lain')),
                   ],
                 ),
                 const SizedBox(width: 12),

@@ -35,6 +35,8 @@ class Translations {
   String get settings => isMs ? 'Tetapan' : 'Settings';
 
   // Inventory
+  String get inventoryTitle =>
+      isMs ? 'Inventori Bahan' : 'Inventory Items';
   String get searchItem => isMs ? 'Cari barang...' : 'Search item...';
   String get addItem => isMs ? 'Tambah Barang' : 'Add Item';
   String get all => isMs ? 'Semua' : 'All';
