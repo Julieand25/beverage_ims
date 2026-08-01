@@ -24,7 +24,6 @@ class InventoryScreen extends StatelessWidget {
     final provider = context.watch<InventoryProvider>();
 
     const backgroundColor = Color(0xFFF9F9F9);
-    const primaryGreen = Color(0xFF5BA154);
     const pinkAccent = Color(0xFFFF7B89);
     const textDark = Color(0xFF2C3E50);
 
@@ -53,30 +52,25 @@ class InventoryScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          // Search Bar + Filter Icon + Pink Plus Button
+          // Filter Icon + Add Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                    ),
-                    child: TextField(
-                      onChanged: (v) => provider.setSearchQuery(v),
-                      decoration: InputDecoration(
-                        hintText: t.searchItem ?? 'Cari bahan...',
-                        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-                        prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                    ),
-                  ),
+                PopupMenuButton<ItemCategory?>(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32),
+                  icon: provider.selectedCategory != null
+                      ? const Icon(Icons.filter_list_alt, color: pinkAccent, size: 22)
+                      : const Icon(Icons.filter_list, color: textDark, size: 22),
+                  onSelected: (v) => provider.setCategory(v),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem<ItemCategory?>(value: null, child: Text('Semua')),
+                    PopupMenuItem<ItemCategory?>(value: ItemCategory.bahan, child: Text('Bahan')),
+                    PopupMenuItem<ItemCategory?>(value: ItemCategory.pembungkusan, child: Text('Pembungkusan')),
+                    PopupMenuItem<ItemCategory?>(value: ItemCategory.lain, child: Text('Lain-lain')),
+                  ],
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
@@ -95,11 +89,30 @@ class InventoryScreen extends StatelessWidget {
             ),
           ),
 
-          // Category Pills Filter
-          _CategoryPills(provider: provider),
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEEEEEE)),
+              ),
+              child: TextField(
+                onChanged: (v) => provider.setSearchQuery(v),
+                decoration: InputDecoration(
+                  hintText: t.searchItem ?? 'Cari bahan...',
+                  hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+                  prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+          ),
 
           const SizedBox(height: 8),
-
           // List of Ingredients / Stock Items
           Expanded(
             child: ClipRect(
@@ -540,65 +553,7 @@ class _RestockDialogState extends State<_RestockDialog> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Category Pills UI
-// ---------------------------------------------------------------------------
-class _CategoryPills extends StatelessWidget {
-  final InventoryProvider provider;
-  const _CategoryPills({required this.provider});
 
-  @override
-  Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF5BA154);
-
-    final pills = [
-      _PillData('Semua', null),
-      _PillData('Bahan', ItemCategory.bahan),
-      _PillData('Pembungkusan', ItemCategory.pembungkusan),
-      _PillData('Lain-lain', ItemCategory.lain),
-    ];
-
-    return SizedBox(
-      height: 38,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: pills.map((p) {
-          final selected = provider.selectedCategory == p.category;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => provider.setCategory(p.category),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                decoration: BoxDecoration(
-                  color: selected ? primaryGreen : const Color(0xFFF0F0F0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    p.label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _PillData {
-  final String label;
-  final ItemCategory? category;
-  const _PillData(this.label, this.category);
-}
 
 // ---------------------------------------------------------------------------
 // Inventory Card (Matching image_ad4254.png)
