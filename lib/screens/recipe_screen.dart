@@ -16,6 +16,7 @@ class RecipeScreen extends StatelessWidget {
     final inventoryProvider = context.watch<InventoryProvider>();
     const backgroundColor = Color(0xFFF9F9F9);
     const textDark = Color(0xFF2C3E50);
+    const pinkAccent = Color(0xFFFF7B89);
 
     final recipes = recipeProvider.filteredRecipes(inventoryProvider.items);
 
@@ -24,83 +25,102 @@ class RecipeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: backgroundColor,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: textDark),
-          onPressed: () {},
-        ),
-        title: SizedBox(
-          height: 36,
-          child: TextField(
-            onChanged: (v) => recipeProvider.setSearchQuery(v),
-            decoration: InputDecoration(
-              hintText: t.searchRecipe,
-              hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-              prefixIcon:
-                  const Icon(Icons.search, size: 20, color: Colors.grey),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-            ),
+        centerTitle: true,
+        title: Text(
+          t.recipeTitle,
+          style: const TextStyle(
+            color: textDark,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Resipi Minuman',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle,
-                      color: Color(0xFF5BA154), size: 28),
-                  onPressed: () => _showRecipeDialog(context),
-                ),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              'Tetapkan sukatan',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-          ),
-          Expanded(
-            child: recipes.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tiada resipi dijumpai',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    itemCount: recipes.length,
-                    itemBuilder: (context, index) => _RecipeCard(
-                      recipe: recipes[index],
-                      inventory: inventoryProvider.items,
-                      onTap: () => _showDetailSheet(context, recipes[index]),
-                      onDelete: () =>
-                          _confirmDelete(context, recipes[index]),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Add Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => _showRecipeDialog(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: pinkAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 24),
                     ),
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                ),
+                child: TextField(
+                  onChanged: (v) => recipeProvider.setSearchQuery(v),
+                  decoration: InputDecoration(
+                    hintText: t.searchRecipe,
+                    hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ),
+
+            // Subtitle
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text(
+                'Tetapkan sukatan',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Recipe List
+            Expanded(
+              child: ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: recipes.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Tiada resipi dijumpai',
+                          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: recipes.length,
+                        itemBuilder: (context, index) => _RecipeCard(
+                          recipe: recipes[index],
+                          inventory: inventoryProvider.items,
+                          onTap: () => _showDetailSheet(context, recipes[index]),
+                          onDelete: () =>
+                              _confirmDelete(context, recipes[index]),
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -146,12 +166,13 @@ class RecipeScreen extends StatelessWidget {
       builder: (ctx) {
         final itemMap = {for (final i in inventory) i.id: i};
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Handle top bar
               Center(
                 child: Container(
@@ -181,7 +202,7 @@ class RecipeScreen extends StatelessWidget {
                 children: [
                   Container(
                     width: 100,
-                    height: 100,
+                    height: 110,
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
@@ -193,7 +214,7 @@ class RecipeScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Container(
-                      height: 100,
+                      height: 110,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
@@ -333,7 +354,8 @@ class RecipeScreen extends StatelessWidget {
               ),
             ],
           ),
-        );
+        ),
+      );
       },
     );
   }

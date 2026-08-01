@@ -63,6 +63,8 @@ class Translations {
   String get note => isMs ? 'Nota / Pembekal' : 'Note / Supplier';
 
   // Recipe
+  String get recipeTitle =>
+      isMs ? 'Resipi Minuman' : 'Beverage Recipes';
   String get beverageRecipe => isMs ? 'Resipi Minuman' : 'Beverage Recipe';
   String get searchRecipe => isMs ? 'Cari resipi...' : 'Search recipe...';
   String get addRecipe => isMs ? 'Tambah Resipi' : 'Add Recipe';
