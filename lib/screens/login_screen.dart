@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool obscurePassword = true;
+  bool _isLoggingIn = false;
 
   @override
   void dispose() {
@@ -160,25 +161,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            final auth = context.read<AuthProvider>();
-                            final success = await auth.login(
-                              emailController.text.trim(),
-                              passwordController.text,
-                            );
-                            if (success && context.mounted) {
-                              context.go('/dashboard');
-                            } else if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    t.isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
+                          onPressed: _isLoggingIn
+                              ? null
+                              : () async {
+                                  setState(() => _isLoggingIn = true);
+                                  final auth = context.read<AuthProvider>();
+                                  final success = await auth.login(
+                                    emailController.text.trim(),
+                                    passwordController.text,
+                                  );
+                                  if (!mounted) return;
+                                  setState(() => _isLoggingIn = false);
+                                  if (success) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      if (context.mounted) context.go('/dashboard');
+                                    });
+                                  } else if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          t.isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryGreen,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -186,14 +194,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: Text(
-                            t.login,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoggingIn
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  t.login,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
