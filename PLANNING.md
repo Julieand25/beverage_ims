@@ -10,7 +10,7 @@
 | 4 | **Reports** | Daily sales, stock history timeline, monthly summary with bar chart | ✅ Built (hardcoded mock data) |
 | 5 | **Settings** | Theme toggle (dark/light), language selector (MS/EN) | ✅ Built (persisted via SharedPreferences) |
 | 6 | **Sales Recording** | Record sale with recipe selection, qty, price, auto-stock deduction | ⚠️ UI only — no actual data persistence |
-| 7 | **Auth / User** | Single user (Farisha), no login system | ❌ Not implemented |
+| 7 | **Auth / User Roles** | Admin & staff roles, login/logout, role-based UI, audit logging of all mutations | 🔨 In Progress |
 
 **Key Observations:**
 - All data is **in-memory** — no database (SQLite, Hive, etc.)
