@@ -9,7 +9,7 @@ class AuditLog {
   final DateTime timestamp;
 
   const AuditLog({
-    required this.id,
+    this.id = '',
     required this.userId,
     required this.userName,
     required this.action,
@@ -32,14 +32,16 @@ class AuditLog {
         timestamp: DateTime.parse(json['timestamp'] as String),
       );
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'user_name': userName,
-        'action': action,
-        'target_type': targetType,
-        'target_id': targetId,
-        'details': details,
-        'timestamp': timestamp.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      'user_id': userId,
+      'user_name': userName,
+      'action': action,
+      'target_type': targetType,
+      'details': details,
+      'timestamp': timestamp.toIso8601String(),
+    };
+    if (targetId != null) json['target_id'] = targetId;
+    return json;
+  }
 }

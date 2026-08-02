@@ -33,7 +33,6 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = user;
       notifyListeners();
       await _auditRepo.addLog(AuditLog(
-        id: '',
         userId: user.id,
         userName: user.name,
         action: 'LOGIN',
@@ -49,7 +48,6 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     if (_currentUser != null) {
       await _auditRepo.addLog(AuditLog(
-        id: '',
         userId: _currentUser!.id,
         userName: _currentUser!.name,
         action: 'SIGN_OUT',
@@ -71,7 +69,6 @@ class AuthProvider extends ChangeNotifier {
     );
     if (success) {
       await _auditRepo.addLog(AuditLog(
-        id: '',
         userId: _currentUser!.id,
         userName: _currentUser!.name,
         action: 'CHANGE_PASSWORD',

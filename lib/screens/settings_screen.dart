@@ -169,7 +169,10 @@ class SettingsScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     await context.read<AuthProvider>().logout();
-                    if (context.mounted) context.go('/login');
+                    if (!context.mounted) return;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (context.mounted) context.go('/login');
+                    });
                   },
                   icon: const Icon(Icons.logout, size: 20, color: Colors.white),
                   label: Text(
