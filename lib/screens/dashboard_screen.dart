@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../app/app_colors.dart';
 import '../app/translations.dart';
 
@@ -141,7 +142,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () => context.go('/inventori'),
                           child: Text(
                             t.viewAll,
                             style: TextStyle(fontSize: 12, color: colors.text),
