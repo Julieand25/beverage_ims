@@ -39,91 +39,147 @@ When creating a recipe with a new ingredient that doesn't exist in inventory:
 
 This means `cost_per_unit`, `stock`, and `min_stock` can all be **0** at creation time — they get filled when the first restock happens.
 
-### Proposed SQLite Schema (5 Tables)
+### Proposed Supabase PostgreSQL Schema (7 Tables)
 
-`settings` table is **not needed** — theme & language are already handled by `SharedPreferences`.
+`settings` is **not needed** — theme & language are handled by `SharedPreferences`.
 
 ```sql
--- 1. Inventory Items
+-- 1. Users
+CREATE TABLE users (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL CHECK(role IN ('admin','staff')),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 2. Inventory Items
 CREATE TABLE inventory_items (
-  id            TEXT PRIMARY KEY,
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name          TEXT NOT NULL,
   category      TEXT NOT NULL CHECK(category IN ('bahan','pembungkusan','lain')),
   unit          TEXT NOT NULL CHECK(unit IN ('g','ml','unit','kg','l')),
   stock         REAL NOT NULL DEFAULT 0,
   min_stock     REAL NOT NULL DEFAULT 0,
   cost_per_unit REAL NOT NULL DEFAULT 0,
-  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  created_by    UUID REFERENCES users(id),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. Recipes
+-- 3. Recipes
 CREATE TABLE recipes (
-  id            TEXT PRIMARY KEY,
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name          TEXT NOT NULL,
   selling_price REAL NOT NULL DEFAULT 0,
-  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  created_by    UUID REFERENCES users(id),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3. Recipe Ingredients (junction table)
+-- 4. Recipe Ingredients (junction table)
 CREATE TABLE recipe_ingredients (
-  id                TEXT PRIMARY KEY,
-  recipe_id         TEXT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-  inventory_item_id TEXT NOT NULL REFERENCES inventory_items(id),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipe_id         UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+  inventory_item_id UUID NOT NULL REFERENCES inventory_items(id),
   quantity          REAL NOT NULL DEFAULT 0
 );
 
--- 4. Sales Transactions
+-- 5. Sales Transactions
 CREATE TABLE sales (
-  id            TEXT PRIMARY KEY,
-  recipe_id     TEXT NOT NULL REFERENCES recipes(id),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipe_id     UUID NOT NULL REFERENCES recipes(id),
   quantity      INTEGER NOT NULL DEFAULT 1,
   unit_price    REAL NOT NULL,
   total_amount  REAL NOT NULL,
-  sold_at       TEXT NOT NULL DEFAULT (datetime('now'))
+  recorded_by   UUID REFERENCES users(id),
+  sold_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 5. Stock Movements (for history/reports)
+-- 6. Stock Movements (for history/reports)
 CREATE TABLE stock_movements (
-  id                TEXT PRIMARY KEY,
-  inventory_item_id TEXT NOT NULL REFERENCES inventory_items(id),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  inventory_item_id UUID NOT NULL REFERENCES inventory_items(id),
   type              TEXT NOT NULL CHECK(type IN ('restock','sale','adjustment')),
   quantity          REAL NOT NULL,
   cost_per_unit     REAL,
   total_cost        REAL,
   note              TEXT,
-  moved_at          TEXT NOT NULL DEFAULT (datetime('now'))
+  user_id           UUID REFERENCES users(id),
+  moved_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 7. Audit Logs
+CREATE TABLE audit_logs (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES users(id),
+  user_name   TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  target_type TEXT,
+  target_id   TEXT,
+  details     JSONB DEFAULT '{}',
+  timestamp   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
 ### ER Diagram
 
 ```
-┌─────────────────┐       ┌──────────────────────┐       ┌──────────────┐
-│ inventory_items  │◄──────│  recipe_ingredients   │──────►│   recipes    │
-│                  │       │                        │       │              │
-│  id (PK)         │       │  recipe_id (FK)        │       │  id (PK)     │
-│  name            │       │  inventory_item_id (FK)│       │  name        │
-│  category        │       │  quantity              │       │  selling_price│
-│  unit            │       └────────────────────────┘       └──────┬───────┘
-│  stock           │                                                      │
-│  min_stock       │       ┌──────────────────────┐                     │
-│  cost_per_unit   │       │   stock_movements    │                    │
-│  created_at      │◄──────│                       │                    │
-│  updated_at      │       │  inventory_item_id(FK)│                    │
-└─────────────────┘       │  type (restock/sale)  │                    │
-                           │  quantity             │                    │
-                           │  cost_per_unit        │       ┌───────────┴──┐
-                           │  total_cost           │       │    sales     │
-                           │  note                 │       │              │
-                           │  moved_at             │       │  recipe_id   │
-                           └──────────────────────┘       │  quantity    │
-                                                           │  unit_price  │
-                                                           │  total_amount│
-                                                           │  sold_at     │
-                                                           └──────────────┘
+┌──────────────┐       ┌──────────────────────┐       ┌──────────────┐
+│   users      │       │  recipe_ingredients   │       │   recipes    │
+│              │       │                        │       │              │
+│  id (PK)     │──┐    │  recipe_id (FK)        │       │  id (PK)     │
+│  name        │  │    │  inventory_item_id (FK)│       │  name        │
+│  email       │  │    │  quantity              │       │  selling_price│
+│  password_hash│ │    └───────────┬────────────┘       │  created_by──┼───┐
+│  role        │  │                │                    │  created_at  │   │
+│  created_at  │  │                ▼                    │  updated_at  │   │
+└──────┬───────┘  │    ┌──────────────────┐             └──────┬───────┘   │
+       │          │    │ inventory_items  │                    │           │
+       │          └───►│                  │◄──────┐            │           │
+       │               │  id (PK)         │       │            │           │
+       │               │  name            │       │            │           │
+       │               │  category        │       │            │           │
+       │               │  unit            │       │            │           │
+       │               │  stock           │       │            │           │
+       │               │  min_stock       │       │            │           │
+       │               │  cost_per_unit   │       │            │           │
+       │               │  created_by──────┼───┐   │            │           │
+       │               │  created_at      │   │   │            │           │
+       │               │  updated_at      │   │   │            │           │
+       │               └────────┬─────────┘   │   │            │           │
+       │                        │             │   │            │           │
+       │          ┌─────────────┼─────────────┼───┼────────────┼───────────┘
+       │          │             │             │   │            │
+       │          ▼             ▼             │   │            │
+       │  ┌──────────────────────────────┐    │   │            │
+       │  │      stock_movements         │    │   │            │
+       │  │                              │    │   │            │
+       ├──│  user_id (FK)                │    │   │            │
+       │  │  inventory_item_id (FK)      │    │   │            │
+       │  │  type (restock/sale)         │    │   │            │
+       │  │  quantity                    │    │   │            │
+       │  │  cost_per_unit               │    │   │            │
+       │  │  total_cost                  │    │   │            │
+       │  │  note                        │    │   │            │  ┌──────────────┐
+       │  │  moved_at                    │    │   │            │  │ audit_logs   │
+       │  └──────────────────────────────┘    │   │            │  │              │
+       │                                      │   │            ├──│ user_id (FK) │
+       │  ┌──────────────┐                    │   │            │  │ user_name    │
+       │  │    sales     │                    │   │            │  │ action       │
+       │  │              │                    │   │            │  │ target_type  │
+       │  │  recipe_id (FK)─────────────────┘ │              │  │ target_id    │
+       │  │  quantity    │                    │              │  │ details      │
+       ├──│ recorded_by  │                    │              │  │ timestamp    │
+       │  │  unit_price  │                    │              │  └──────────────┘
+       │  │  total_amount│                    │
+       │  │  sold_at     │                    │
+       │  └──────────────┘                    │
+       │                                      │
+       └──────────────────────────────────────┘
 ```
+
 
 ### Key Design Decisions for Recipe-First
 
@@ -255,19 +311,88 @@ Screen (UI) ──reads/watch──→ Provider (ChangeNotifier)
 1. User taps "Record Sale" on Dashboard
 2. Modal opens: select recipe, enter qty, price auto-fills
 3. Tap "Simpan Rekod"
-4. System: creates `sales` record, deducts inventory stock for each ingredient, creates `stock_movement` entries
+4. System: creates `sales` record, deducts inventory stock for each ingredient, creates `stock_movement` entries, logs to `audit_logs` with `user_id`
 5. Dashboard/Reports refresh with real data
 
 **Restock Flow:**
 1. User taps "Tambah Stok" on inventory item
 2. Dialog: enter qty, purchase price, note
-3. System: weighted-average cost recalculated, stock updated, `stock_movement(type='restock')` recorded
+3. System: weighted-average cost recalculated, stock updated, `stock_movement(type='restock')` recorded, logged to `audit_logs`
 4. Report stock history updates
 
 **Recipe Cost Calculation Flow:**
 1. Recipe screen watches `RecipeProvider` + reads `InventoryProvider`
 2. For each recipe, iterate `ingredients` → look up `costPerUnit` from inventory → `costPerServing = Σ(costPerUnit × quantity)`
 3. `grossProfit = sellingPrice - costPerServing`
+
+### 3.5 Login & Role Flow
+
+```
+App Launch → /login
+     │
+     ▼
+AuthProvider.login(email, password)
+     │
+     ├── Valid credentials → currentUser set → Router redirect → /dashboard
+     │
+     ├── Admin user → 5 bottom tabs visible
+     │   ├── Dashboard: full access
+     │   ├── Inventory: full CRUD (add, restock, view)
+     │   ├── Recipes: full CRUD (add, edit, delete, view)
+     │   ├── Reports: full access
+     │   └── Settings: full access (theme, language, change password, sign out)
+     │
+     └── Staff user → 4 bottom tabs visible (Settings hidden)
+         ├── Dashboard: view + record sale only
+         ├── Inventory: view only (add-FAB hidden, restock disabled)
+         ├── Recipes: view only (add-FAB hidden, edit/delete disabled)
+         └── Reports: view only
+```
+
+### 3.6 Audit Trail Flow
+
+```
+Every mutation action in the app:
+  (addItem, restock, addRecipe, updateRecipe, deleteRecipe, recordSale, changePassword, login, signOut)
+     │
+     ▼
+AuditRepository.addLog(
+  userId,        // who did it
+  user_name,     // display name
+  action,        // "ADD_ITEM", "RESTOCK", "RECORD_SALE", etc.
+  target_type,   // "inventory", "recipe", "sale", "auth"
+  target_id,     // which item/recipe was affected
+  details: {     // JSONB - rich context
+    "item_name": "Matcha Powder",
+    "qty_before": 1000,
+    "qty_after": 300,
+    "qty_change": -700
+  }
+)
+     │
+     ▼
+AuditProvider.allLogs → viewable in Reports → Stock History tab (future: dedicated Audit tab)
+     │
+     ▼
+Audit logs persist in-memory now, in Supabase `audit_logs` table later.
+Each log linked to a `user_id` so you can filter by user, date range, or action type.
+```
+
+### 3.7 Role Access Matrix
+
+| Feature | Admin | Staff |
+|---|---|---|
+| Dashboard (view stats) | Full | Full |
+| Dashboard (record sale) | Full | Full |
+| Inventory (view) | Full | Full |
+| Inventory (add item) | Full | Hidden |
+| Inventory (restock) | Full | Hidden |
+| Recipes (view) | Full | Full |
+| Recipes (add/edit/delete) | Full | Hidden |
+| Reports (view) | Full | Full |
+| Settings tab (bottom nav) | Visible | Hidden |
+| Change password | Full | Hidden |
+| Audit log viewing | Full | Future |
 
 ---
 
