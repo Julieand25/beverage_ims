@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app/app_colors.dart';
 import '../app/translations.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -14,59 +15,46 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
-    const backgroundColor = Color(0xFFF9F9F9);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const primaryGreen = Color(0xFF5BA154);
-    const softGreenBg = Color(0xFFEAF5EA);
-    const softRedBg = Color(0xFFFDF0F0);
-    const softBlueBg = Color(0xFFF0F6FF);
-    const softPurpleBg = Color(0xFFFBF0F9);
     const pinkAccent = Color(0xFFE27387);
-    const textDark = Color(0xFF2C3E50);
-
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: colors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: textDark),
-          onPressed: () {},
-        ),
+        centerTitle: true,
         title: Text(
           t.reportTitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: textDark,
-            fontSize: 20,
+            color: colors.text,
+            fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_outlined, color: textDark),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _TabToggle(
-              selectedIndex: _selectedTab,
-              labels: [
-                t.dailyReport,
-                t.stockHistory,
-                t.monthlySummary,
-              ],
-              onChanged: (index) => setState(() => _selectedTab = index),
-            ),
-            const SizedBox(height: 16),
-            if (_selectedTab == 0) _DailyReport(t: t, primaryGreen: primaryGreen, softGreenBg: softGreenBg, softRedBg: softRedBg, softBlueBg: softBlueBg, softPurpleBg: softPurpleBg, pinkAccent: pinkAccent, textDark: textDark),
-            if (_selectedTab == 1) _StockHistory(t: t, softGreenBg: softGreenBg, softRedBg: softRedBg, textDark: textDark, primaryGreen: primaryGreen),
-            if (_selectedTab == 2) _MonthlySummary(t: t, primaryGreen: primaryGreen, softGreenBg: softGreenBg, softRedBg: softRedBg, textDark: textDark),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TabToggle(
+                selectedIndex: _selectedTab,
+                labels: [
+                  t.dailyReport,
+                  t.stockHistory,
+                  t.monthlySummary,
+                ],
+                onChanged: (index) => setState(() => _selectedTab = index),
+              ),
+              const SizedBox(height: 16),
+              if (_selectedTab == 0) _DailyReport(t: t, primaryGreen: primaryGreen, pinkAccent: pinkAccent),
+              if (_selectedTab == 1) _StockHistory(t: t, primaryGreen: primaryGreen),
+              if (_selectedTab == 2) _MonthlySummary(t: t, primaryGreen: primaryGreen),
+            ],
+          ),
         ),
       ),
     );
@@ -86,9 +74,10 @@ class _TabToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(4),
@@ -112,7 +101,7 @@ class _TabToggle extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.grey,
+                    color: isSelected ? Colors.white : colors.gray,
                   ),
                 ),
               ),
@@ -127,26 +116,17 @@ class _TabToggle extends StatelessWidget {
 class _DailyReport extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
-  final Color softGreenBg;
-  final Color softRedBg;
-  final Color softBlueBg;
-  final Color softPurpleBg;
   final Color pinkAccent;
-  final Color textDark;
 
   const _DailyReport({
     required this.t,
     required this.primaryGreen,
-    required this.softGreenBg,
-    required this.softRedBg,
-    required this.softBlueBg,
-    required this.softPurpleBg,
     required this.pinkAccent,
-    required this.textDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,7 +143,7 @@ class _DailyReport extends StatelessWidget {
             _StatCard(
               icon: Icons.receipt_long,
               iconColor: primaryGreen,
-              bgColor: softGreenBg,
+              bgColor: colors.subtleGreen,
               title: t.dailySales,
               value: 'RM 485.00',
               valueColor: primaryGreen,
@@ -171,7 +151,7 @@ class _DailyReport extends StatelessWidget {
             _StatCard(
               icon: Icons.monetization_on_outlined,
               iconColor: pinkAccent,
-              bgColor: softPurpleBg,
+              bgColor: colors.subtlePurple,
               title: t.dailyCost,
               value: 'RM 198.50',
               valueColor: pinkAccent,
@@ -179,7 +159,7 @@ class _DailyReport extends StatelessWidget {
             _StatCard(
               icon: Icons.trending_up,
               iconColor: primaryGreen,
-              bgColor: softGreenBg,
+              bgColor: colors.subtleGreen,
               title: t.dailyProfit,
               value: 'RM 286.50',
               valueColor: primaryGreen,
@@ -187,7 +167,7 @@ class _DailyReport extends StatelessWidget {
             _StatCard(
               icon: Icons.local_cafe_outlined,
               iconColor: Colors.blue,
-              bgColor: softBlueBg,
+              bgColor: colors.subtleBlue,
               title: t.dailyCups,
               value: '68 ${t.isMs ? "cawan" : "cups"}',
               valueColor: Colors.blue,
@@ -197,10 +177,10 @@ class _DailyReport extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           t.menuRank.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: colors.gray,
           ),
         ),
         const SizedBox(height: 8),
@@ -217,23 +197,24 @@ class _DailyReport extends StatelessWidget {
 class _DateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-          SizedBox(width: 8),
+          Icon(Icons.calendar_today, size: 16, color: colors.gray),
+          const SizedBox(width: 8),
           Text(
             '16 Julai 2026',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
+              color: colors.text,
             ),
           ),
         ],
@@ -261,10 +242,11 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -285,7 +267,7 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(fontSize: 11, color: colors.gray),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -324,6 +306,7 @@ class _BestSellerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     final rankColors = [const Color(0xFFFFD700), const Color(0xFFC0C0C0), const Color(0xFFCD7F32)];
     final rankColor = rank <= 3 ? rankColors[rank - 1] : Colors.grey;
 
@@ -331,7 +314,7 @@ class _BestSellerCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -358,16 +341,16 @@ class _BestSellerCard extends StatelessWidget {
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Color(0xFF2C3E50),
+                color: colors.text,
               ),
             ),
           ),
           Text(
             '$cups cup',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: colors.gray),
           ),
           const SizedBox(width: 16),
           Text(
@@ -386,27 +369,22 @@ class _BestSellerCard extends StatelessWidget {
 
 class _StockHistory extends StatelessWidget {
   final Translations t;
-  final Color softGreenBg;
-  final Color softRedBg;
-  final Color textDark;
   final Color primaryGreen;
 
   const _StockHistory({
     required this.t,
-    required this.softGreenBg,
-    required this.softRedBg,
-    required this.textDark,
     required this.primaryGreen,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Column(
       children: [
         _StockLog(
           icon: Icons.add_circle_outline,
           iconColor: primaryGreen,
-          bgColor: softGreenBg,
+          bgColor: colors.subtleGreen,
           title: '+10000ml Susu UHT',
           subtitle: t.restockEntry,
           timestamp: '16 Julai 2026, 08:00 AM',
@@ -415,7 +393,7 @@ class _StockHistory extends StatelessWidget {
         _StockLog(
           icon: Icons.remove_circle_outline,
           iconColor: Colors.red,
-          bgColor: softRedBg,
+          bgColor: colors.subtleRed,
           title: '-35 cawan Matcha Latte',
           subtitle: t.deductionEntry,
           timestamp: '16 Julai 2026, 10:30 AM',
@@ -424,7 +402,7 @@ class _StockHistory extends StatelessWidget {
         _StockLog(
           icon: Icons.remove_circle_outline,
           iconColor: Colors.red,
-          bgColor: softRedBg,
+          bgColor: colors.subtleRed,
           title: '-20 cawan Milk Tea',
           subtitle: t.deductionEntry,
           timestamp: '16 Julai 2026, 12:15 PM',
@@ -433,7 +411,7 @@ class _StockHistory extends StatelessWidget {
         _StockLog(
           icon: Icons.add_circle_outline,
           iconColor: primaryGreen,
-          bgColor: softGreenBg,
+          bgColor: colors.subtleGreen,
           title: '+500g Matcha Powder',
           subtitle: t.restockEntry,
           timestamp: '15 Julai 2026, 04:00 PM',
@@ -442,7 +420,7 @@ class _StockHistory extends StatelessWidget {
         _StockLog(
           icon: Icons.remove_circle_outline,
           iconColor: Colors.red,
-          bgColor: softRedBg,
+          bgColor: colors.subtleRed,
           title: '-13 cawan Americano',
           subtitle: t.deductionEntry,
           timestamp: '16 Julai 2026, 03:45 PM',
@@ -471,11 +449,12 @@ class _StockLog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -495,16 +474,16 @@ class _StockLog extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Color(0xFF2C3E50),
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(fontSize: 11, color: colors.gray),
                 ),
               ],
             ),
@@ -512,7 +491,7 @@ class _StockLog extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             timestamp,
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
+            style: TextStyle(fontSize: 10, color: colors.gray),
           ),
         ],
       ),
@@ -523,16 +502,10 @@ class _StockLog extends StatelessWidget {
 class _MonthlySummary extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
-  final Color softGreenBg;
-  final Color softRedBg;
-  final Color textDark;
 
   const _MonthlySummary({
     required this.t,
     required this.primaryGreen,
-    required this.softGreenBg,
-    required this.softRedBg,
-    required this.textDark,
   });
 
   @override
@@ -540,9 +513,9 @@ class _MonthlySummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _MonthlyHeader(t: t, primaryGreen: primaryGreen, textDark: textDark),
+        _MonthlyHeader(t: t, primaryGreen: primaryGreen),
         const SizedBox(height: 16),
-        _WeeklyChart(primaryGreen: primaryGreen, softRedBg: softRedBg),
+        _WeeklyChart(primaryGreen: primaryGreen),
         const SizedBox(height: 16),
         _Legend(t: t),
       ],
@@ -553,26 +526,25 @@ class _MonthlySummary extends StatelessWidget {
 class _MonthlyHeader extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
-  final Color textDark;
 
   const _MonthlyHeader({
     required this.t,
     required this.primaryGreen,
-    required this.textDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_month, size: 20, color: Colors.grey),
+          Icon(Icons.calendar_month, size: 20, color: colors.gray),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -580,7 +552,7 @@ class _MonthlyHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: textDark,
+                color: colors.text,
               ),
             ),
           ),
@@ -595,7 +567,7 @@ class _MonthlyHeader extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             t.monthlyRevenue,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
+            style: TextStyle(fontSize: 11, color: colors.gray),
           ),
         ],
       ),
@@ -605,15 +577,14 @@ class _MonthlyHeader extends StatelessWidget {
 
 class _WeeklyChart extends StatelessWidget {
   final Color primaryGreen;
-  final Color softRedBg;
 
   const _WeeklyChart({
     required this.primaryGreen,
-    required this.softRedBg,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     final weeks = [
       ('Mng 1', 0.85, 0.35),
       ('Mng 2', 0.70, 0.30),
@@ -625,7 +596,7 @@ class _WeeklyChart extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -653,7 +624,7 @@ class _WeeklyChart extends StatelessWidget {
                           width: 18,
                           height: 100 * w.$3,
                           decoration: BoxDecoration(
-                            color: softRedBg,
+                            color: colors.subtleRed,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -663,7 +634,7 @@ class _WeeklyChart extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     w.$1,
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(fontSize: 11, color: colors.gray),
                   ),
                 ],
               );
@@ -701,6 +672,7 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Row(
       children: [
         Container(
@@ -714,7 +686,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
+          style: TextStyle(fontSize: 11, color: colors.gray),
         ),
       ],
     );

@@ -7,6 +7,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color gray;
   final Color border;
   final Color inputBg;
+  final Color subtleGreen;
+  final Color subtleRed;
+  final Color subtleBlue;
+  final Color subtlePurple;
 
   const AppColors({
     required this.background,
@@ -15,6 +19,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.gray,
     required this.border,
     required this.inputBg,
+    required this.subtleGreen,
+    required this.subtleRed,
+    required this.subtleBlue,
+    required this.subtlePurple,
   });
 
   static const light = AppColors(
@@ -24,6 +32,10 @@ class AppColors extends ThemeExtension<AppColors> {
     gray: Color(0xFF9E9E9E),
     border: Color(0xFFEEEEEE),
     inputBg: Color(0xFFFAFAFA),
+    subtleGreen: Color(0xFFEAF5EA),
+    subtleRed: Color(0xFFFDF0F0),
+    subtleBlue: Color(0xFFF0F6FF),
+    subtlePurple: Color(0xFFFBF0F9),
   );
 
   static const dark = AppColors(
@@ -33,6 +45,10 @@ class AppColors extends ThemeExtension<AppColors> {
     gray: Color(0xFF9E9E9E),
     border: Color(0xFF3D3D5C),
     inputBg: Color(0xFF252540),
+    subtleGreen: Color(0xFF1B3A1B),
+    subtleRed: Color(0xFF3A1B1B),
+    subtleBlue: Color(0xFF1B2B3A),
+    subtlePurple: Color(0xFF2E1B2E),
   );
 
   @override
@@ -43,6 +59,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? gray,
     Color? border,
     Color? inputBg,
+    Color? subtleGreen,
+    Color? subtleRed,
+    Color? subtleBlue,
+    Color? subtlePurple,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -51,6 +71,10 @@ class AppColors extends ThemeExtension<AppColors> {
       gray: gray ?? this.gray,
       border: border ?? this.border,
       inputBg: inputBg ?? this.inputBg,
+      subtleGreen: subtleGreen ?? this.subtleGreen,
+      subtleRed: subtleRed ?? this.subtleRed,
+      subtleBlue: subtleBlue ?? this.subtleBlue,
+      subtlePurple: subtlePurple ?? this.subtlePurple,
     );
   }
 
@@ -67,6 +91,10 @@ class AppColors extends ThemeExtension<AppColors> {
       gray: Color.lerp(gray, other.gray, t)!,
       border: Color.lerp(border, other.border, t)!,
       inputBg: Color.lerp(inputBg, other.inputBg, t)!,
+      subtleGreen: Color.lerp(subtleGreen, other.subtleGreen, t)!,
+      subtleRed: Color.lerp(subtleRed, other.subtleRed, t)!,
+      subtleBlue: Color.lerp(subtleBlue, other.subtleBlue, t)!,
+      subtlePurple: Color.lerp(subtlePurple, other.subtlePurple, t)!,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app/app_colors.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/models/recipe.dart';
@@ -14,22 +15,21 @@ class RecipeScreen extends StatelessWidget {
     final t = Translations.of(context);
     final recipeProvider = context.watch<RecipeProvider>();
     final inventoryProvider = context.watch<InventoryProvider>();
-    const backgroundColor = Color(0xFFF9F9F9);
-    const textDark = Color(0xFF2C3E50);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const pinkAccent = Color(0xFFFF7B89);
 
     final recipes = recipeProvider.filteredRecipes(inventoryProvider.items);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: colors.background,
         elevation: 0,
         centerTitle: true,
         title: Text(
           t.recipeTitle,
-          style: const TextStyle(
-            color: textDark,
+          style: TextStyle(
+            color: colors.text,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -39,7 +39,6 @@ class RecipeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Add Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
               child: Row(
@@ -61,22 +60,21 @@ class RecipeScreen extends StatelessWidget {
               ),
             ),
 
-            // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                  border: Border.all(color: colors.border),
                 ),
                 child: TextField(
                   onChanged: (v) => recipeProvider.setSearchQuery(v),
                   decoration: InputDecoration(
                     hintText: t.searchRecipe,
-                    hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                    hintStyle: TextStyle(fontSize: 14, color: colors.gray),
+                    prefixIcon: Icon(Icons.search, size: 20, color: colors.gray),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -84,18 +82,15 @@ class RecipeScreen extends StatelessWidget {
               ),
             ),
 
-            // Subtitle
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Text(
                 'Tetapkan sukatan',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: colors.gray),
               ),
             ),
-
             const SizedBox(height: 8),
 
-            // Recipe List
             Expanded(
               child: ClipRect(
                 clipBehavior: Clip.hardEdge,
@@ -103,7 +98,7 @@ class RecipeScreen extends StatelessWidget {
                     ? Center(
                         child: Text(
                           'Tiada resipi dijumpai',
-                          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                          style: TextStyle(color: colors.gray, fontSize: 14),
                         ),
                       )
                     : ListView.builder(
@@ -152,10 +147,10 @@ class RecipeScreen extends StatelessWidget {
   void _showDetailSheet(BuildContext context, Recipe recipe) {
     final t = Translations.of(context);
     final inventory = context.read<InventoryProvider>().items;
+    final colors = Theme.of(context).extension<AppColors>()!;
 
     const primaryPink = Color(0xFFFF6B81);
     const lightPinkBg = Color(0xFFFFF0F2);
-    const textDark = Color(0xFF2C3E50);
 
     showModalBottomSheet(
       context: context,
@@ -173,189 +168,183 @@ class RecipeScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // Handle top bar
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Title Header
-              Text(
-                recipe.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Top Image + Price Card Section
-              Row(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 110,
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Text('🍵', style: TextStyle(fontSize: 48)),
+                      color: colors.gray.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Container(
+                ),
+                const SizedBox(height: 16),
+
+                Text(
+                  recipe.name,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Container(
+                      width: 100,
                       height: 110,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: lightPinkBg,
+                        color: colors.inputBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.sellingPrice,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'RM${recipe.sellingPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: textDark,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 32,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                _showRecipeDialog(context, recipe: recipe);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryPink,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                padding: EdgeInsets.zero,
-                              ),
-                              child: Text(
-                                t.editRecipe,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: const Center(
+                        child: Text('🍵', style: TextStyle(fontSize: 48)),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Ingredients Header
-              Text(
-                '${t.ingredientsTitle} (1 ${t.perCup.trim()})',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Ingredients List
-              ...recipe.ingredients.map((ing) {
-                final item = itemMap[ing.inventoryItemId];
-                if (item == null) return const SizedBox.shrink();
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      const Text('🟢', style: TextStyle(fontSize: 14)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: textDark,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${ing.quantity.toStringAsFixed(0)}${_unitLabel(item.unit)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-
-              const SizedBox(height: 20),
-
-              // Notice Footer Box
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: lightPinkBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
+                    const SizedBox(width: 16),
                     Expanded(
-                      child: Text(
-                        'Resipi ini akan digunakan setiap kali jualan direkod.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                      child: Container(
+                        height: 110,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: lightPinkBg,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              t.sellingPrice,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.gray,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'RM${recipe.sellingPrice.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 32,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  _showRecipeDialog(context, recipe: recipe);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryPink,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                child: Text(
+                                  t.editRecipe,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.favorite,
-                      size: 16,
-                      color: primaryPink,
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                Text(
+                  '${t.ingredientsTitle} (1 ${t.perCup.trim()})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                ...recipe.ingredients.map((ing) {
+                  final item = itemMap[ing.inventoryItemId];
+                  if (item == null) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        const Text('🟢', style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: colors.text,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${ing.quantity.toStringAsFixed(0)}${_unitLabel(item.unit)}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.gray,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 20),
+
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: lightPinkBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Resipi ini akan digunakan setiap kali jualan direkod.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.gray,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.favorite,
+                        size: 16,
+                        color: primaryPink,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -364,6 +353,7 @@ class RecipeScreen extends StatelessWidget {
     final t = Translations.of(context);
     final inventory = context.read<InventoryProvider>().items;
     final recipeProvider = context.read<RecipeProvider>();
+    final colors = Theme.of(context).extension<AppColors>()!;
     final isEdit = recipe != null;
 
     final nameCtrl =
@@ -439,10 +429,10 @@ class RecipeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     t.ingredientsTitle.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: colors.gray,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -539,11 +529,12 @@ class RecipeScreen extends StatelessWidget {
                     ),
                   ),
                   const Divider(height: 20),
-                  _costRow(t.totalCostLabel, cost, Colors.black87),
-                  _costRow(t.sellingPrice, price, const Color(0xFF5BA154)),
+                  _costRow(t.totalCostLabel, cost, colors.gray, Colors.black87),
+                  _costRow(t.sellingPrice, price, colors.gray, const Color(0xFF5BA154)),
                   _costRow(
                     t.grossProfitLabel,
                     profit,
+                    colors.gray,
                     profit >= 0 ? Colors.green : Colors.red,
                   ),
                 ],
@@ -612,16 +603,16 @@ class _RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
+    final colors = Theme.of(context).extension<AppColors>()!;
     final cost = recipe.costPerServing(inventory);
     final profit = recipe.grossProfit(inventory);
-    const textDark = Color(0xFF2C3E50);
     const primaryGreen = Color(0xFF5BA154);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -634,20 +625,20 @@ class _RecipeCard extends StatelessWidget {
               children: [
                 Text(
                   recipe.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: textDark,
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${t.sellingPrice}: RM ${recipe.sellingPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: colors.gray),
                 ),
                 Text(
                   '${t.cost}: RM ${cost.toStringAsFixed(2)}${t.perCup}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: colors.gray),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -662,7 +653,7 @@ class _RecipeCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right, color: Colors.grey),
+            icon: Icon(Icons.chevron_right, color: colors.gray),
             onPressed: onTap,
           ),
           IconButton(
@@ -702,19 +693,19 @@ String _unitLabel(ItemUnit unit) {
   }
 }
 
-Widget _costRow(String label, double value, Color color) {
+Widget _costRow(String label, double value, Color labelColor, Color valueColor) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 2),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 13, color: labelColor)),
         Text(
           'RM ${value.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: color,
+            color: valueColor,
           ),
         ),
       ],

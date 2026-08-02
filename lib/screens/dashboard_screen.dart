@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import '../app/app_colors.dart';
 import '../app/translations.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  // Method to trigger the popup dialog matching your image
-  void _showRecordSaleDialog(BuildContext context, Translations t) {
+  void _showRecordSaleDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -17,273 +17,265 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
-    const backgroundColor = Color(0xFFF9F9F9);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const primaryGreen = Color(0xFF5BA154);
-    const softGreenBg = Color(0xFFEAF5EA);
-    const softRedBg = Color(0xFFFDF0F0);
-    const softBlueBg = Color(0xFFF0F6FF);
-    const softPurpleBg = Color(0xFFFBF0F9);
     const pinkAccent = Color(0xFFE27387);
-    const textDark = Color(0xFF2C3E50);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: colors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: textDark),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_outlined, color: textDark),
-            onPressed: () {},
+        centerTitle: true,
+        title: Text(
+          t.dashboard,
+          style: TextStyle(
+            color: colors.text,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
-        ],
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            t.greeting,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: colors.text,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('👋'),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t.greetingSubtitle,
+                        style: TextStyle(fontSize: 13, color: colors.gray),
+                      ),
+                    ],
+                  ),
+                  const CircleAvatar(
+                    radius: 28,
+                    backgroundImage: AssetImage('assets/character.png'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 3.0,
+                children: [
+                  _StatCard(
+                    icon: Icons.receipt_long,
+                    iconColor: primaryGreen,
+                    bgColor: colors.subtleGreen,
+                    title: t.salesToday,
+                    value: 'RM 485.00',
+                    valueColor: primaryGreen,
+                  ),
+                  _StatCard(
+                    icon: Icons.monetization_on_outlined,
+                    iconColor: pinkAccent,
+                    bgColor: colors.subtlePurple,
+                    title: t.grossProfit,
+                    value: 'RM 286.50',
+                    valueColor: pinkAccent,
+                  ),
+                  _StatCard(
+                    icon: Icons.local_cafe_outlined,
+                    iconColor: const Color(0xFF8E44AD),
+                    bgColor: colors.subtlePurple,
+                    title: t.cupsSold,
+                    value: '68 cup',
+                    valueColor: colors.text,
+                  ),
+                  _StatCard(
+                    icon: Icons.inventory_2_outlined,
+                    iconColor: Colors.blue,
+                    bgColor: colors.subtleBlue,
+                    title: t.inventoryValue,
+                    value: 'RM 1,250.00',
+                    valueColor: Colors.blue,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Column(
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          t.greeting,
-                          style: const TextStyle(
-                            fontSize: 20,
+                          t.stockStatus,
+                          style: TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: textDark,
+                            color: colors.text,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Text('👋'),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Text(
+                            t.viewAll,
+                            style: TextStyle(fontSize: 12, color: colors.text),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.greetingSubtitle,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    const Divider(height: 16, thickness: 0.5),
+                    _StockItemRow(
+                      iconPath: '🥛',
+                      name: 'Susu UHT',
+                      qty: '2 kotak',
+                      statusText: t.nearlyOut,
+                      statusColor: Colors.red,
+                      statusBgColor: colors.subtleRed,
+                    ),
+                    const Divider(height: 16, thickness: 0.5),
+                    _StockItemRow(
+                      iconPath: '🍵',
+                      name: 'Matcha Powder',
+                      qty: '300g',
+                      statusText: t.low,
+                      statusColor: Colors.orange,
+                      statusBgColor: const Color(0xFFFFF3E0),
+                    ),
+                    const Divider(height: 16, thickness: 0.5),
+                    _StockItemRow(
+                      iconPath: '🧋',
+                      name: 'Pearl',
+                      qty: '500g',
+                      statusText: t.nearlyOut,
+                      statusColor: Colors.red,
+                      statusBgColor: colors.subtleRed,
                     ),
                   ],
                 ),
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundImage: AssetImage('assets/character.png'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 3.0,
-              children: [
-                _StatCard(
-                  icon: Icons.receipt_long,
-                  iconColor: primaryGreen,
-                  bgColor: softGreenBg,
-                  title: t.salesToday,
-                  value: 'RM 485.00',
-                  valueColor: primaryGreen,
-                ),
-                _StatCard(
-                  icon: Icons.monetization_on_outlined,
-                  iconColor: pinkAccent,
-                  bgColor: softPurpleBg,
-                  title: t.grossProfit,
-                  value: 'RM 286.50',
-                  valueColor: pinkAccent,
-                ),
-                _StatCard(
-                  icon: Icons.local_cafe_outlined,
-                  iconColor: const Color(0xFF8E44AD),
-                  bgColor: softPurpleBg,
-                  title: t.cupsSold,
-                  value: '68 cup',
-                  valueColor: textDark,
-                ),
-                _StatCard(
-                  icon: Icons.inventory_2_outlined,
-                  iconColor: Colors.blue,
-                  bgColor: softBlueBg,
-                  title: t.inventoryValue,
-                  value: 'RM 1,250.00',
-                  valueColor: Colors.blue,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        t.stockStatus,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: textDark,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          t.viewAll,
-                          style: const TextStyle(fontSize: 12, color: textDark),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(height: 16, thickness: 0.5),
-                  _StockItemRow(
-                    iconPath: '🥛',
-                    name: 'Susu UHT',
-                    qty: '2 kotak',
-                    statusText: t.nearlyOut,
-                    statusColor: Colors.red,
-                    statusBgColor: softRedBg,
-                  ),
-                  Divider(height: 16, thickness: 0.5),
-                  _StockItemRow(
-                    iconPath: '🍵',
-                    name: 'Matcha Powder',
-                    qty: '300g',
-                    statusText: t.low,
-                    statusColor: Colors.orange,
-                    statusBgColor: const Color(0xFFFFF3E0),
-                  ),
-                  Divider(height: 16, thickness: 0.5),
-                  _StockItemRow(
-                    iconPath: '🧋',
-                    name: 'Pearl',
-                    qty: '500g',
-                    statusText: t.nearlyOut,
-                    statusColor: Colors.red,
-                    statusBgColor: softRedBg,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Record Sale Button triggers the Modal Pop-up
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showRecordSaleDialog(context, t),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: Text(
-                  t.recordSale,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showRecordSaleDialog(context),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: Text(
+                    t.recordSale,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        t.bestSellingMenu,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: textDark,
+              Container(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          t.bestSellingMenu,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colors.text,
+                          ),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          t.viewReport,
-                          style: const TextStyle(fontSize: 12, color: textDark),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Text(
+                            t.viewReport,
+                            style: TextStyle(fontSize: 12, color: colors.text),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 16, thickness: 0.5),
-                  SizedBox(
-                    height: 90,
-                    child: Center(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            _TopMenuItemCard(
-                              iconEmoji: '🍵',
-                              title: 'Matcha\nLatte',
-                              count: '35 cup',
-                            ),
-                            SizedBox(width: 10),
-                            _TopMenuItemCard(
-                              iconEmoji: '🧋',
-                              title: 'Milk Tea',
-                              count: '20 cup',
-                            ),
-                            SizedBox(width: 10),
-                            _TopMenuItemCard(
-                              iconEmoji: '☕',
-                              title: 'Americano',
-                              count: '13 cup',
-                            ),
-                          ],
+                      ],
+                    ),
+                    const Divider(height: 16, thickness: 0.5),
+                    SizedBox(
+                      height: 90,
+                      child: Center(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              _TopMenuItemCard(
+                                iconEmoji: '🍵',
+                                title: 'Matcha\nLatte',
+                                count: '35 cup',
+                              ),
+                              SizedBox(width: 10),
+                              _TopMenuItemCard(
+                                iconEmoji: '🧋',
+                                title: 'Milk Tea',
+                                count: '20 cup',
+                              ),
+                              SizedBox(width: 10),
+                              _TopMenuItemCard(
+                                iconEmoji: '☕',
+                                title: 'Americano',
+                                count: '13 cup',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// POPUP DIALOG: Rekod Jualan
-// ---------------------------------------------------------------------------
 class _RecordSaleModal extends StatefulWidget {
   const _RecordSaleModal();
 
@@ -305,13 +297,12 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
 
   @override
   Widget build(BuildContext context) {
-    const textDark = Color(0xFF2C3E50);
-    const borderColor = Color(0xFFE2E8F0);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const saveButtonColor = Color(0xFFFF7B89);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: Colors.white,
+      backgroundColor: colors.card,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -320,16 +311,15 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row with Title and Close Icon
               Stack(
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
                       'Rekod Jualan',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: textDark,
+                        color: colors.text,
                       ),
                     ),
                   ),
@@ -338,9 +328,9 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                     top: -2,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Icon(
+                      child: Icon(
                         Icons.close,
-                        color: Color(0xFFA0AEC0),
+                        color: colors.gray,
                         size: 22,
                       ),
                     ),
@@ -349,28 +339,27 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               ),
               const SizedBox(height: 20),
 
-              // Pilih Menu Label & Dropdown
-              const Text(
+              Text(
                 'Pilih Menu',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: textDark,
+                  color: colors.text,
                 ),
               ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  border: Border.all(color: borderColor),
+                  border: Border.all(color: colors.border),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedMenu,
                     isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF718096)),
-                    style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w500),
+                    icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
+                    style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
                         setState(() {
@@ -393,55 +382,52 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               ),
               const SizedBox(height: 16),
 
-              // Kuantiti Terjual Fields (Quantity + Unit)
-              const Text(
+              Text(
                 'Kuantiti Terjual',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: textDark,
+                  color: colors.text,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  // Quantity Input Field
                   Expanded(
                     flex: 1,
                     child: TextField(
                       controller: quantityController,
                       keyboardType: TextInputType.number,
                       onChanged: (_) => setState(() {}),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: colors.text),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: borderColor),
+                          borderSide: BorderSide(color: colors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: borderColor),
+                          borderSide: BorderSide(color: colors.border),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Unit Dropdown Field
                   Expanded(
                     flex: 1,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        border: Border.all(color: borderColor),
+                        border: Border.all(color: colors.border),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedUnit,
                           isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF718096)),
-                          style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w500),
+                          icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
+                          style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                           onChanged: (String? newValue) {
                             if (newValue != null) {
                               setState(() {
@@ -464,13 +450,12 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               ),
               const SizedBox(height: 16),
 
-              // Harga Jual Seunit Field
-              const Text(
+              Text(
                 'Harga Jual Seunit (RM)',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: textDark,
+                  color: colors.text,
                 ),
               ),
               const SizedBox(height: 8),
@@ -478,24 +463,23 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                 controller: priceController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: (_) => setState(() {}),
-                style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
+                style: TextStyle(fontWeight: FontWeight.bold, color: colors.text),
                 decoration: InputDecoration(
-                  fillColor: const Color(0xFFF7FAFC),
+                  fillColor: colors.inputBg,
                   filled: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: borderColor),
+                    borderSide: BorderSide(color: colors.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: borderColor),
+                    borderSide: BorderSide(color: colors.border),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Total Calculation Container (Jumlah Jualan)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -507,21 +491,21 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Jumlah Jualan',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF718096),
+                        color: colors.gray,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'RM ${totalSales.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: textDark,
+                        color: colors.text,
                       ),
                     ),
                   ],
@@ -529,7 +513,6 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               ),
               const SizedBox(height: 20),
 
-              // Save Button (Simpan Rekod)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -556,7 +539,6 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               ),
               const SizedBox(height: 16),
 
-              // Automatic Stock Deduction Notice Container
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -600,9 +582,6 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// EXISTING HELPER WIDGETS
-// ---------------------------------------------------------------------------
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -622,10 +601,11 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -646,7 +626,7 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(fontSize: 11, color: colors.gray),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -687,6 +667,7 @@ class _StockItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Row(
       children: [
         Expanded(
@@ -698,10 +679,10 @@ class _StockItemRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Color(0xFF2C3E50),
+                    color: colors.text,
                   ),
                 ),
               ),
@@ -712,7 +693,7 @@ class _StockItemRow extends StatelessWidget {
           flex: 2,
           child: Text(
             qty,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: colors.gray),
           ),
         ),
         Expanded(
@@ -751,6 +732,7 @@ class _TopMenuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return SizedBox(
       width: 130,
       child: Card(
@@ -771,17 +753,17 @@ class _TopMenuItemCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
+                        color: colors.text,
                         height: 1.1,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       count,
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      style: TextStyle(fontSize: 11, color: colors.gray),
                     ),
                   ],
                 ),
