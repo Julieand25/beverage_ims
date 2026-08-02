@@ -418,6 +418,8 @@ lib/
 │   └── widgets/
 │       └── app_shell.dart          # BottomNavigationBar scaffold
 ├── screens/
+│   ├── login_screen.dart
+│   ├── change_password_screen.dart
 │   ├── dashboard_screen.dart
 │   ├── inventory_screen.dart
 │   ├── recipe_screen.dart
@@ -430,25 +432,71 @@ lib/
 ### 4.2 Recommended Implementation Roadmap
 
 | Phase | Tasks |
-|-------|-------|
-| **P1: Database Layer** | Add `sqflite` (or `drift`) dependency. Create `DatabaseService` singleton. Implement schema creation & migrations. Create repository pattern (`InventoryRepository`, `RecipeRepository`, `SalesRepository`, `StockMovementRepository`). |
-| **P2: Provider Refactor** | Replace hardcoded data with DB calls. Refactor `InventoryProvider` to load from DB, write through repository. Refactor `RecipeProvider` similarly. Add `SalesProvider` and `StockMovementProvider`. |
-| **P3: Sales Module** | Implement actual sales recording in dashboard modal. Auto-deduct inventory on sale. Create `stock_movements` on sale. Connect to real data. |
-| **P4: Reports** | Replace hardcoded numbers with real queries from `sales` + `stock_movements` tables. Implement daily report aggregation. Stock history timeline from `stock_movements`. Monthly summary with real weekly aggregation. |
-| **P5: Polish** | Empty `providers/` and `widgets/` directories cleanup. Add loading/empty states. Error handling for DB operations. |
+|---|---|
+| **P0: Auth + Roles** | User model (`User` + `UserRole` enum). AuthRepository interface + `InMemoryAuthRepository`. `AuthProvider` (login/logout/session). Router guard (redirect unauthenticated to `/login`). Wire up `LoginScreen`, `SettingsScreen` sign-out, `ChangePasswordScreen`. Role-based bottom navigation (`AppShell` hides Settings tab for staff). `InventoryScreen`/`RecipeScreen` hide add/edit for staff. |
+| **P1: Audit Trail** | `AuditLog` model. AuditRepository interface + `InMemoryAuditRepository`. `AuditProvider`. Patch `InventoryProvider` to log `ADD_ITEM`/`RESTOCK`. Patch `RecipeProvider` to log `ADD_RECIPE`/`EDIT_RECIPE`/`DELETE_RECIPE`. Wire record-sale to log `RECORD_SALE`. Wire auth actions to log `LOGIN`/`SIGN_OUT`/`CHANGE_PASSWORD`. |
+| **P2: Repository Pattern Refactor** | Extract `InventoryRepository` & `RecipeRepository` as abstract classes. Move seed data to `InMemoryInventoryRepository` & `InMemoryRecipeRepository`. Providers call repo methods. Zero behavior change — purely architectural. |
+| **P3: Sales Module** | Implement real sale recording: deduct stock per recipe ingredients, create `stock_movements`, compute totals. Wire dashboard modal "Simpan" button. Dashboard stat cards computed from real data (not hardcoded). |
+| **P4: Reports from Real Data** | Replace hardcoded dashboard/report numbers with computed data from providers. Daily report aggregation from sales. Stock history timeline from stock_movements + audit_logs. |
+| **P5: Supabase Migration** | Add `supabase_flutter` dependency. Create `SupabaseAuthRepository`, `SupabaseInventoryRepository`, `SupabaseRecipeRepository`, `SupabaseAuditRepository`. Swap 4 lines in `app.dart`. Zero UI/screen changes. Deploy Supabase tables via migration SQL. |
 
-### 4.3 Technology Choices (Recommended)
+### 4.3 Technology Choices
 
 | Concern | Current | Recommended |
-|---------|---------|-------------|
+|---|---|---|
 | State Management | Provider | Provider (keep — sufficient for this scale) |
-| Database | None | `sqflite` (local SQLite) or `drift` (type-safe ORM) |
-| Routing | go_router | Keep |
-| Persistence | SharedPreferences | Keep for theme/locale; DB for business data |
-| Architecture | Flat (app/ + screens/) | Add repository layer + services/ |
+| Database | None (in-memory) | In-memory via repository pattern now; Supabase PostgreSQL later |
+| Routing | go_router | Keep — add `redirect` guard for auth |
+| Persistence | SharedPreferences | Keep for theme/locale/session; business data via repository |
+| Architecture | Flat (app/ + screens/) | Repository pattern (abstraction layer between providers and data) |
+| Auth | None | Custom in-memory now; Supabase Auth later |
 | Testing | None | Add unit tests for providers + integration tests |
 
-### 4.4 Target Folder Structure
+### 4.4 Repository Pattern Architecture (Supabase-Ready)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Screens / UI                                            │
+│  (LoginScreen, InventoryScreen, DashboardScreen, etc.)   │
+│       ↕ context.watch / context.read                      │
+├──────────────────────────────────────────────────────────┤
+│  Providers (ChangeNotifier)                              │
+│  AuthProvider, InventoryProvider, RecipeProvider, etc.   │
+│       ↕ call repository methods                           │
+├──────────────────────────────────────────────────────────┤
+│  Repository Interface (abstract class)                   │
+│  AuthRepository, InventoryRepository, RecipeRepository   │
+│       ↕                                                   │
+│  ┌──────────────────────┐  ┌─────────────────────────┐   │
+│  │ InMemoryRepository    │  │ SupabaseRepository      │   │
+│  │ (built NOW)           │  │ (built LATER)           │   │
+│  │ List<> + SharedPrefs  │  │ supabase_flutter client │   │
+│  └──────────────────────┘  └─────────────────────────┘   │
+└──────────────────────────────────────────────────────────┘
+
+Key benefit: When ready for Supabase, swap 4 lines in app.dart.
+Zero changes to providers, screens, or router.
+```
+
+### 4.5 How Supabase Migration Works (Future)
+
+```
+Step 1: Add dependency    →  supabase_flutter
+Step 2: Write 4 classes   →  SupabaseAuthRepository implements AuthRepository
+                              SupabaseInventoryRepository implements InventoryRepository
+                              SupabaseRecipeRepository implements RecipeRepository
+                              SupabaseAuditRepository implements AuditRepository
+Step 3: Swap in app.dart  →  // Was:
+                              AuthProvider(InMemoryAuthRepository())
+                              InventoryProvider(InMemoryInventoryRepository())
+                              // Becomes:
+                              AuthProvider(SupabaseAuthRepository(client))
+                              InventoryProvider(SupabaseInventoryRepository(client))
+Step 4: Run migration SQL  →  Deploy 7 tables via Supabase dashboard
+Step 5: Done                →  Zero UI changes. All data now in PostgreSQL.
+```
+
+### 4.6 Target Folder Structure
 
 ```
 lib/
@@ -459,18 +507,26 @@ lib/
 │   ├── locale_provider.dart
 │   ├── inventory_provider.dart
 │   ├── recipe_provider.dart
-│   ├── sales_provider.dart              # NEW
+│   ├── auth_provider.dart                   # NEW
+│   ├── audit_provider.dart                  # NEW
 │   ├── translations.dart
-│   ├── models/                          (keep)
-│   ├── router/                          (keep)
-│   ├── widgets/                         (keep)
-│   └── database/
-│       ├── database_service.dart        # NEW - DB connection + schema
-│       ├── inventory_repository.dart    # NEW
-│       ├── recipe_repository.dart       # NEW
-│       ├── sales_repository.dart        # NEW
-│       └── stock_movement_repository.dart # NEW
+│   ├── models/
+│   │   ├── inventory_item.dart
+│   │   ├── recipe.dart
+│   │   ├── user.dart                        # NEW
+│   │   └── audit_log.dart                   # NEW
+│   ├── router/
+│   │   └── router.dart
+│   ├── widgets/
+│   │   └── app_shell.dart
+│   └── repositories/                        # NEW directory
+│       ├── auth_repository.dart             # NEW (abstract + InMemory)
+│       ├── inventory_repository.dart        # NEW (abstract + InMemory)
+│       ├── recipe_repository.dart           # NEW (abstract + InMemory)
+│       └── audit_repository.dart            # NEW (abstract + InMemory)
 ├── screens/
+│   ├── login_screen.dart
+│   ├── change_password_screen.dart
 │   ├── dashboard_screen.dart
 │   ├── inventory_screen.dart
 │   ├── recipe_screen.dart
