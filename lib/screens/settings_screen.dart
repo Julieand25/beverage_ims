@@ -59,12 +59,15 @@ class SettingsScreen extends StatelessWidget {
                   color: colors.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: SwitchListTile(
-                  title: Text(t.theme),
-                  subtitle: Text(themeProvider.isDark ? t.dark : t.light),
-                  value: themeProvider.isDark,
-                  activeThumbColor: primaryGreen,
-                  onChanged: (value) => themeProvider.setDarkMode(value),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    title: Text(t.theme),
+                    subtitle: Text(themeProvider.isDark ? t.dark : t.light),
+                    value: themeProvider.isDark,
+                    activeThumbColor: primaryGreen,
+                    onChanged: (value) => themeProvider.setDarkMode(value),
+                  ),
                 ),
               ),
             ),
