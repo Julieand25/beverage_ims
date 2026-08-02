@@ -122,6 +122,8 @@ class Translations {
   String get nameHint => isMs ? 'Masukkan nama' : 'Enter name';
   String get staffRegistered =>
       isMs ? 'Pekerja berjaya didaftarkan' : 'Staff registered successfully';
+  String get aboutApp =>
+      isMs ? 'Tentang Aplikasi' : 'About App';
   String get viewAuditLogs =>
       isMs ? 'Lihat Log Audit' : 'View Audit Logs';
   String get edit => isMs ? 'Ubah' : 'Edit';

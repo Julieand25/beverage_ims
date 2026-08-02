@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../../screens/about_screen.dart';
 import '../../screens/audit_log_screen.dart';
 import '../../screens/change_password_screen.dart';
 import '../../screens/dashboard_screen.dart';
@@ -35,6 +36,10 @@ GoRouter createRouter({required bool isLoggedIn}) {
       GoRoute(
         path: '/audit-logs',
         builder: (context, state) => const AuditLogScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

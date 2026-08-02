@@ -14,6 +14,8 @@ class AuditLogScreen extends StatefulWidget {
 }
 
 class _AuditLogScreenState extends State<AuditLogScreen> {
+  DateTime? _selectedDate;
+
   @override
   void initState() {
     super.initState();
@@ -22,11 +24,31 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
     });
   }
 
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final provider = context.watch<AuditProvider>();
     final colors = Theme.of(context).extension<AppColors>()!;
+
+    final filteredLogs = _selectedDate == null
+        ? provider.logs
+        : provider.logs.where((log) {
+            return log.timestamp.year == _selectedDate!.year &&
+                log.timestamp.month == _selectedDate!.month &&
+                log.timestamp.day == _selectedDate!.day;
+          }).toList();
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -46,26 +68,67 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             fontSize: 18,
           ),
         ),
+        actions: [
+          GestureDetector(
+            onTap: () => _pickDate(context),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(Icons.calendar_today, size: 20, color: colors.text),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
-        child: provider.logs.isEmpty
-            ? Center(
-                child: Text(
-                  t.isMs ? 'Tiada rekod audit' : 'No audit records',
-                  style: TextStyle(color: colors.gray, fontSize: 14),
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: () => provider.loadAll(),
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: provider.logs.length,
-                  itemBuilder: (context, index) {
-                    final log = provider.logs[index];
-                    return _AuditLogCard(log: log);
-                  },
+        child: Column(
+          children: [
+            if (_selectedDate != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: colors.card,
+                child: Row(
+                  children: [
+                    Icon(Icons.date_range, size: 16, color: colors.gray),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}',
+                      style: TextStyle(fontSize: 13, color: colors.text, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${filteredLogs.length} ${t.isMs ? "rekod" : "records"})',
+                      style: TextStyle(fontSize: 12, color: colors.gray),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => setState(() => _selectedDate = null),
+                      child: Icon(Icons.close, size: 18, color: colors.gray),
+                    ),
+                  ],
                 ),
               ),
+            Expanded(
+              child: filteredLogs.isEmpty
+                  ? Center(
+                      child: Text(
+                        t.isMs ? 'Tiada rekod audit' : 'No audit records',
+                        style: TextStyle(color: colors.gray, fontSize: 14),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => provider.loadAll(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: filteredLogs.length,
+                        itemBuilder: (context, index) {
+                          final log = filteredLogs[index];
+                          return _AuditLogCard(log: log);
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
