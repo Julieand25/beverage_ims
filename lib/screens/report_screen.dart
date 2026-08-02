@@ -177,7 +177,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: Colors.blue,
               bgColor: colors.subtleBlue,
               title: t.dailyCups,
-              value: '${sales.todayCups} ${t.isMs ? "cawan" : "cups"}',
+              value: '${sales.todayCups} ${t.cupsUnit}',
               valueColor: Colors.blue,
             ),
           ],
@@ -192,7 +192,7 @@ class _DailyReport extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
-              t.isMs ? 'Tiada jualan hari ini' : 'No sales today',
+              t.noSalesToday,
               style: TextStyle(fontSize: 13, color: colors.gray),
             ),
           )
@@ -327,6 +327,7 @@ class _BestSellerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     final colors = Theme.of(context).extension<AppColors>()!;
     final rankColors = [const Color(0xFFFFD700), const Color(0xFFC0C0C0), const Color(0xFFCD7F32)];
     final rankColor = rank <= 3 ? rankColors[rank - 1] : colors.gray;
@@ -370,7 +371,7 @@ class _BestSellerCard extends StatelessWidget {
             ),
           ),
           Text(
-            '$cups cup',
+            '$cups ${t.cupUnit}',
             style: TextStyle(fontSize: 12, color: colors.gray),
           ),
           const SizedBox(width: 16),
@@ -409,7 +410,7 @@ class _StockHistory extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 32),
           child: Text(
-            t.isMs ? 'Tiada rekod stok' : 'No stock records',
+            t.noStockRecords,
             style: TextStyle(fontSize: 13, color: colors.gray),
           ),
         ),
@@ -419,7 +420,7 @@ class _StockHistory extends StatelessWidget {
     return Column(
       children: movements.map((m) {
         final isRestock = m['type'] == 'restock';
-        final itemName = m['inventory_items']?['name'] ?? 'Unknown';
+        final itemName = m['inventory_items']?['name'] ?? t.unknownItem;
         final qty = (m['quantity'] as num).toDouble();
         final movedAt = DateTime.parse(m['moved_at'] as String);
         final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';

@@ -124,7 +124,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: const Color(0xFF8E44AD),
                     bgColor: colors.subtlePurple,
                     title: t.cupsSold,
-                    value: '${sales.todayCups} ${t.isMs ? "cawan" : "cups"}',
+                    value: '${sales.todayCups} ${t.cupsUnit}',
                     valueColor: colors.text,
                   ),
                   _StatCard(
@@ -172,7 +172,7 @@ class DashboardScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          t.isMs ? 'Semua stok mencukupi' : 'All stock sufficient',
+                          t.allStockSufficient,
                           style: TextStyle(fontSize: 13, color: colors.gray),
                         ),
                       )
@@ -264,7 +264,7 @@ class DashboardScreen extends StatelessWidget {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 30),
                                       child: Text(
-                                        t.isMs ? 'Tiada jualan hari ini' : 'No sales today',
+                                        t.noSalesToday,
                                         style: TextStyle(fontSize: 12, color: colors.gray),
                                       ),
                                     )
@@ -278,7 +278,7 @@ class DashboardScreen extends StatelessWidget {
                                         _TopMenuItemCard(
                                           iconEmoji: emoji,
                                           title: name,
-                                          count: '$cups ${t.isMs ? "cawan" : "cup"}',
+                                          count: '$cups ${t.cupUnit}',
                                         ),
                                         if (b != sales.bestSellers.last) const SizedBox(width: 10),
                                       ],
@@ -349,7 +349,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                 children: [
                   Center(
                     child: Text(
-                      'Rekod Jualan',
+                        t.recordSaleTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -370,7 +370,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               const SizedBox(height: 20),
 
               Text(
-                'Pilih Menu',
+                t.selectMenu,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
@@ -384,7 +384,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                   child: DropdownButton<String>(
                     value: _selectedRecipeId,
                     isExpanded: true,
-                    hint: Text(t.isMs ? 'Pilih menu...' : 'Select menu...', style: TextStyle(fontSize: 14, color: colors.gray)),
+                    hint: Text(t.selectMenuHint, style: TextStyle(fontSize: 14, color: colors.gray)),
                     icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
                     style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                     onChanged: (String? newValue) {
@@ -402,7 +402,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               const SizedBox(height: 16),
 
               Text(
-                'Kuantiti Terjual',
+                t.qtySold,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
@@ -461,7 +461,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               const SizedBox(height: 16),
 
               Text(
-                'Harga Jual Seunit (RM)',
+                t.unitPriceLabel,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
@@ -498,7 +498,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Jumlah Jualan',
+                      t.totalSalesLabel,
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.gray),
                     ),
                     const SizedBox(height: 4),
@@ -551,9 +551,9 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                           width: 20, height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text(
-                          'Simpan Rekod',
-                          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                      : Text(
+                          t.saveRecord,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
@@ -577,10 +577,10 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                       child: const Icon(Icons.check, size: 14, color: Color(0xFF319795)),
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Stok bahan akan ditolak mengikut resipi secara automatik.',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2C7A7B)),
+                        t.autoDeductNotice,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2C7A7B)),
                       ),
                     ),
                   ],

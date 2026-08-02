@@ -142,7 +142,7 @@ class SettingsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'Account',
+                t.account,
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
               ),
             ),

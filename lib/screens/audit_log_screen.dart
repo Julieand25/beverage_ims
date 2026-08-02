@@ -96,7 +96,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '(${filteredLogs.length} ${t.isMs ? "rekod" : "records"})',
+                      '(${filteredLogs.length} ${t.recordsUnit})',
                       style: TextStyle(fontSize: 12, color: colors.gray),
                     ),
                     const Spacer(),
@@ -110,8 +110,8 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             Expanded(
               child: filteredLogs.isEmpty
                   ? Center(
-                      child: Text(
-                        t.isMs ? 'Tiada rekod audit' : 'No audit records',
+                child: Text(
+                  t.emptyAudit,
                         style: TextStyle(color: colors.gray, fontSize: 14),
                       ),
                     )

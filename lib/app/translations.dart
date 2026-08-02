@@ -157,4 +157,59 @@ class Translations {
   String get language => isMs ? 'Bahasa' : 'Language';
   String get malay => 'Melayu';
   String get english => isMs ? 'Inggeris' : 'English';
+  String get account => isMs ? 'Akaun' : 'Account';
+  String get recordSaleTitle =>
+      isMs ? 'Rekod Jualan' : 'Record Sale';
+  String get selectMenu => isMs ? 'Pilih Menu' : 'Select Menu';
+  String get selectMenuHint =>
+      isMs ? 'Pilih menu...' : 'Select menu...';
+  String get qtySold =>
+      isMs ? 'Kuantiti Terjual' : 'Quantity Sold';
+  String get unitPriceLabel =>
+      isMs ? 'Harga Jual Seunit (RM)' : 'Unit Price (RM)';
+  String get totalSalesLabel =>
+      isMs ? 'Jumlah Jualan' : 'Total Sales';
+  String get saveRecord =>
+      isMs ? 'Simpan Rekod' : 'Save Record';
+  String get autoDeductNotice =>
+      isMs ? 'Stok bahan akan ditolak mengikut resipi secara automatik.' : 'Stock will be deducted automatically per recipe.';
+  String get emptyInventory =>
+      isMs ? 'Tiada barang dijumpai' : 'No items found';
+  String get emptyRecipe =>
+      isMs ? 'Tiada resipi dijumpai' : 'No recipes found';
+  String get allStockSufficient =>
+      isMs ? 'Semua stok mencukupi' : 'All stock sufficient';
+  String get noSalesToday =>
+      isMs ? 'Tiada jualan hari ini' : 'No sales today';
+  String get noStockRecords =>
+      isMs ? 'Tiada rekod stok' : 'No stock records';
+  String get emptyAudit =>
+      isMs ? 'Tiada rekod audit' : 'No audit records';
+  String get chooseIngredient =>
+      isMs ? 'Pilih Bahan' : 'Select Ingredient';
+  String get quantity =>
+      isMs ? 'Kuantiti' : 'Quantity';
+  String get purchasePriceLabel =>
+      isMs ? 'Harga Beli Seunit (RM)' : 'Purchase Price Per Unit (RM)';
+  String get purchaseDate =>
+      isMs ? 'Tarikh Beli' : 'Purchase Date';
+  String get noteOptional =>
+      isMs ? 'Nota (pilihan)' : 'Note (optional)';
+  String get loginError =>
+      isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password';
+  String get wrongPassword =>
+      isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect';
+  String get fillAllFields =>
+      isMs ? 'Sila isi semua ruangan' : 'Please fill all fields';
+  String get cupsUnit => isMs ? 'cawan' : 'cups';
+  String get cupUnit => isMs ? 'cawan' : 'cup';
+  String get recordsUnit => isMs ? 'rekod' : 'records';
+  String get unknownItem =>
+      isMs ? 'Tidak Diketahui' : 'Unknown';
+  String get recipeNote =>
+      isMs ? 'Resipi ini akan digunakan setiap kali jualan direkod.' : 'This recipe will be used each time a sale is recorded.';
+  String get setMeasurement =>
+      isMs ? 'Tetapkan sukatan' : 'Set Measurement';
+  String get selectHint =>
+      isMs ? 'Pilih...' : 'Select...';
 }

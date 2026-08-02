@@ -68,11 +68,11 @@ class InventoryScreen extends StatelessWidget {
                         provider.setCategory(ItemCategory.lain);
                     }
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem<String>(value: '_all', child: Text('Semua')),
-                    PopupMenuItem<String>(value: 'bahan', child: Text('Bahan')),
-                    PopupMenuItem<String>(value: 'pembungkusan', child: Text('Pembungkusan')),
-                    PopupMenuItem<String>(value: 'lain', child: Text('Lain-lain')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem<String>(value: '_all', child: Text(t.all)),
+                    PopupMenuItem<String>(value: 'bahan', child: Text(t.ingredients)),
+                    PopupMenuItem<String>(value: 'pembungkusan', child: Text(t.packaging)),
+                    PopupMenuItem<String>(value: 'lain', child: Text(t.others)),
                   ],
                 ),
                 const SizedBox(width: 12),
@@ -122,7 +122,7 @@ class InventoryScreen extends StatelessWidget {
               child: provider.filteredItems.isEmpty
                   ? Center(
                       child: Text(
-                        'Tiada barang dijumpai',
+                        t.emptyInventory,
                         style: TextStyle(color: colors.gray, fontSize: 14),
                       ),
                     )
@@ -286,6 +286,7 @@ class _RestockDialogState extends State<_RestockDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     final provider = context.watch<InventoryProvider>();
     final colors = Theme.of(context).extension<AppColors>()!;
     const primaryGreen = Color(0xFF5BA154);
@@ -305,7 +306,7 @@ class _RestockDialogState extends State<_RestockDialog> {
               children: [
                 const SizedBox(width: 24),
                 Text(
-                  'Tambah Stok',
+                  t.addStock,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -321,7 +322,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 18),
 
             Text(
-              'Pilih Bahan',
+              t.chooseIngredient,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -355,7 +356,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              'Kuantiti',
+              t.quantity,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -416,7 +417,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              'Harga Beli Seunit (RM)',
+              t.purchasePriceLabel,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -441,7 +442,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              'Tarikh Beli',
+              t.purchaseDate,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -481,7 +482,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              'Nota (pilihan)',
+              t.noteOptional,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -533,9 +534,9 @@ class _RestockDialogState extends State<_RestockDialog> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Simpan',
-                  style: TextStyle(
+                child: Text(
+                  t.save,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -556,6 +557,7 @@ class _InventoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     final colors = Theme.of(context).extension<AppColors>()!;
     const softGreenBg = Color(0xFFE8F5E9);
     const textGreen = Color(0xFF4CAF50);
@@ -565,7 +567,7 @@ class _InventoryCard extends StatelessWidget {
     final isLow = item.isLowStock;
     final statusBgColor = isLow ? softOrangeBg : softGreenBg;
     final statusTextColor = isLow ? textOrange : textGreen;
-    final statusText = isLow ? 'Rendah' : 'Cukup';
+    final statusText = isLow ? t.lowStock : t.sufficient;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

@@ -88,7 +88,7 @@ class RecipeScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Text(
-                'Tetapkan sukatan',
+                t.setMeasurement,
                 style: TextStyle(fontSize: 13, color: colors.gray),
               ),
             ),
@@ -100,7 +100,7 @@ class RecipeScreen extends StatelessWidget {
                 child: recipes.isEmpty
                     ? Center(
                         child: Text(
-                          'Tiada resipi dijumpai',
+                          t.emptyRecipe,
                           style: TextStyle(color: colors.gray, fontSize: 14),
                         ),
                       )
@@ -280,7 +280,7 @@ class RecipeScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Resipi ini akan digunakan setiap kali jualan direkod.',
+                          t.recipeNote,
                           style: TextStyle(
                             fontSize: 12,
                             color: colors.gray,
@@ -421,7 +421,7 @@ class RecipeScreen extends StatelessWidget {
                                   value: row.itemId,
                                   isDense: true,
                                   isExpanded: true,
-                                  hint: const Text('Pilih...',
+                                      hint: Text(t.selectHint,
                                       style: TextStyle(fontSize: 13)),
                                   items: inventory
                                       .map((i) => DropdownMenuItem(

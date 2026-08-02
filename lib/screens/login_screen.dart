@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          t.isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password',
+                                          t.loginError,
                                         ),
                                         backgroundColor: Colors.red,
                                       ),

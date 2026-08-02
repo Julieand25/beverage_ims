@@ -209,7 +209,7 @@ class _RegisterStaffScreenState extends State<RegisterStaffScreen> {
                       : () async {
                           if (nameCtrl.text.trim().isEmpty || emailCtrl.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t.isMs ? 'Sila isi semua ruangan' : 'Please fill all fields'), backgroundColor: Colors.red),
+                                              SnackBar(content: Text(t.fillAllFields), backgroundColor: Colors.red),
                             );
                             return;
                           }

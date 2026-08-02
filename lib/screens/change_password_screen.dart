@@ -144,7 +144,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(t.isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect'),
+                            content: Text(t.wrongPassword),
                           backgroundColor: Colors.red,
                         ),
                       );
