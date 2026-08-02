@@ -145,7 +145,7 @@ class DashboardScreen extends StatelessWidget {
                           onTap: () => context.go('/inventori'),
                           child: Text(
                             t.viewAll,
-                            style: TextStyle(fontSize: 12, color: colors.text),
+                            style: const TextStyle(fontSize: 12, color: Colors.blue),
                           ),
                         ),
                       ],
@@ -227,10 +227,10 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () => context.go('/laporan'),
                           child: Text(
                             t.viewReport,
-                            style: TextStyle(fontSize: 12, color: colors.text),
+                            style: const TextStyle(fontSize: 12, color: Colors.blue),
                           ),
                         ),
                       ],
