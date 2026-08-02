@@ -9,6 +9,7 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<bool> changePassword(String userId, String currentPassword, String newPassword);
   Future<User?> getStoredSession();
+  Future<User> registerUser(String name, String email, String password, String role);
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -84,5 +85,22 @@ class SupabaseAuthRepository implements AuthRepository {
         .eq('id', userId);
 
     return true;
+  }
+
+  @override
+  Future<User> registerUser(String name, String email, String password, String role) async {
+    final hash = _hashPassword(password);
+    final response = await _client
+        .from('users')
+        .insert({
+          'name': name,
+          'email': email,
+          'password_hash': hash,
+          'role': role,
+        })
+        .select()
+        .single();
+
+    return User.fromJson(response);
   }
 }

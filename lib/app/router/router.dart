@@ -4,6 +4,7 @@ import '../../screens/dashboard_screen.dart';
 import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
+import '../../screens/register_staff_screen.dart';
 import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
@@ -25,6 +26,10 @@ GoRouter createRouter({required bool isLoggedIn}) {
       GoRoute(
         path: '/change-password',
         builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: '/register-staff',
+        builder: (context, state) => const RegisterStaffScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

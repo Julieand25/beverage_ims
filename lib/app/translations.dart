@@ -116,6 +116,12 @@ class Translations {
   String get forgotPassword =>
       isMs ? 'Lupa Kata Laluan?' : 'Forgot Password?';
   String get signOut => isMs ? 'Log Keluar' : 'Sign Out';
+  String get registerStaff =>
+      isMs ? 'Daftar Pekerja' : 'Register Staff';
+  String get name => isMs ? 'Nama' : 'Name';
+  String get nameHint => isMs ? 'Masukkan nama' : 'Enter name';
+  String get staffRegistered =>
+      isMs ? 'Pekerja berjaya didaftarkan' : 'Staff registered successfully';
   String get changePassword =>
       isMs ? 'Tukar Kata Laluan' : 'Change Password';
   String get currentPassword =>

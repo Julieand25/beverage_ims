@@ -78,4 +78,18 @@ class AuthProvider extends ChangeNotifier {
     }
     return success;
   }
+
+  Future<bool> registerStaff(String name, String email, String password) async {
+    if (_currentUser == null || !isAdmin) return false;
+    await _authRepo.registerUser(name, email, password, 'staff');
+    await _auditRepo.addLog(AuditLog(
+      userId: _currentUser!.id,
+      userName: _currentUser!.name,
+      action: 'REGISTER_STAFF',
+      targetType: 'auth',
+      details: {'staff_name': name, 'staff_email': email},
+      timestamp: DateTime.now(),
+    ));
+    return true;
+  }
 }
