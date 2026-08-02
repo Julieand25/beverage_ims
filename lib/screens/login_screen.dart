@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
 import '../app/translations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -158,7 +160,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () => context.go('/dashboard'),
+                          onPressed: () async {
+                            final auth = context.read<AuthProvider>();
+                            final success = await auth.login(
+                              emailController.text.trim(),
+                              passwordController.text,
+                            );
+                            if (success && context.mounted) {
+                              context.go('/dashboard');
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    t.isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryGreen,
                             padding: const EdgeInsets.symmetric(vertical: 14),

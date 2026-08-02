@@ -1,49 +1,18 @@
 import 'package:flutter/material.dart';
-import 'models/inventory_item.dart';
 import 'models/recipe.dart';
+import 'repositories/recipe_repository.dart';
 
 class RecipeProvider extends ChangeNotifier {
-  final List<Recipe> _recipes = [
-    Recipe(
-      id: 'r1',
-      name: 'Matcha Latte',
-      sellingPrice: 8.00,
-      ingredients: [
-        RecipeIngredient(inventoryItemId: '1', quantity: 5),
-        RecipeIngredient(inventoryItemId: '2', quantity: 150),
-        RecipeIngredient(inventoryItemId: '3', quantity: 20),
-        RecipeIngredient(inventoryItemId: '4', quantity: 1),
-        RecipeIngredient(inventoryItemId: '6', quantity: 1),
-      ],
-    ),
-    Recipe(
-      id: 'r2',
-      name: 'Milk Tea',
-      sellingPrice: 6.00,
-      ingredients: [
-        RecipeIngredient(inventoryItemId: '2', quantity: 120),
-        RecipeIngredient(inventoryItemId: '3', quantity: 25),
-        RecipeIngredient(inventoryItemId: '4', quantity: 1),
-        RecipeIngredient(inventoryItemId: '6', quantity: 1),
-      ],
-    ),
-    Recipe(
-      id: 'r3',
-      name: 'Americano',
-      sellingPrice: 5.00,
-      ingredients: [
-        RecipeIngredient(inventoryItemId: '4', quantity: 1),
-        RecipeIngredient(inventoryItemId: '6', quantity: 1),
-      ],
-    ),
-  ];
-
+  final RecipeRepository _repo;
+  List<Recipe> _recipes = [];
   String _searchQuery = '';
+  bool _isLoading = true;
 
+  bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   List<Recipe> get recipes => List.unmodifiable(_recipes);
 
-  List<Recipe> filteredRecipes(List<InventoryItem> inventory) {
+  List<Recipe> filteredRecipes() {
     var result = _recipes;
     if (_searchQuery.isNotEmpty) {
       result = result
@@ -54,40 +23,60 @@ class RecipeProvider extends ChangeNotifier {
     return result;
   }
 
+  RecipeProvider({required RecipeRepository repo}) : _repo = repo {
+    loadAll();
+  }
+
+  Future<void> loadAll() async {
+    _recipes = await _repo.getAll();
+    _isLoading = false;
+    notifyListeners();
+  }
+
   void setSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
   }
 
-  void addRecipe({
+  Future<void> addRecipe({
     required String name,
     required double sellingPrice,
     required List<RecipeIngredient> ingredients,
-  }) {
-    _recipes.add(Recipe(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    required String userId,
+  }) async {
+    final recipe = Recipe(
+      id: '',
       name: name,
       sellingPrice: sellingPrice,
       ingredients: ingredients,
-    ));
+    );
+    final created = await _repo.addRecipe(recipe, userId: userId);
+    _recipes.add(created);
     notifyListeners();
   }
 
-  void updateRecipe({
+  Future<void> updateRecipe({
     required String id,
     required String name,
     required double sellingPrice,
     required List<RecipeIngredient> ingredients,
-  }) {
+  }) async {
+    final recipe = Recipe(
+      id: id,
+      name: name,
+      sellingPrice: sellingPrice,
+      ingredients: ingredients,
+    );
+    final updated = await _repo.updateRecipe(recipe);
     final index = _recipes.indexWhere((r) => r.id == id);
-    if (index == -1) return;
-    _recipes[index].name = name;
-    _recipes[index].sellingPrice = sellingPrice;
-    _recipes[index].ingredients = ingredients;
+    if (index != -1) {
+      _recipes[index] = updated;
+    }
     notifyListeners();
   }
 
-  void deleteRecipe(String id) {
+  Future<void> deleteRecipe(String id) async {
+    await _repo.deleteRecipe(id);
     _recipes.removeWhere((r) => r.id == id);
     notifyListeners();
   }

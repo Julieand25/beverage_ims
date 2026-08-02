@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/models/recipe.dart';
@@ -15,10 +16,11 @@ class RecipeScreen extends StatelessWidget {
     final t = Translations.of(context);
     final recipeProvider = context.watch<RecipeProvider>();
     final inventoryProvider = context.watch<InventoryProvider>();
+    final isAdmin = context.watch<AuthProvider>().isAdmin;
     final colors = Theme.of(context).extension<AppColors>()!;
     const pinkAccent = Color(0xFFFF7B89);
 
-    final recipes = recipeProvider.filteredRecipes(inventoryProvider.items);
+    final recipes = recipeProvider.filteredRecipes();
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -44,6 +46,7 @@ class RecipeScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  if (isAdmin)
                   GestureDetector(
                     onTap: () => _showRecipeDialog(context),
                     child: Container(
@@ -108,8 +111,8 @@ class RecipeScreen extends StatelessWidget {
                           recipe: recipes[index],
                           inventory: inventoryProvider.items,
                           onTap: () => _showDetailSheet(context, recipes[index]),
-                          onDelete: () =>
-                              _confirmDelete(context, recipes[index]),
+                          onDelete: isAdmin ? () =>
+                              _confirmDelete(context, recipes[index]) : null,
                         ),
                       ),
               ),
@@ -133,6 +136,8 @@ class RecipeScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
           TextButton(
             onPressed: () {
+              final auth = context.read<AuthProvider>();
+              if (auth.currentUser == null) return;
               context.read<RecipeProvider>().deleteRecipe(recipe.id);
               Navigator.pop(ctx);
             },
@@ -148,6 +153,7 @@ class RecipeScreen extends StatelessWidget {
     final t = Translations.of(context);
     final inventory = context.read<InventoryProvider>().items;
     final colors = Theme.of(context).extension<AppColors>()!;
+    final isAdmin = context.read<AuthProvider>().isAdmin;
 
     const primaryPink = Color(0xFFFF6B81);
     const lightPinkBg = Color(0xFFFFF0F2);
@@ -235,6 +241,7 @@ class RecipeScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
+                            if (isAdmin)
                             SizedBox(
                               width: double.infinity,
                               height: 32,
@@ -561,6 +568,8 @@ class RecipeScreen extends StatelessWidget {
                   if (ingredients.isEmpty) return;
 
                   if (isEdit) {
+                    final auth = context.read<AuthProvider>();
+                    if (auth.currentUser == null) return;
                     recipeProvider.updateRecipe(
                       id: recipe.id,
                       name: nameCtrl.text.trim(),
@@ -568,10 +577,13 @@ class RecipeScreen extends StatelessWidget {
                       ingredients: ingredients,
                     );
                   } else {
+                    final auth = context.read<AuthProvider>();
+                    if (auth.currentUser == null) return;
                     recipeProvider.addRecipe(
                       name: nameCtrl.text.trim(),
                       sellingPrice: price,
                       ingredients: ingredients,
+                      userId: auth.currentUser!.id,
                     );
                   }
                   Navigator.pop(ctx);
@@ -591,13 +603,13 @@ class _RecipeCard extends StatelessWidget {
   final Recipe recipe;
   final List<InventoryItem> inventory;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
 
   const _RecipeCard({
     required this.recipe,
     required this.inventory,
     required this.onTap,
-    required this.onDelete,
+    this.onDelete,
   });
 
   @override
@@ -656,6 +668,7 @@ class _RecipeCard extends StatelessWidget {
             icon: Icon(Icons.chevron_right, color: colors.gray),
             onPressed: onTap,
           ),
+          if (onDelete != null)
           IconButton(
             icon: const Icon(Icons.delete_outline,
                 size: 20, color: Colors.red),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
 import '../app/translations.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -115,7 +117,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (newPasswordCtrl.text != confirmPasswordCtrl.text) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -125,13 +127,28 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       );
                       return;
                     }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(t.passwordChangedMsg),
-                        backgroundColor: primaryGreen,
-                      ),
+                    final auth = context.read<AuthProvider>();
+                    final success = await auth.changePassword(
+                      currentPasswordCtrl.text,
+                      newPasswordCtrl.text,
                     );
-                    context.pop();
+                    if (!context.mounted) return;
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(t.passwordChangedMsg),
+                          backgroundColor: primaryGreen,
+                        ),
+                      );
+                      context.pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(t.isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,

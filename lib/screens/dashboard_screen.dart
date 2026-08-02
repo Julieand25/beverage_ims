@@ -59,8 +59,6 @@ class DashboardScreen extends StatelessWidget {
                               color: colors.text,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Text('👋'),
                         ],
                       ),
                       const SizedBox(height: 4),

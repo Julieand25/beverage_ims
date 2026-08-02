@@ -11,7 +11,7 @@ class Translations {
   bool get isMs => locale.languageCode == 'ms';
 
   // Dashboard
-  String get greeting => 'Hai, Farisha!';
+  String get greeting => 'Hi Cuyaa Matcha Latte!';
   String get greetingSubtitle =>
       isMs ? 'Semoga jualan hari ini laris!' : 'Hope your sales go well today!';
   String get salesToday => isMs ? 'Jualan Hari Ini' : "Today's Sales";

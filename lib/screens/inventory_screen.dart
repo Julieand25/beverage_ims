@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/translations.dart';
@@ -22,6 +23,8 @@ class InventoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final provider = context.watch<InventoryProvider>();
+    final auth = context.watch<AuthProvider>();
+    final isAdmin = auth.isAdmin;
     final colors = Theme.of(context).extension<AppColors>()!;
     const pinkAccent = Color(0xFFFF7B89);
 
@@ -73,6 +76,7 @@ class InventoryScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: 12),
+                if (isAdmin)
                 GestureDetector(
                   onTap: () => _showAddItemDialog(context),
                   child: Container(
@@ -128,7 +132,7 @@ class InventoryScreen extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final item = provider.filteredItems[index];
                         return GestureDetector(
-                          onTap: () => _showRestockDialog(context, selectedItem: item),
+                          onTap: isAdmin ? () => _showRestockDialog(context, selectedItem: item) : null,
                           child: _InventoryCard(item: item),
                         );
                       },
@@ -211,15 +215,18 @@ class InventoryScreen extends StatelessWidget {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
-              onPressed: () {
+              onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
-                context.read<InventoryProvider>().addItem(
+                final auth = context.read<AuthProvider>();
+                if (auth.currentUser == null) return;
+                await context.read<InventoryProvider>().addItem(
                       name: nameCtrl.text.trim(),
                       category: category,
                       unit: unit,
                       stock: double.tryParse(stockCtrl.text) ?? 0,
                       minStock: double.tryParse(minStockCtrl.text) ?? 0,
                       costPerUnit: double.tryParse(costCtrl.text) ?? 0,
+                      userId: auth.currentUser!.id,
                     );
                 Navigator.pop(ctx);
               },
@@ -500,16 +507,20 @@ class _RestockDialogState extends State<_RestockDialog> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (selectedItemId != null) {
                     final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
                     final cost = double.tryParse(costCtrl.text) ?? 0;
                     if (addedQty > 0) {
-                      provider.restockItem(
-                        itemId: selectedItemId!,
-                        addedQty: addedQty,
-                        totalCost: addedQty * cost,
-                      );
+                      final auth = context.read<AuthProvider>();
+                      if (auth.currentUser != null) {
+                        await provider.restockItem(
+                          itemId: selectedItemId!,
+                          addedQty: addedQty,
+                          totalCost: addedQty * cost,
+                          userId: auth.currentUser!.id,
+                        );
+                      }
                     }
                   }
                   Navigator.of(context).pop();

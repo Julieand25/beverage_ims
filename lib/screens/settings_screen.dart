@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
 import '../app/locale_provider.dart';
 import '../app/theme_provider.dart';
 import '../app/translations.dart';
@@ -166,7 +167,10 @@ class SettingsScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () async {
+                    await context.read<AuthProvider>().logout();
+                    if (context.mounted) context.go('/login');
+                  },
                   icon: const Icon(Icons.logout, size: 20, color: Colors.white),
                   label: Text(
                     t.signOut,

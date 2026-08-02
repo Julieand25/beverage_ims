@@ -1,76 +1,15 @@
 import 'package:flutter/material.dart';
 import 'models/inventory_item.dart';
+import 'repositories/inventory_repository.dart';
 
 class InventoryProvider extends ChangeNotifier {
-  final List<InventoryItem> _items = [
-    InventoryItem(
-      id: '1',
-      name: 'Matcha Powder',
-      category: ItemCategory.bahan,
-      unit: ItemUnit.g,
-      stock: 300,
-      minStock: 500,
-      costPerUnit: 0.065,
-    ),
-    InventoryItem(
-      id: '2',
-      name: 'Susu UHT',
-      category: ItemCategory.bahan,
-      unit: ItemUnit.ml,
-      stock: 2000,
-      minStock: 1000,
-      costPerUnit: 0.008,
-    ),
-    InventoryItem(
-      id: '3',
-      name: 'Sirap Gula',
-      category: ItemCategory.bahan,
-      unit: ItemUnit.ml,
-      stock: 150,
-      minStock: 500,
-      costPerUnit: 0.012,
-    ),
-    InventoryItem(
-      id: '4',
-      name: 'Cawan 16oz',
-      category: ItemCategory.pembungkusan,
-      unit: ItemUnit.unit,
-      stock: 100,
-      minStock: 50,
-      costPerUnit: 0.48,
-    ),
-    InventoryItem(
-      id: '5',
-      name: 'Lids',
-      category: ItemCategory.pembungkusan,
-      unit: ItemUnit.unit,
-      stock: 30,
-      minStock: 100,
-      costPerUnit: 0.12,
-    ),
-    InventoryItem(
-      id: '6',
-      name: 'Straws',
-      category: ItemCategory.pembungkusan,
-      unit: ItemUnit.unit,
-      stock: 500,
-      minStock: 200,
-      costPerUnit: 0.05,
-    ),
-    InventoryItem(
-      id: '7',
-      name: 'Ice / Ais',
-      category: ItemCategory.lain,
-      unit: ItemUnit.kg,
-      stock: 10,
-      minStock: 5,
-      costPerUnit: 1.50,
-    ),
-  ];
-
+  final InventoryRepository _repo;
+  List<InventoryItem> _items = [];
   String _searchQuery = '';
   ItemCategory? _selectedCategory;
+  bool _isLoading = true;
 
+  bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   ItemCategory? get selectedCategory => _selectedCategory;
   List<InventoryItem> get items => List.unmodifiable(_items);
@@ -89,6 +28,16 @@ class InventoryProvider extends ChangeNotifier {
     return result;
   }
 
+  InventoryProvider({required InventoryRepository repo}) : _repo = repo {
+    loadAll();
+  }
+
+  Future<void> loadAll() async {
+    _items = await _repo.getAll();
+    _isLoading = false;
+    notifyListeners();
+  }
+
   void setSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
@@ -99,38 +48,42 @@ class InventoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addItem({
+  Future<InventoryItem?> addItem({
     required String name,
     required ItemCategory category,
     required ItemUnit unit,
     required double stock,
     required double minStock,
     required double costPerUnit,
-  }) {
-    _items.add(InventoryItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    required String userId,
+  }) async {
+    final item = InventoryItem(
+      id: '',
       name: name,
       category: category,
       unit: unit,
       stock: stock,
       minStock: minStock,
       costPerUnit: costPerUnit,
-    ));
+    );
+    final created = await _repo.addItem(item, userId: userId);
+    _items.add(created);
     notifyListeners();
+    return created;
   }
 
-  void restockItem({
+  Future<void> restockItem({
     required String itemId,
     required double addedQty,
     required double totalCost,
-  }) {
+    required String userId,
+  }) async {
+    final updated = await _repo.restockItem(itemId, addedQty, totalCost, userId: userId);
     final index = _items.indexWhere((i) => i.id == itemId);
-    if (index == -1) return;
-    final item = _items[index];
-    final currentValue = item.stock * item.costPerUnit;
-    final newStock = item.stock + addedQty;
-    item.costPerUnit = (currentValue + totalCost) / newStock;
-    item.stock = newStock;
+    if (index != -1) {
+      _items[index].stock = updated.stock;
+      _items[index].costPerUnit = updated.costPerUnit;
+    }
     notifyListeners();
   }
 }
