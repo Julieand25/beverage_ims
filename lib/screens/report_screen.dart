@@ -308,7 +308,7 @@ class _BestSellerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final rankColors = [const Color(0xFFFFD700), const Color(0xFFC0C0C0), const Color(0xFFCD7F32)];
-    final rankColor = rank <= 3 ? rankColors[rank - 1] : Colors.grey;
+    final rankColor = rank <= 3 ? rankColors[rank - 1] : colors.gray;
 
     return Container(
       width: double.infinity,
@@ -653,12 +653,13 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _LegendItem(color: const Color(0xFF5BA154), label: t.legendRevenue),
         const SizedBox(width: 24),
-        _LegendItem(color: const Color(0xFFFDF0F0), label: t.legendCost),
+        _LegendItem(color: colors.subtleRed, label: t.legendCost),
       ],
     );
   }
