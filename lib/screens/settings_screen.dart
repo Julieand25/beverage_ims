@@ -136,6 +136,45 @@ class SettingsScreen extends StatelessWidget {
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(
+                    onTap: () => context.push('/audit-logs'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history, size: 20, color: colors.text),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              t.viewAuditLogs,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, size: 20, color: colors.gray),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            if (context.watch<AuthProvider>().isAdmin)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
                     onTap: () => context.push('/register-staff'),
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
