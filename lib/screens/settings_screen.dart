@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app/app_colors.dart';
 import '../app/locale_provider.dart';
 import '../app/theme_provider.dart';
 import '../app/translations.dart';
@@ -12,74 +13,94 @@ class SettingsScreen extends StatelessWidget {
     final t = Translations.of(context);
     final themeProvider = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
-    const backgroundColor = Color(0xFFF9F9F9);
-    const textDark = Color(0xFF2C3E50);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const primaryGreen = Color(0xFF5BA154);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: colors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: textDark),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_outlined, color: textDark),
-            onPressed: () {},
+        centerTitle: true,
+        title: Text(
+          t.settings,
+          style: TextStyle(
+            color: colors.text,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
-        ],
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              t.appearance,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
+            const SizedBox(height: 8),
+
+            // Appearance header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                t.appearance,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colors.gray,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 8),
+
+            // Theme toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SwitchListTile(
+                  title: Text(t.theme),
+                  subtitle: Text(themeProvider.isDark ? t.dark : t.light),
+                  value: themeProvider.isDark,
+                  activeThumbColor: primaryGreen,
+                  onChanged: (value) => themeProvider.setDarkMode(value),
+                ),
               ),
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    title: Text(t.theme),
-                    subtitle: Text(themeProvider.isDark ? t.dark : t.light),
-                    value: themeProvider.isDark,
-                    activeThumbColor: primaryGreen,
-                    onChanged: (value) => themeProvider.setDarkMode(value),
+            ),
+            const SizedBox(height: 16),
+
+            // Language header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                t.language,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colors.gray,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Language picker
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SegmentedButton<Locale>(
+                segments: [
+                  ButtonSegment(
+                    value: const Locale('ms'),
+                    label: Text(t.malay),
                   ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  ListTile(
-                    title: Text(t.language),
-                    trailing: SegmentedButton<Locale>(
-                      segments: [
-                        ButtonSegment(
-                          value: const Locale('ms'),
-                          label: Text(t.malay),
-                        ),
-                        ButtonSegment(
-                          value: const Locale('en'),
-                          label: Text(t.english),
-                        ),
-                      ],
-                      selected: {localeProvider.locale},
-                      onSelectionChanged: (set) =>
-                          localeProvider.setLocale(set.first),
-                    ),
+                  ButtonSegment(
+                    value: const Locale('en'),
+                    label: Text(t.english),
                   ),
                 ],
+                selected: {localeProvider.locale},
+                onSelectionChanged: (set) =>
+                    localeProvider.setLocale(set.first),
               ),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'app_colors.dart';
 import 'inventory_provider.dart';
 import 'locale_provider.dart';
 import 'recipe_provider.dart';
@@ -30,12 +31,14 @@ class App extends StatelessWidget {
                 brightness: Brightness.light,
               ),
               scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+              extensions: const <ThemeExtension<dynamic>>[AppColors.light],
             ),
             darkTheme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.deepPurple,
                 brightness: Brightness.dark,
               ),
+              extensions: const <ThemeExtension<dynamic>>[AppColors.dark],
             ),
             themeMode: themeProvider.themeMode,
             debugShowCheckedModeBanner: false,
