@@ -1,14 +1,19 @@
 import 'package:go_router/go_router.dart';
 import '../../screens/dashboard_screen.dart';
 import '../../screens/inventory_screen.dart';
+import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
 import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
 
 final router = GoRouter(
-  initialLocation: '/dashboard',
+  initialLocation: '/login',
   routes: [
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),

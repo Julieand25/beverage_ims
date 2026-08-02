@@ -103,6 +103,20 @@ class Translations {
   String get week3 => isMs ? 'Mng 3' : 'Wk 3';
   String get week4 => isMs ? 'Mng 4' : 'Wk 4';
 
+  // Login
+  String get appTitle => 'Beverage IMS';
+  String get appSubtitle =>
+      isMs ? 'Sistem Pengurusan Inventori' : 'Inventory Management System';
+  String get login => isMs ? 'Log Masuk' : 'Login';
+  String get email => isMs ? 'Emel' : 'Email';
+  String get emailHint => isMs ? 'Masukkan emel' : 'Enter email';
+  String get password => isMs ? 'Kata Laluan' : 'Password';
+  String get passwordHint =>
+      isMs ? 'Masukkan kata laluan' : 'Enter password';
+  String get forgotPassword =>
+      isMs ? 'Lupa Kata Laluan?' : 'Forgot Password?';
+  String get signOut => isMs ? 'Log Keluar' : 'Sign Out';
+
   // Settings
   String get appearance => isMs ? 'Penampilan' : 'Appearance';
   String get theme => isMs ? 'Tema' : 'Theme';

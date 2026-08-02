@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
 import '../app/locale_provider.dart';
@@ -104,6 +105,41 @@ class SettingsScreen extends StatelessWidget {
                 selected: {localeProvider.locale},
                 onSelectionChanged: (set) =>
                     localeProvider.setLocale(set.first),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    onTap: () => context.go('/login'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.logout, size: 20, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Text(
+                            t.signOut,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
