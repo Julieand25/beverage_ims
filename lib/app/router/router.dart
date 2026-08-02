@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../../screens/change_password_screen.dart';
 import '../../screens/dashboard_screen.dart';
 import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
@@ -13,6 +14,10 @@ final router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/change-password',
+      builder: (context, state) => const ChangePasswordScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

@@ -116,6 +116,26 @@ class Translations {
   String get forgotPassword =>
       isMs ? 'Lupa Kata Laluan?' : 'Forgot Password?';
   String get signOut => isMs ? 'Log Keluar' : 'Sign Out';
+  String get changePassword =>
+      isMs ? 'Tukar Kata Laluan' : 'Change Password';
+  String get currentPassword =>
+      isMs ? 'Kata Laluan Semasa' : 'Current Password';
+  String get currentPasswordHint =>
+      isMs ? 'Masukkan kata laluan semasa' : 'Enter current password';
+  String get newPassword =>
+      isMs ? 'Kata Laluan Baru' : 'New Password';
+  String get newPasswordHint =>
+      isMs ? 'Masukkan kata laluan baru' : 'Enter new password';
+  String get confirmPassword =>
+      isMs ? 'Sahkan Kata Laluan' : 'Confirm Password';
+  String get confirmPasswordHint =>
+      isMs ? 'Sahkan kata laluan baru' : 'Confirm new password';
+  String get passwordMismatch =>
+      isMs ? 'Kata laluan tidak sepadan' : 'Passwords do not match';
+  String get passwordChanged =>
+      isMs ? 'Kata laluan berjaya ditukar' : 'Password changed successfully';
+  String get passwordChangedMsg =>
+      isMs ? 'Kata laluan anda telah berjaya ditukar.' : 'Your password has been changed successfully.';
 
   // Settings
   String get appearance => isMs ? 'Penampilan' : 'Appearance';
