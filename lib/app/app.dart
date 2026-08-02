@@ -7,11 +7,13 @@ import 'auth_provider.dart';
 import 'inventory_provider.dart';
 import 'locale_provider.dart';
 import 'recipe_provider.dart';
+import 'sales_provider.dart';
 import 'theme_provider.dart';
 import 'repositories/audit_repository.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/inventory_repository.dart';
 import 'repositories/recipe_repository.dart';
+import 'repositories/sales_repository.dart';
 import 'router/router.dart';
 
 class App extends StatelessWidget {
@@ -39,6 +41,9 @@ class App extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => RecipeProvider(repo: SupabaseRecipeRepository(client)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SalesProvider(repo: SupabaseSalesRepository(client)),
         ),
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, AuthProvider>(

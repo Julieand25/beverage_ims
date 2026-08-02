@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/sales_provider.dart';
 import '../app/translations.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final colors = Theme.of(context).extension<AppColors>()!;
+    final sales = context.watch<SalesProvider>();
     const primaryGreen = Color(0xFF5BA154);
     const pinkAccent = Color(0xFFE27387);
 
@@ -50,9 +53,9 @@ class _ReportScreenState extends State<ReportScreen> {
                 onChanged: (index) => setState(() => _selectedTab = index),
               ),
               const SizedBox(height: 16),
-              if (_selectedTab == 0) _DailyReport(t: t, primaryGreen: primaryGreen, pinkAccent: pinkAccent),
-              if (_selectedTab == 1) _StockHistory(t: t, primaryGreen: primaryGreen),
-              if (_selectedTab == 2) _MonthlySummary(t: t, primaryGreen: primaryGreen),
+              if (_selectedTab == 0) _DailyReport(t: t, primaryGreen: primaryGreen, pinkAccent: pinkAccent, sales: sales),
+              if (_selectedTab == 1) _StockHistory(t: t, primaryGreen: primaryGreen, sales: sales),
+              if (_selectedTab == 2) _MonthlySummary(t: t, primaryGreen: primaryGreen, sales: sales),
             ],
           ),
         ),
@@ -117,20 +120,25 @@ class _DailyReport extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
   final Color pinkAccent;
+  final SalesProvider sales;
 
   const _DailyReport({
     required this.t,
     required this.primaryGreen,
     required this.pinkAccent,
+    required this.sales,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final now = DateTime.now();
+    final dateStr = '${now.day} ${_monthName(now.month, t.isMs)} ${now.year}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DateHeader(),
+        _DateHeader(date: dateStr),
         const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 2,
@@ -145,7 +153,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: primaryGreen,
               bgColor: colors.subtleGreen,
               title: t.dailySales,
-              value: 'RM 485.00',
+              value: 'RM ${sales.todaySales.toStringAsFixed(2)}',
               valueColor: primaryGreen,
             ),
             _StatCard(
@@ -153,7 +161,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: pinkAccent,
               bgColor: colors.subtlePurple,
               title: t.dailyCost,
-              value: 'RM 198.50',
+              value: 'RM ${(sales.todaySales * 0.4).toStringAsFixed(2)}',
               valueColor: pinkAccent,
             ),
             _StatCard(
@@ -161,7 +169,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: primaryGreen,
               bgColor: colors.subtleGreen,
               title: t.dailyProfit,
-              value: 'RM 286.50',
+              value: 'RM ${(sales.todaySales * 0.6).toStringAsFixed(2)}',
               valueColor: primaryGreen,
             ),
             _StatCard(
@@ -169,7 +177,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: Colors.blue,
               bgColor: colors.subtleBlue,
               title: t.dailyCups,
-              value: '68 ${t.isMs ? "cawan" : "cups"}',
+              value: '${sales.todayCups} ${t.isMs ? "cawan" : "cups"}',
               valueColor: Colors.blue,
             ),
           ],
@@ -177,46 +185,59 @@ class _DailyReport extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           t.menuRank.toUpperCase(),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: colors.gray,
-          ),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
         ),
         const SizedBox(height: 8),
-        _BestSellerCard(rank: 1, name: 'Matcha Latte', cups: '35', revenue: 'RM 280.00', primaryGreen: primaryGreen),
-        const SizedBox(height: 8),
-        _BestSellerCard(rank: 2, name: 'Milk Tea', cups: '20', revenue: 'RM 120.00', primaryGreen: primaryGreen),
-        const SizedBox(height: 8),
-        _BestSellerCard(rank: 3, name: 'Americano', cups: '13', revenue: 'RM 65.00', primaryGreen: primaryGreen),
+        if (sales.bestSellers.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              t.isMs ? 'Tiada jualan hari ini' : 'No sales today',
+              style: TextStyle(fontSize: 13, color: colors.gray),
+            ),
+          )
+        else
+          ...sales.bestSellers.asMap().entries.map((entry) {
+            final rank = entry.key + 1;
+            final b = entry.value;
+            final name = b['recipe_name'] as String;
+            final cups = (b['total_cups'] as int).toString();
+            final revenue = 'RM ${(b['total_revenue'] as double).toStringAsFixed(2)}';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _BestSellerCard(rank: rank, name: name, cups: cups, revenue: revenue, primaryGreen: primaryGreen),
+            );
+          }),
       ],
     );
   }
 }
 
+String _monthName(int month, bool isMs) {
+  if (isMs) {
+    const months = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+    return months[month];
+  }
+  const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return months[month];
+}
+
 class _DateHeader extends StatelessWidget {
+  final String date;
+  const _DateHeader({required this.date});
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Icon(Icons.calendar_today, size: 16, color: colors.gray),
           const SizedBox(width: 8),
-          Text(
-            '16 Julai 2026',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: colors.text,
-            ),
-          ),
+          Text(date, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.text)),
         ],
       ),
     );
@@ -370,62 +391,51 @@ class _BestSellerCard extends StatelessWidget {
 class _StockHistory extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
+  final SalesProvider sales;
 
   const _StockHistory({
     required this.t,
     required this.primaryGreen,
+    required this.sales,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final movements = sales.stockMovements;
+
+    if (movements.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Text(
+            t.isMs ? 'Tiada rekod stok' : 'No stock records',
+            style: TextStyle(fontSize: 13, color: colors.gray),
+          ),
+        ),
+      );
+    }
+
     return Column(
-      children: [
-        _StockLog(
-          icon: Icons.add_circle_outline,
-          iconColor: primaryGreen,
-          bgColor: colors.subtleGreen,
-          title: '+10000ml Susu UHT',
-          subtitle: t.restockEntry,
-          timestamp: '16 Julai 2026, 08:00 AM',
-        ),
-        const SizedBox(height: 8),
-        _StockLog(
-          icon: Icons.remove_circle_outline,
-          iconColor: Colors.red,
-          bgColor: colors.subtleRed,
-          title: '-35 cawan Matcha Latte',
-          subtitle: t.deductionEntry,
-          timestamp: '16 Julai 2026, 10:30 AM',
-        ),
-        const SizedBox(height: 8),
-        _StockLog(
-          icon: Icons.remove_circle_outline,
-          iconColor: Colors.red,
-          bgColor: colors.subtleRed,
-          title: '-20 cawan Milk Tea',
-          subtitle: t.deductionEntry,
-          timestamp: '16 Julai 2026, 12:15 PM',
-        ),
-        const SizedBox(height: 8),
-        _StockLog(
-          icon: Icons.add_circle_outline,
-          iconColor: primaryGreen,
-          bgColor: colors.subtleGreen,
-          title: '+500g Matcha Powder',
-          subtitle: t.restockEntry,
-          timestamp: '15 Julai 2026, 04:00 PM',
-        ),
-        const SizedBox(height: 8),
-        _StockLog(
-          icon: Icons.remove_circle_outline,
-          iconColor: Colors.red,
-          bgColor: colors.subtleRed,
-          title: '-13 cawan Americano',
-          subtitle: t.deductionEntry,
-          timestamp: '16 Julai 2026, 03:45 PM',
-        ),
-      ],
+      children: movements.map((m) {
+        final isRestock = m['type'] == 'restock';
+        final itemName = m['inventory_items']?['name'] ?? 'Unknown';
+        final qty = (m['quantity'] as num).toDouble();
+        final movedAt = DateTime.parse(m['moved_at'] as String);
+        final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _StockLog(
+            icon: isRestock ? Icons.add_circle_outline : Icons.remove_circle_outline,
+            iconColor: isRestock ? primaryGreen : Colors.red,
+            bgColor: isRestock ? colors.subtleGreen : colors.subtleRed,
+            title: '${isRestock ? "+" : "-"}${qty.abs().toStringAsFixed(0)} $itemName',
+            subtitle: isRestock ? t.restockEntry : t.deductionEntry,
+            timestamp: timestamp,
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -502,10 +512,12 @@ class _StockLog extends StatelessWidget {
 class _MonthlySummary extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
+  final SalesProvider sales;
 
   const _MonthlySummary({
     required this.t,
     required this.primaryGreen,
+    required this.sales,
   });
 
   @override
@@ -513,9 +525,9 @@ class _MonthlySummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _MonthlyHeader(t: t, primaryGreen: primaryGreen),
+        _MonthlyHeader(t: t, primaryGreen: primaryGreen, sales: sales),
         const SizedBox(height: 16),
-        _WeeklyChart(primaryGreen: primaryGreen),
+        _WeeklyChart(primaryGreen: primaryGreen, sales: sales),
         const SizedBox(height: 16),
         _Legend(t: t),
       ],
@@ -526,49 +538,37 @@ class _MonthlySummary extends StatelessWidget {
 class _MonthlyHeader extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
+  final SalesProvider sales;
 
   const _MonthlyHeader({
     required this.t,
     required this.primaryGreen,
+    required this.sales,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final now = DateTime.now();
+    final monthStr = '${_monthName(now.month, t.isMs)} ${now.year}';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Icon(Icons.calendar_month, size: 20, color: colors.gray),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              'Julai 2026',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colors.text,
-              ),
-            ),
+            child: Text(monthStr, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.text)),
           ),
           Text(
-            'RM 8,250.00',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: primaryGreen,
-            ),
+            'RM ${sales.monthlyRevenue.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen),
           ),
           const SizedBox(width: 4),
-          Text(
-            t.monthlyRevenue,
-            style: TextStyle(fontSize: 11, color: colors.gray),
-          ),
+          Text(t.monthlyRevenue, style: TextStyle(fontSize: 11, color: colors.gray)),
         ],
       ),
     );
@@ -577,28 +577,30 @@ class _MonthlyHeader extends StatelessWidget {
 
 class _WeeklyChart extends StatelessWidget {
   final Color primaryGreen;
+  final SalesProvider sales;
 
   const _WeeklyChart({
     required this.primaryGreen,
+    required this.sales,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final weeks = [
-      ('Mng 1', 0.85, 0.35),
-      ('Mng 2', 0.70, 0.30),
-      ('Mng 3', 0.90, 0.40),
-      ('Mng 4', 0.65, 0.25),
-    ];
+    final weekly = sales.weeklyStats;
+
+    final weeks = [1, 2, 3, 4].map((w) {
+      final data = weekly[w];
+      final revFrac = data != null ? ((data['revenue'] ?? 0) / (sales.monthlyRevenue > 0 ? sales.monthlyRevenue : 1)).clamp(0.2, 1.0) : 0.2;
+      final costFrac = data != null ? ((data['cost'] ?? 0) / (sales.monthlyRevenue > 0 ? sales.monthlyRevenue : 1)).clamp(0.1, 1.0) : 0.1;
+      final label = 'Wk $w';
+      return (label, revFrac, costFrac);
+    }).toList();
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Row(
@@ -611,31 +613,14 @@ class _WeeklyChart extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Container(
-                          width: 18,
-                          height: 100 * w.$2,
-                          decoration: BoxDecoration(
-                            color: primaryGreen,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
+                        Container(width: 18, height: 100 * w.$2, decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(4))),
                         const SizedBox(width: 4),
-                        Container(
-                          width: 18,
-                          height: 100 * w.$3,
-                          decoration: BoxDecoration(
-                            color: colors.subtleRed,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
+                        Container(width: 18, height: 100 * w.$3, decoration: BoxDecoration(color: colors.subtleRed, borderRadius: BorderRadius.circular(4))),
                       ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    w.$1,
-                    style: TextStyle(fontSize: 11, color: colors.gray),
-                  ),
+                  Text(w.$1, style: TextStyle(fontSize: 11, color: colors.gray)),
                 ],
               );
             }).toList(),

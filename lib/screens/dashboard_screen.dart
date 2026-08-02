@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/auth_provider.dart';
+import '../app/inventory_provider.dart';
+import '../app/models/inventory_item.dart';
+import '../app/models/recipe.dart';
+import '../app/recipe_provider.dart';
+import '../app/sales_provider.dart';
 import '../app/translations.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -10,7 +17,8 @@ class DashboardScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return const _RecordSaleModal();
+        final recipes = context.read<RecipeProvider>().recipes;
+        return _RecordSaleModal(recipes: recipes);
       },
     );
   }
@@ -19,8 +27,19 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final colors = Theme.of(context).extension<AppColors>()!;
+    final sales = context.watch<SalesProvider>();
+    final inventory = context.watch<InventoryProvider>();
     const primaryGreen = Color(0xFF5BA154);
     const pinkAccent = Color(0xFFE27387);
+
+    // Compute inventory value
+    double inventoryValue = 0;
+    for (final item in inventory.items) {
+      inventoryValue += item.stockValue;
+    }
+
+    // Get low stock items (top 3)
+    final lowStockItems = inventory.items.where((i) => i.isLowStock).take(3).toList();
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -89,7 +108,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: primaryGreen,
                     bgColor: colors.subtleGreen,
                     title: t.salesToday,
-                    value: 'RM 485.00',
+                    value: 'RM ${sales.todaySales.toStringAsFixed(2)}',
                     valueColor: primaryGreen,
                   ),
                   _StatCard(
@@ -97,7 +116,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: pinkAccent,
                     bgColor: colors.subtlePurple,
                     title: t.grossProfit,
-                    value: 'RM 286.50',
+                    value: 'RM ${(sales.todaySales * 0.6).toStringAsFixed(2)}',
                     valueColor: pinkAccent,
                   ),
                   _StatCard(
@@ -105,7 +124,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: const Color(0xFF8E44AD),
                     bgColor: colors.subtlePurple,
                     title: t.cupsSold,
-                    value: '68 cup',
+                    value: '${sales.todayCups} ${t.isMs ? "cawan" : "cups"}',
                     valueColor: colors.text,
                   ),
                   _StatCard(
@@ -113,7 +132,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: Colors.blue,
                     bgColor: colors.subtleBlue,
                     title: t.inventoryValue,
-                    value: 'RM 1,250.00',
+                    value: 'RM ${inventoryValue.toStringAsFixed(2)}',
                     valueColor: Colors.blue,
                   ),
                 ],
@@ -149,32 +168,31 @@ class DashboardScreen extends StatelessWidget {
                       ],
                     ),
                     const Divider(height: 16, thickness: 0.5),
-                    _StockItemRow(
-                      iconPath: '🥛',
-                      name: 'Susu UHT',
-                      qty: '2 kotak',
-                      statusText: t.nearlyOut,
-                      statusColor: Colors.red,
-                      statusBgColor: colors.subtleRed,
-                    ),
-                    const Divider(height: 16, thickness: 0.5),
-                    _StockItemRow(
-                      iconPath: '🍵',
-                      name: 'Matcha Powder',
-                      qty: '300g',
-                      statusText: t.low,
-                      statusColor: Colors.orange,
-                      statusBgColor: const Color(0xFFFFF3E0),
-                    ),
-                    const Divider(height: 16, thickness: 0.5),
-                    _StockItemRow(
-                      iconPath: '🧋',
-                      name: 'Pearl',
-                      qty: '500g',
-                      statusText: t.nearlyOut,
-                      statusColor: Colors.red,
-                      statusBgColor: colors.subtleRed,
-                    ),
+                    if (lowStockItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          t.isMs ? 'Semua stok mencukupi' : 'All stock sufficient',
+                          style: TextStyle(fontSize: 13, color: colors.gray),
+                        ),
+                      )
+                    else
+                      ...lowStockItems.map((item) {
+                        final unitLabel = _unitLabel(item.unit);
+                        return Column(
+                          children: [
+                            _StockItemRow(
+                              iconPath: _itemEmoji(item.name),
+                              name: item.name,
+                              qty: '${item.stock.toStringAsFixed(0)} $unitLabel',
+                              statusText: item.stock <= 0 ? t.nearlyOut : t.low,
+                              statusColor: item.stock <= 0 ? Colors.red : Colors.orange,
+                              statusBgColor: item.stock <= 0 ? colors.subtleRed : const Color(0xFFFFF3E0),
+                            ),
+                            const Divider(height: 16, thickness: 0.5),
+                          ],
+                        );
+                      }),
                   ],
                 ),
               ),
@@ -241,25 +259,31 @@ class DashboardScreen extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              _TopMenuItemCard(
-                                iconEmoji: '🍵',
-                                title: 'Matcha\nLatte',
-                                count: '35 cup',
-                              ),
-                              SizedBox(width: 10),
-                              _TopMenuItemCard(
-                                iconEmoji: '🧋',
-                                title: 'Milk Tea',
-                                count: '20 cup',
-                              ),
-                              SizedBox(width: 10),
-                              _TopMenuItemCard(
-                                iconEmoji: '☕',
-                                title: 'Americano',
-                                count: '13 cup',
-                              ),
-                            ],
+                            children: sales.bestSellers.isEmpty
+                                ? [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 30),
+                                      child: Text(
+                                        t.isMs ? 'Tiada jualan hari ini' : 'No sales today',
+                                        style: TextStyle(fontSize: 12, color: colors.gray),
+                                      ),
+                                    )
+                                  ]
+                                : sales.bestSellers.map((b) {
+                                    final name = b['recipe_name'] as String;
+                                    final cups = b['total_cups'] as int;
+                                    final emoji = name.contains('Matcha') ? '🍵' : name.contains('Milk') ? '🧋' : '☕';
+                                    return Row(
+                                      children: [
+                                        _TopMenuItemCard(
+                                          iconEmoji: emoji,
+                                          title: name,
+                                          count: '$cups ${t.isMs ? "cawan" : "cup"}',
+                                        ),
+                                        if (b != sales.bestSellers.last) const SizedBox(width: 10),
+                                      ],
+                                    );
+                                  }).toList(),
                           ),
                         ),
                       ),
@@ -276,17 +300,19 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _RecordSaleModal extends StatefulWidget {
-  const _RecordSaleModal();
+  final List<Recipe> recipes;
+  const _RecordSaleModal({required this.recipes});
 
   @override
   State<_RecordSaleModal> createState() => _RecordSaleModalState();
 }
 
 class _RecordSaleModalState extends State<_RecordSaleModal> {
-  String selectedMenu = 'Matcha Latte (RM 8.00)';
+  String? _selectedRecipeId;
   String selectedUnit = 'Cup';
-  final TextEditingController quantityController = TextEditingController(text: '20');
-  final TextEditingController priceController = TextEditingController(text: '8.00');
+  final TextEditingController quantityController = TextEditingController(text: '1');
+  final TextEditingController priceController = TextEditingController(text: '0');
+  bool _isSaving = false;
 
   double get totalSales {
     final double qty = double.tryParse(quantityController.text) ?? 0;
@@ -295,9 +321,18 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
   }
 
   @override
+  void dispose() {
+    quantityController.dispose();
+    priceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final t = Translations.of(context);
     const saveButtonColor = Color(0xFFFF7B89);
+    final recipes = widget.recipes;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -327,11 +362,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                     top: -2,
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Icon(
-                        Icons.close,
-                        color: colors.gray,
-                        size: 22,
-                      ),
+                      child: Icon(Icons.close, color: colors.gray, size: 22),
                     ),
                   ),
                 ],
@@ -340,11 +371,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
 
               Text(
                 'Pilih Menu',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colors.text,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
               Container(
@@ -355,27 +382,20 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: selectedMenu,
+                    value: _selectedRecipeId,
                     isExpanded: true,
+                    hint: Text(t.isMs ? 'Pilih menu...' : 'Select menu...', style: TextStyle(fontSize: 14, color: colors.gray)),
                     icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
                     style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
-                        setState(() {
-                          selectedMenu = newValue;
-                        });
+                        setState(() => _selectedRecipeId = newValue);
                       }
                     },
-                    items: <String>[
-                      'Matcha Latte (RM 8.00)',
-                      'Milk Tea (RM 7.00)',
-                      'Americano (RM 5.00)'
-                    ].map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                    items: recipes.map((r) => DropdownMenuItem<String>(
+                      value: r.id,
+                      child: Text(r.name),
+                    )).toList(),
                   ),
                 ),
               ),
@@ -383,11 +403,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
 
               Text(
                 'Kuantiti Terjual',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colors.text,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
               Row(
@@ -429,18 +445,13 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                           style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                           onChanged: (String? newValue) {
                             if (newValue != null) {
-                              setState(() {
-                                selectedUnit = newValue;
-                              });
+                              setState(() => selectedUnit = newValue);
                             }
                           },
                           items: <String>['Cup', 'Botol', 'Peket']
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
+                              .map<DropdownMenuItem<String>>(
+                                  (String value) => DropdownMenuItem<String>(value: value, child: Text(value)))
+                              .toList(),
                         ),
                       ),
                     ),
@@ -451,11 +462,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
 
               Text(
                 'Harga Jual Seunit (RM)',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colors.text,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -492,20 +499,12 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                   children: [
                     Text(
                       'Jumlah Jualan',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colors.gray,
-                      ),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.gray),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'RM ${totalSales.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: colors.text,
-                      ),
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: colors.text),
                     ),
                   ],
                 ),
@@ -515,25 +514,47 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isSaving || _selectedRecipeId == null
+                      ? null
+                      : () async {
+                          final qty = int.tryParse(quantityController.text) ?? 0;
+                          final price = double.tryParse(priceController.text) ?? 0;
+                          if (qty <= 0 || price <= 0) return;
+
+                          setState(() => _isSaving = true);
+                          final auth = context.read<AuthProvider>();
+                          final salesProvider = context.read<SalesProvider>();
+                          final selectedRecipe = widget.recipes.firstWhere((r) => r.id == _selectedRecipeId);
+
+                          await salesProvider.recordSale(
+                            recipeId: selectedRecipe.id,
+                            recipeName: selectedRecipe.name,
+                            quantity: qty,
+                            unitPrice: price,
+                            totalAmount: qty * price,
+                            userId: auth.currentUser!.id,
+                            userName: auth.currentUser!.name,
+                          );
+
+                          if (!mounted) return;
+                          setState(() => _isSaving = false);
+                          Navigator.pop(context);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: saveButtonColor,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text(
-                    'Simpan Rekod',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          'Simpan Rekod',
+                          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -553,21 +574,13 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                         shape: BoxShape.circle,
                         border: Border.all(color: const Color(0xFF319795), width: 1.5),
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        size: 14,
-                        color: Color(0xFF319795),
-                      ),
+                      child: const Icon(Icons.check, size: 14, color: Color(0xFF319795)),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
                         'Stok bahan akan ditolak mengikut resipi secara automatik.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2C7A7B),
-                        ),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2C7A7B)),
                       ),
                     ),
                   ],
@@ -716,6 +729,32 @@ class _StockItemRow extends StatelessWidget {
       ],
     );
   }
+}
+
+String _unitLabel(ItemUnit unit) {
+  switch (unit) {
+    case ItemUnit.g:
+      return 'g';
+    case ItemUnit.ml:
+      return 'ml';
+    case ItemUnit.unit:
+      return 'unit';
+    case ItemUnit.kg:
+      return 'kg';
+    case ItemUnit.l:
+      return 'L';
+  }
+}
+
+String _itemEmoji(String name) {
+  final lower = name.toLowerCase();
+  if (lower.contains('susu')) return '🥛';
+  if (lower.contains('matcha')) return '🍵';
+  if (lower.contains('pearl')) return '🧋';
+  if (lower.contains('gula') || lower.contains('sirap')) return '🍾';
+  if (lower.contains('cawan') || lower.contains('cup')) return '🥤';
+  if (lower.contains('straw')) return '🥤';
+  return '📦';
 }
 
 class _TopMenuItemCard extends StatelessWidget {
