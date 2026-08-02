@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app/app_colors.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/translations.dart';
@@ -7,7 +8,6 @@ import '../app/translations.dart';
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({super.key});
 
-  // Open the "Tambah / Edit Stok" dialog matched to image_aceec4.png
   void _showRestockDialog(BuildContext context, {InventoryItem? selectedItem}) {
     showDialog(
       context: context,
@@ -22,21 +22,19 @@ class InventoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final provider = context.watch<InventoryProvider>();
-
-    const backgroundColor = Color(0xFFF9F9F9);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const pinkAccent = Color(0xFFFF7B89);
-    const textDark = Color(0xFF2C3E50);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: colors.background,
         elevation: 0,
         centerTitle: true,
         title: Text(
           t.inventoryTitle,
-          style: const TextStyle(
-            color: textDark,
+          style: TextStyle(
+            color: colors.text,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -46,7 +44,6 @@ class InventoryScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          // Filter Icon + Add Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
             child: Row(
@@ -55,7 +52,7 @@ class InventoryScreen extends StatelessWidget {
                 PopupMenuButton<String>(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 32),
-                  icon: const Icon(Icons.filter_list, color: textDark, size: 22),
+                  icon: Icon(Icons.filter_list, color: colors.gray, size: 22),
                   onSelected: (v) {
                     switch (v) {
                       case '_all':
@@ -92,22 +89,21 @@ class InventoryScreen extends StatelessWidget {
             ),
           ),
 
-          // Search Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
+                border: Border.all(color: colors.border),
               ),
               child: TextField(
                 onChanged: (v) => provider.setSearchQuery(v),
                 decoration: InputDecoration(
                   hintText: t.searchItem ?? 'Cari bahan...',
-                  hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, size: 20, color: Colors.grey),
+                  hintStyle: TextStyle(fontSize: 14, color: colors.gray),
+                  prefixIcon: Icon(Icons.search, size: 20, color: colors.gray),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -116,7 +112,6 @@ class InventoryScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 8),
-          // List of Ingredients / Stock Items
           Expanded(
             child: ClipRect(
               clipBehavior: Clip.hardEdge,
@@ -124,7 +119,7 @@ class InventoryScreen extends StatelessWidget {
                   ? Center(
                       child: Text(
                         'Tiada barang dijumpai',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                        style: TextStyle(color: colors.gray, fontSize: 14),
                       ),
                     )
                   : ListView.builder(
@@ -138,8 +133,8 @@ class InventoryScreen extends StatelessWidget {
                         );
                       },
                     ),
-              ),
             ),
+          ),
           ],
         ),
       ),
@@ -237,9 +232,6 @@ class InventoryScreen extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// RESTOCK & EDIT DIALOG SCREEN (Matching image_aceec4.png)
-// ---------------------------------------------------------------------------
 class _RestockDialog extends StatefulWidget {
   final InventoryItem? initialItem;
   const _RestockDialog({this.initialItem});
@@ -288,61 +280,57 @@ class _RestockDialogState extends State<_RestockDialog> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<InventoryProvider>();
-    const textDark = Color(0xFF2C3E50);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const primaryGreen = Color(0xFF5BA154);
-    const borderColor = Color(0xFFE2E8F0);
-    const inputBgColor = Color(0xFFFAFAFA);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      backgroundColor: Colors.white,
+      backgroundColor: colors.card,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title Header with Close Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const SizedBox(width: 24),
-                const Text(
+                Text(
                   'Tambah Stok',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: textDark,
+                    color: colors.text,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, color: Colors.grey, size: 22),
+                  child: Icon(Icons.close, color: colors.gray, size: 22),
                 ),
               ],
             ),
             const SizedBox(height: 18),
 
-            // Field 1: Pilih Bahan Dropdown
-            const Text(
+            Text(
               'Pilih Bahan',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: inputBgColor,
+                color: colors.inputBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor),
+                border: Border.all(color: colors.border),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedItemId,
                   isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                  style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w600),
+                  icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
+                  style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w600),
                   items: provider.items.map((item) {
                     return DropdownMenuItem<String>(
                       value: item.id,
@@ -359,10 +347,9 @@ class _RestockDialogState extends State<_RestockDialog> {
             ),
             const SizedBox(height: 14),
 
-            // Field 2: Kuantiti + Unit Dropdown
-            const Text(
+            Text(
               'Kuantiti',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
             Row(
@@ -372,18 +359,18 @@ class _RestockDialogState extends State<_RestockDialog> {
                   child: TextField(
                     controller: qtyCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      fillColor: inputBgColor,
+                      fillColor: colors.inputBg,
                       filled: true,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: borderColor),
+                        borderSide: BorderSide(color: colors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: borderColor),
+                        borderSide: BorderSide(color: colors.border),
                       ),
                     ),
                   ),
@@ -394,16 +381,16 @@ class _RestockDialogState extends State<_RestockDialog> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      color: inputBgColor,
+                      color: colors.inputBg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: borderColor),
+                      border: Border.all(color: colors.border),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: selectedUnit,
                         isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                        style: const TextStyle(fontSize: 14, color: textDark, fontWeight: FontWeight.w600),
+                        icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
+                        style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w600),
                         items: <String>['Kotak', 'g', 'kg', 'ml', 'L', 'unit'].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -421,42 +408,40 @@ class _RestockDialogState extends State<_RestockDialog> {
             ),
             const SizedBox(height: 14),
 
-            // Field 3: Harga Beli Seunit (RM)
-            const Text(
+            Text(
               'Harga Beli Seunit (RM)',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: costCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: inputBgColor,
+                fillColor: colors.inputBg,
                 filled: true,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
               ),
             ),
             const SizedBox(height: 14),
 
-            // Field 4: Tarikh Beli
-            const Text(
+            Text(
               'Tarikh Beli',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: dateCtrl,
               readOnly: true,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
               onTap: () async {
                 DateTime? pickedDate = await showDatePicker(
                   context: context,
@@ -473,47 +458,45 @@ class _RestockDialogState extends State<_RestockDialog> {
               },
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: inputBgColor,
+                fillColor: colors.inputBg,
                 filled: true,
-                suffixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.grey, size: 20),
+                suffixIcon: Icon(Icons.calendar_today_outlined, color: colors.gray, size: 20),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
               ),
             ),
             const SizedBox(height: 14),
 
-            // Field 5: Nota (pilihan)
-            const Text(
+            Text(
               'Nota (pilihan)',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textDark),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: noteCtrl,
-              style: const TextStyle(fontSize: 14, color: textDark),
+              style: TextStyle(fontSize: 14, color: colors.text),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: inputBgColor,
+                fillColor: colors.inputBg,
                 filled: true,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: borderColor),
+                  borderSide: BorderSide(color: colors.border),
                 ),
               ),
             ),
             const SizedBox(height: 20),
 
-            // Save Button (Simpan)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -556,18 +539,13 @@ class _RestockDialogState extends State<_RestockDialog> {
   }
 }
 
-
-
-// ---------------------------------------------------------------------------
-// Inventory Card (Matching image_ad4254.png)
-// ---------------------------------------------------------------------------
 class _InventoryCard extends StatelessWidget {
   final InventoryItem item;
   const _InventoryCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    const textDark = Color(0xFF2C3E50);
+    final colors = Theme.of(context).extension<AppColors>()!;
     const softGreenBg = Color(0xFFE8F5E9);
     const textGreen = Color(0xFF4CAF50);
     const softOrangeBg = Color(0xFFFFF3E0);
@@ -582,18 +560,17 @@ class _InventoryCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          // Emoji / Icon Graphic Box
           Container(
             width: 48,
             height: 48,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: colors.inputBg,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -603,38 +580,36 @@ class _InventoryCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // Name & Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   item.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: textDark,
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Harga: RM${item.costPerUnit.toStringAsFixed(2)} / ${_unitLabel(item.unit)}',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(fontSize: 11, color: colors.gray),
                 ),
               ],
             ),
           ),
 
-          // Status Badge + Chevron Arrow Right
           Row(
             children: [
               Container(
@@ -653,9 +628,9 @@ class _InventoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: Colors.grey,
+                color: colors.gray,
                 size: 20,
               ),
             ],
@@ -665,7 +640,6 @@ class _InventoryCard extends StatelessWidget {
     );
   }
 
-  // Returns emoji based on item name for custom visual presentation
   String _itemEmoji(String name) {
     final lower = name.toLowerCase();
     if (lower.contains('susu')) return '🥛';
@@ -678,7 +652,6 @@ class _InventoryCard extends StatelessWidget {
   }
 }
 
-// Helpers
 String _unitLabel(ItemUnit unit) {
   switch (unit) {
     case ItemUnit.g:

@@ -5,12 +5,16 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color text;
   final Color card;
   final Color gray;
+  final Color border;
+  final Color inputBg;
 
   const AppColors({
     required this.background,
     required this.text,
     required this.card,
     required this.gray,
+    required this.border,
+    required this.inputBg,
   });
 
   static const light = AppColors(
@@ -18,6 +22,8 @@ class AppColors extends ThemeExtension<AppColors> {
     text: Color(0xFF2C3E50),
     card: Colors.white,
     gray: Color(0xFF9E9E9E),
+    border: Color(0xFFEEEEEE),
+    inputBg: Color(0xFFFAFAFA),
   );
 
   static const dark = AppColors(
@@ -25,6 +31,8 @@ class AppColors extends ThemeExtension<AppColors> {
     text: Color(0xFFE0E0E0),
     card: Color(0xFF2D2D44),
     gray: Color(0xFF9E9E9E),
+    border: Color(0xFF3D3D5C),
+    inputBg: Color(0xFF252540),
   );
 
   @override
@@ -33,12 +41,16 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? text,
     Color? card,
     Color? gray,
+    Color? border,
+    Color? inputBg,
   }) {
     return AppColors(
       background: background ?? this.background,
       text: text ?? this.text,
       card: card ?? this.card,
       gray: gray ?? this.gray,
+      border: border ?? this.border,
+      inputBg: inputBg ?? this.inputBg,
     );
   }
 
@@ -53,6 +65,8 @@ class AppColors extends ThemeExtension<AppColors> {
       text: Color.lerp(text, other.text, t)!,
       card: Color.lerp(card, other.card, t)!,
       gray: Color.lerp(gray, other.gray, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      inputBg: Color.lerp(inputBg, other.inputBg, t)!,
     );
   }
 }
