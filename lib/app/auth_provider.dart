@@ -96,4 +96,23 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> updateUserName(String name) async {
+    if (_currentUser == null) return false;
+    try {
+      await _authRepo.updateUserName(_currentUser!.id, name);
+      _currentUser = _currentUser!.copyWith(name: name);
+      notifyListeners();
+      await _auditRepo.addLog(AuditLog(
+        userId: _currentUser!.id,
+        userName: name,
+        action: 'UPDATE_NAME',
+        targetType: 'auth',
+        timestamp: DateTime.now(),
+      ));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

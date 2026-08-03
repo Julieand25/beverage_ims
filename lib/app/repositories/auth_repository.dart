@@ -13,6 +13,7 @@ abstract class AuthRepository {
   Future<List<User>> fetchAllUsers();
   Future<void> updateUserRole(String userId, String role);
   Future<void> toggleUserActive(String userId, bool isActive);
+  Future<void> updateUserName(String userId, String name);
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -139,6 +140,14 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client
         .from('users')
         .update({'is_active': isActive})
+        .eq('id', userId);
+  }
+
+  @override
+  Future<void> updateUserName(String userId, String name) async {
+    await _client
+        .from('users')
+        .update({'name': name})
         .eq('id', userId);
   }
 }

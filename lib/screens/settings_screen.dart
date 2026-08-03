@@ -7,15 +7,67 @@ import '../app/locale_provider.dart';
 import '../app/theme_provider.dart';
 import '../app/translations.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _nameController = TextEditingController();
+  bool _isEditingName = false;
+  bool _isSavingName = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().currentUser;
+      if (user != null) _nameController.text = user.name;
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveName(AuthProvider auth) async {
+    final newName = _nameController.text.trim();
+    if (newName.isEmpty) return;
+    setState(() => _isSavingName = true);
+    final success = await auth.updateUserName(newName);
+    if (!mounted) return;
+    setState(() {
+      _isSavingName = false;
+      _isEditingName = false;
+    });
+    final t = Translations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? t.nameUpdated : t.staffRegisterFailed),
+        backgroundColor: success ? const Color(0xFF5BA154) : Colors.red,
+      ),
+    );
+  }
+
+  void _cancelEdit() {
+    final user = context.read<AuthProvider>().currentUser;
+    if (user != null) _nameController.text = user.name;
+    setState(() => _isEditingName = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final themeProvider = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
     final colors = Theme.of(context).extension<AppColors>()!;
+    const primaryGreen = Color(0xFF5BA154);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -33,19 +85,126 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 8),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
 
-            // Appearance section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                t.appearance,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
+              if (user != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: primaryGreen.withAlpha(30),
+                          child: Text(
+                            user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: primaryGreen,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _isEditingName
+                                        ? SizedBox(
+                                            height: 36,
+                                            child: TextField(
+                                              controller: _nameController,
+                                              autofocus: true,
+                                              textCapitalization: TextCapitalization.words,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: colors.text,
+                                              ),
+                                              decoration: InputDecoration(
+                                                isDense: true,
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  borderSide: BorderSide(color: primaryGreen),
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  borderSide: BorderSide(color: primaryGreen),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Text(
+                                            user.name,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: colors.text,
+                                            ),
+                                          ),
+                                  ),
+                                  if (_isEditingName) ...[
+                                    const SizedBox(width: 8),
+                                    if (_isSavingName)
+                                      const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    else ...[
+                                      GestureDetector(
+                                        onTap: () => _saveName(auth),
+                                        child: Icon(Icons.check, size: 20, color: primaryGreen),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: _cancelEdit,
+                                        child: Icon(Icons.close, size: 20, color: colors.gray),
+                                      ),
+                                    ],
+                                  ] else
+                                    GestureDetector(
+                                      onTap: () => setState(() => _isEditingName = true),
+                                      child: Icon(Icons.edit_outlined, size: 18, color: colors.gray),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                user.email,
+                                style: TextStyle(fontSize: 13, color: colors.gray),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Appearance section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  t.appearance,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
+                ),
               ),
-            ),
             const SizedBox(height: 8),
 
             // Theme row
@@ -353,6 +512,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

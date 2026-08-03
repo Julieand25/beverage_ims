@@ -34,4 +34,21 @@ class User {
         'is_active': isActive,
         'last_open': lastOpen?.toIso8601String(),
       };
+
+  User copyWith({
+    String? id,
+    String? name,
+    String? email,
+    UserRole? role,
+    bool? isActive,
+    DateTime? lastOpen,
+  }) =>
+      User(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        email: email ?? this.email,
+        role: role ?? this.role,
+        isActive: isActive ?? this.isActive,
+        lastOpen: lastOpen ?? this.lastOpen,
+      );
 }

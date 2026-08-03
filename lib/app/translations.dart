@@ -248,4 +248,8 @@ class Translations {
       isMs ? 'Peranan' : 'Role';
   String get status =>
       isMs ? 'Status' : 'Status';
+  String get editName =>
+      isMs ? 'Edit Nama' : 'Edit Name';
+  String get nameUpdated =>
+      isMs ? 'Nama dikemaskini' : 'Name updated';
 }
