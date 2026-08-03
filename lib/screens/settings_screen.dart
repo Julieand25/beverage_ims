@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
 import '../app/auth_provider.dart';
-import '../app/locale_provider.dart';
+// import '../app/locale_provider.dart';
 import '../app/theme_provider.dart';
 import '../app/translations.dart';
 
@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final themeProvider = context.watch<ThemeProvider>();
-    final localeProvider = context.watch<LocaleProvider>();
+    // final localeProvider = context.watch<LocaleProvider>();
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
     final colors = Theme.of(context).extension<AppColors>()!;
@@ -247,54 +247,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Language section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                t.language,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Language row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    onTap: () => context.push('/language'),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      child: Row(
-                        children: [
-                          Icon(Icons.translate, size: 20, color: colors.text),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              t.language,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.text),
-                            ),
-                          ),
-                          Text(
-                            localeProvider.locale.languageCode == 'ms' ? t.malay : t.english,
-                            style: TextStyle(fontSize: 13, color: colors.gray),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(Icons.chevron_right, size: 20, color: colors.gray),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // // Language section
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            //   child: Text(
+            //     t.language,
+            //     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
+            //   ),
+            // ),
+            // const SizedBox(height: 8),
+            //
+            // // Language row
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: colors.card,
+            //       borderRadius: BorderRadius.circular(12),
+            //     ),
+            //     child: Material(
+            //       type: MaterialType.transparency,
+            //       child: InkWell(
+            //         onTap: () => context.push('/language'),
+            //         borderRadius: BorderRadius.circular(12),
+            //         child: Padding(
+            //           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            //           child: Row(
+            //             children: [
+            //               Icon(Icons.translate, size: 20, color: colors.text),
+            //               const SizedBox(width: 12),
+            //               Expanded(
+            //                 child: Text(
+            //                   t.language,
+            //                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.text),
+            //                 ),
+            //               ),
+            //               Text(
+            //                 localeProvider.locale.languageCode == 'ms' ? t.malay : t.english,
+            //                 style: TextStyle(fontSize: 13, color: colors.gray),
+            //               ),
+            //               const SizedBox(width: 8),
+            //               Icon(Icons.chevron_right, size: 20, color: colors.gray),
+            //             ],
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 24),
 
             // Account section
