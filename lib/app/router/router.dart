@@ -12,15 +12,17 @@ import '../../screens/register_staff_screen.dart';
 import '../../screens/user_management_screen.dart';
 import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
+import '../auth_provider.dart';
 import '../widgets/app_shell.dart';
 
-GoRouter createRouter({required bool isLoggedIn}) {
+GoRouter createRouter({required AuthProvider authProvider}) {
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: authProvider,
     redirect: (context, state) {
       final isLoginRoute = state.matchedLocation == '/login';
-      if (!isLoggedIn && !isLoginRoute) return '/login';
-      if (isLoggedIn && isLoginRoute) return '/dashboard';
+      if (!authProvider.isLoggedIn && !isLoginRoute) return '/login';
+      if (authProvider.isLoggedIn && isLoginRoute) return '/dashboard';
       return null;
     },
     routes: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_colors.dart';
@@ -53,33 +54,51 @@ class App extends StatelessWidget {
           ),
         ),
       ],
-      child: Consumer3<ThemeProvider, LocaleProvider, AuthProvider>(
-        builder: (context, themeProvider, localeProvider, authProvider, _) {
-          final router = createRouter(isLoggedIn: authProvider.isLoggedIn);
-          return MaterialApp.router(
-            title: 'Beverage IMS',
-            routerConfig: router,
-            locale: localeProvider.locale,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
-                brightness: Brightness.light,
-              ),
-              scaffoldBackgroundColor: const Color(0xFFF9F9F9),
-              extensions: const <ThemeExtension<dynamic>>[AppColors.light],
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
-                brightness: Brightness.dark,
-              ),
-              extensions: const <ThemeExtension<dynamic>>[AppColors.dark],
-            ),
-            themeMode: themeProvider.themeMode,
-            debugShowCheckedModeBanner: false,
-          );
-        },
+      child: _AppRouter(),
+    );
+  }
+}
+
+class _AppRouter extends StatefulWidget {
+  @override
+  State<_AppRouter> createState() => _AppRouterState();
+}
+
+class _AppRouterState extends State<_AppRouter> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final authProvider = context.read<AuthProvider>();
+    _router = createRouter(authProvider: authProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
+    return MaterialApp.router(
+      title: 'Beverage IMS',
+      routerConfig: _router,
+      locale: localeProvider.locale,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+        extensions: const <ThemeExtension<dynamic>>[AppColors.light],
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+        extensions: const <ThemeExtension<dynamic>>[AppColors.dark],
+      ),
+      themeMode: themeProvider.themeMode,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
