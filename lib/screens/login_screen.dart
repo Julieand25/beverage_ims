@@ -164,29 +164,34 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _isLoggingIn
                               ? null
                               : () async {
-                                  setState(() => _isLoggingIn = true);
-                                  final auth = context.read<AuthProvider>();
-                                  final success = await auth.login(
-                                    emailController.text.trim(),
-                                    passwordController.text,
-                                  );
-                                  if (!mounted) return;
-                                  setState(() => _isLoggingIn = false);
-                                  if (success) {
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      if (context.mounted) context.go('/dashboard');
-                                    });
-                                  } else if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          t.loginError,
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                },
+                                   setState(() => _isLoggingIn = true);
+                                   bool success = false;
+                                   try {
+                                     final auth = context.read<AuthProvider>();
+                                     success = await auth.login(
+                                       emailController.text.trim(),
+                                       passwordController.text,
+                                     );
+                                   } catch (_) {
+                                     success = false;
+                                   }
+                                   if (!mounted) return;
+                                   setState(() => _isLoggingIn = false);
+                                   if (success) {
+                                     WidgetsBinding.instance.addPostFrameCallback((_) {
+                                       if (context.mounted) context.go('/dashboard');
+                                     });
+                                   } else if (context.mounted) {
+                                     ScaffoldMessenger.of(context).showSnackBar(
+                                       SnackBar(
+                                         content: Text(
+                                           t.loginError,
+                                         ),
+                                         backgroundColor: Colors.red,
+                                       ),
+                                     );
+                                   }
+                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryGreen,
                             padding: const EdgeInsets.symmetric(vertical: 14),

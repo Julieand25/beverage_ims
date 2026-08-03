@@ -10,6 +10,9 @@ abstract class AuthRepository {
   Future<bool> changePassword(String userId, String currentPassword, String newPassword);
   Future<User?> getStoredSession();
   Future<User> registerUser(String name, String email, String password, String role);
+  Future<List<User>> fetchAllUsers();
+  Future<void> updateUserRole(String userId, String role);
+  Future<void> toggleUserActive(String userId, bool isActive);
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -35,6 +38,15 @@ class SupabaseAuthRepository implements AuthRepository {
     if (response == null) return null;
 
     final user = User.fromJson(response);
+    if (!user.isActive) return null;
+
+    try {
+      await _client
+          .from('users')
+          .update({'last_open': DateTime.now().toIso8601String()})
+          .eq('id', user.id);
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_sessionKey, user.id);
     return user;
@@ -102,5 +114,31 @@ class SupabaseAuthRepository implements AuthRepository {
         .single();
 
     return User.fromJson(response);
+  }
+
+  @override
+  Future<List<User>> fetchAllUsers() async {
+    final response = await _client
+        .from('users')
+        .select()
+        .order('name');
+
+    return (response as List).map((json) => User.fromJson(json)).toList();
+  }
+
+  @override
+  Future<void> updateUserRole(String userId, String role) async {
+    await _client
+        .from('users')
+        .update({'role': role})
+        .eq('id', userId);
+  }
+
+  @override
+  Future<void> toggleUserActive(String userId, bool isActive) async {
+    await _client
+        .from('users')
+        .update({'is_active': isActive})
+        .eq('id', userId);
   }
 }

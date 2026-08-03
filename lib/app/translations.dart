@@ -218,4 +218,34 @@ class Translations {
       isMs ? 'Tetapkan sukatan' : 'Set Measurement';
   String get selectHint =>
       isMs ? 'Pilih...' : 'Select...';
+  String get manageUsers =>
+      isMs ? 'Urus Pengguna' : 'Manage Users';
+  String get userManagementTitle =>
+      isMs ? 'Urus Pengguna' : 'User Management';
+  String get roleChanged =>
+      isMs ? 'Peranan berjaya ditukar' : 'Role updated successfully';
+  String get statusChanged =>
+      isMs ? 'Status berjaya ditukar' : 'Status updated successfully';
+  String get active =>
+      isMs ? 'Aktif' : 'Active';
+  String get deactivated =>
+      isMs ? 'Dinyahaktif' : 'Deactivated';
+  String get lastOpened =>
+      isMs ? 'Terakhir dibuka' : 'Last opened';
+  String get never =>
+      isMs ? 'Tidak pernah' : 'Never';
+  String get confirmDeactivate =>
+      isMs ? 'Nyahaktifkan pengguna ini? Mereka tidak boleh log masuk lagi.' : 'Deactivate this user? They will no longer be able to log in.';
+  String get confirmActivate =>
+      isMs ? 'Aktifkan semula pengguna ini?' : 'Reactivate this user?';
+  String get deactivateUser =>
+      isMs ? 'Nyahaktifkan' : 'Deactivate';
+  String get activateUser =>
+      isMs ? 'Aktifkan' : 'Activate';
+  String get changeRole =>
+      isMs ? 'Tukar Peranan' : 'Change Role';
+  String get role =>
+      isMs ? 'Peranan' : 'Role';
+  String get status =>
+      isMs ? 'Status' : 'Status';
 }

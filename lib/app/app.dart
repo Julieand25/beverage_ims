@@ -9,6 +9,7 @@ import 'locale_provider.dart';
 import 'recipe_provider.dart';
 import 'sales_provider.dart';
 import 'theme_provider.dart';
+import 'user_provider.dart';
 import 'repositories/audit_repository.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/inventory_repository.dart';
@@ -44,6 +45,12 @@ class App extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => SalesProvider(repo: SupabaseSalesRepository(client)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UserProvider(
+            authRepo: SupabaseAuthRepository(client),
+            auditRepo: SupabaseAuditRepository(client),
+          ),
         ),
       ],
       child: Consumer3<ThemeProvider, LocaleProvider, AuthProvider>(

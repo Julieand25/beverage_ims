@@ -9,6 +9,7 @@ import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
 import '../../screens/register_staff_screen.dart';
+import '../../screens/user_management_screen.dart';
 import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../widgets/app_shell.dart';
@@ -34,6 +35,10 @@ GoRouter createRouter({required bool isLoggedIn}) {
       GoRoute(
         path: '/register-staff',
         builder: (context, state) => const RegisterStaffScreen(),
+      ),
+      GoRoute(
+        path: '/manage-users',
+        builder: (context, state) => const UserManagementScreen(),
       ),
       GoRoute(
         path: '/audit-logs',

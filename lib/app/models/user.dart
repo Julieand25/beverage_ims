@@ -5,12 +5,16 @@ class User {
   final String name;
   final String email;
   final UserRole role;
+  final bool isActive;
+  final DateTime? lastOpen;
 
   const User({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
+    this.isActive = true,
+    this.lastOpen,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -18,6 +22,8 @@ class User {
         name: json['name'] as String,
         email: json['email'] as String,
         role: json['role'] == 'admin' ? UserRole.admin : UserRole.staff,
+        isActive: json['is_active'] == null ? true : json['is_active'] as bool,
+        lastOpen: json['last_open'] != null ? DateTime.tryParse(json['last_open'] as String) : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -25,5 +31,7 @@ class User {
         'name': name,
         'email': email,
         'role': role.name,
+        'is_active': isActive,
+        'last_open': lastOpen?.toIso8601String(),
       };
 }
