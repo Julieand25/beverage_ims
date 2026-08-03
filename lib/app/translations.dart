@@ -201,6 +201,12 @@ class Translations {
       isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect';
   String get fillAllFields =>
       isMs ? 'Sila isi semua ruangan' : 'Please fill all fields';
+  String get emailInvalid =>
+      isMs ? 'Format emel tidak sah' : 'Invalid email format';
+  String get passwordTooShort =>
+      isMs ? 'Kata laluan mesti sekurang-kurangnya 6 aksara' : 'Password must be at least 6 characters';
+  String get staffRegisterFailed =>
+      isMs ? 'Pendaftaran gagal. Emel mungkin telah digunakan.' : 'Registration failed. Email may already be in use.';
   String get cupsUnit => isMs ? 'cawan' : 'cups';
   String get cupUnit => isMs ? 'cawan' : 'cup';
   String get recordsUnit => isMs ? 'rekod' : 'records';

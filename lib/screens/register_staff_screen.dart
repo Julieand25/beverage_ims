@@ -207,30 +207,53 @@ class _RegisterStaffScreenState extends State<RegisterStaffScreen> {
                   onPressed: _isSaving
                       ? null
                       : () async {
-                          if (nameCtrl.text.trim().isEmpty || emailCtrl.text.trim().isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(t.fillAllFields), backgroundColor: Colors.red),
-                            );
-                            return;
-                          }
-                          if (passwordCtrl.text != confirmPasswordCtrl.text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t.passwordMismatch), backgroundColor: Colors.red),
-                            );
-                            return;
-                          }
-                          setState(() => _isSaving = true);
-                          final auth = context.read<AuthProvider>();
-                          final success = await auth.registerStaff(nameCtrl.text.trim(), emailCtrl.text.trim(), passwordCtrl.text);
-                          if (!mounted) return;
-                          setState(() => _isSaving = false);
-                          if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t.staffRegistered), backgroundColor: primaryGreen),
-                            );
-                            context.pop();
-                          }
-                        },
+                           final email = emailCtrl.text.trim();
+                           if (nameCtrl.text.trim().isEmpty || email.isEmpty) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                                               SnackBar(content: Text(t.fillAllFields), backgroundColor: Colors.red),
+                             );
+                             return;
+                           }
+                           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                           if (!emailRegex.hasMatch(email)) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(t.emailInvalid), backgroundColor: Colors.red),
+                             );
+                             return;
+                           }
+                           if (passwordCtrl.text.length < 6) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(t.passwordTooShort), backgroundColor: Colors.red),
+                             );
+                             return;
+                           }
+                           if (passwordCtrl.text != confirmPasswordCtrl.text) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(t.passwordMismatch), backgroundColor: Colors.red),
+                             );
+                             return;
+                           }
+                           setState(() => _isSaving = true);
+                           bool success;
+                           try {
+                             final auth = context.read<AuthProvider>();
+                             success = await auth.registerStaff(nameCtrl.text.trim(), email, passwordCtrl.text);
+                           } catch (_) {
+                             success = false;
+                           }
+                           if (!mounted) return;
+                           setState(() => _isSaving = false);
+                           if (success) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(t.staffRegistered), backgroundColor: primaryGreen),
+                             );
+                             context.pop();
+                           } else {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(t.staffRegisterFailed), backgroundColor: Colors.red),
+                             );
+                           }
+                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
                     padding: const EdgeInsets.symmetric(vertical: 14),
