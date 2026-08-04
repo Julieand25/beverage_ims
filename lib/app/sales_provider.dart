@@ -20,7 +20,7 @@ class SalesProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get stockMovements => _stockMovements;
   bool get isLoading => _isLoading;
 
-  SalesProvider({required SalesRepository repo}) : _repo = repo {
+  SalesProvider({required this._repo}) {
     loadAll();
   }
 

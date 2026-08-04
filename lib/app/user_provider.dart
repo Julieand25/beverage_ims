@@ -15,10 +15,9 @@ class UserProvider extends ChangeNotifier {
   bool get isLoaded => _isLoaded;
 
   UserProvider({
-    required AuthRepository authRepo,
+    required this._authRepo,
     required AuditRepository auditRepo,
-  })  : _authRepo = authRepo,
-        _auditRepo = auditRepo;
+  })  : _auditRepo = auditRepo;
 
   Future<void> loadAllUsers() async {
     _users = await _authRepo.fetchAllUsers();

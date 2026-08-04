@@ -23,7 +23,7 @@ class RecipeProvider extends ChangeNotifier {
     return result;
   }
 
-  RecipeProvider({required RecipeRepository repo}) : _repo = repo {
+  RecipeProvider({required this._repo}) {
     loadAll();
   }
 

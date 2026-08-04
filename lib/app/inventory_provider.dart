@@ -28,7 +28,7 @@ class InventoryProvider extends ChangeNotifier {
     return result;
   }
 
-  InventoryProvider({required InventoryRepository repo}) : _repo = repo {
+  InventoryProvider({required this._repo}) {
     loadAll();
   }
 

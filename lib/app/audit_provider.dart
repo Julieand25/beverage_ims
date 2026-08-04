@@ -8,7 +8,7 @@ class AuditProvider extends ChangeNotifier {
 
   List<AuditLog> get logs => List.unmodifiable(_logs);
 
-  AuditProvider({required AuditRepository repo}) : _repo = repo {
+  AuditProvider({required this._repo}) {
     loadAll();
   }
 
