@@ -68,12 +68,12 @@ class RecipeScreen extends StatelessWidget {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF5BA154)),
-                ),
-                child: TextField(
-                  onChanged: (v) => recipeProvider.setSearchQuery(v),
+                color: colors.card,
+                borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+              ),
+              child: TextField(
+                onChanged: (v) => recipeProvider.setSearchQuery(v),
                   decoration: InputDecoration(
                     hintText: t.searchRecipe,
                     hintStyle: TextStyle(fontSize: 14, color: colors.gray),
