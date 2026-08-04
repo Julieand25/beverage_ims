@@ -254,8 +254,6 @@ class RecipeScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(
                       children: [
-                        const Text('🟢', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             item.name,
@@ -834,8 +832,6 @@ class _RecipeCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('☕', style: TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

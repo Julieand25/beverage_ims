@@ -578,21 +578,6 @@ class _InventoryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colors.inputBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              _itemEmoji(item.name),
-              style: const TextStyle(fontSize: 26),
-            ),
-          ),
-          const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,17 +636,6 @@ class _InventoryCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _itemEmoji(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('susu')) return '🥛';
-    if (lower.contains('matcha')) return '🍵';
-    if (lower.contains('pearl')) return '🧋';
-    if (lower.contains('gula') || lower.contains('sirap')) return '🍾';
-    if (lower.contains('cawan') || lower.contains('cup')) return '🥤';
-    if (lower.contains('straw')) return '🥤';
-    return '📦';
   }
 }
 
