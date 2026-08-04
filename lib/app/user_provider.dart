@@ -16,8 +16,8 @@ class UserProvider extends ChangeNotifier {
 
   UserProvider({
     required this._authRepo,
-    required AuditRepository auditRepo,
-  })  : _auditRepo = auditRepo;
+    required this._auditRepo,
+  });
 
   Future<void> loadAllUsers() async {
     _users = await _authRepo.fetchAllUsers();

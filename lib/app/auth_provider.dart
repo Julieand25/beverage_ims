@@ -15,8 +15,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAdmin => _currentUser?.role == UserRole.admin;
   bool get isLoading => _isLoading;
 
-  AuthProvider({required this._authRepo, required AuditRepository auditRepo})
-      : _auditRepo = auditRepo {
+  AuthProvider({required this._authRepo, required this._auditRepo}) {
     _restoreSession();
   }
 
