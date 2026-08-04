@@ -182,7 +182,6 @@ class DashboardScreen extends StatelessWidget {
                         return Column(
                           children: [
                             _StockItemRow(
-                              iconPath: _itemEmoji(item.name),
                               name: item.name,
                               qty: '${item.stock.toStringAsFixed(0)} $unitLabel',
                               statusText: item.stock <= 0 ? t.nearlyOut : t.low,
@@ -661,7 +660,6 @@ class _StatCard extends StatelessWidget {
 }
 
 class _StockItemRow extends StatelessWidget {
-  final String iconPath;
   final String name;
   final String qty;
   final String statusText;
@@ -669,7 +667,6 @@ class _StockItemRow extends StatelessWidget {
   final Color statusBgColor;
 
   const _StockItemRow({
-    required this.iconPath,
     required this.name,
     required this.qty,
     required this.statusText,
@@ -684,21 +681,13 @@ class _StockItemRow extends StatelessWidget {
       children: [
         Expanded(
           flex: 3,
-          child: Row(
-            children: [
-              Text(iconPath, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: colors.text,
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            name,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: colors.text,
+            ),
           ),
         ),
         Expanded(
@@ -744,17 +733,6 @@ String _unitLabel(ItemUnit unit) {
     case ItemUnit.l:
       return 'L';
   }
-}
-
-String _itemEmoji(String name) {
-  final lower = name.toLowerCase();
-  if (lower.contains('susu')) return '🥛';
-  if (lower.contains('matcha')) return '🍵';
-  if (lower.contains('pearl')) return '🧋';
-  if (lower.contains('gula') || lower.contains('sirap')) return '🍾';
-  if (lower.contains('cawan') || lower.contains('cup')) return '🥤';
-  if (lower.contains('straw')) return '🥤';
-  return '📦';
 }
 
 class _TopMenuItemCard extends StatelessWidget {
