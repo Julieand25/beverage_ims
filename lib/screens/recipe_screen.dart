@@ -70,7 +70,7 @@ class RecipeScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: colors.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border),
+        border: Border.all(color: const Color(0xFF5BA154)),
                 ),
                 child: TextField(
                   onChanged: (v) => recipeProvider.setSearchQuery(v),
@@ -619,8 +619,7 @@ class RecipeScreen extends StatelessWidget {
               ),
             ),
           ),
-          if (ctrls.length > 1)
-            IconButton(
+          IconButton(
               icon: const Icon(Icons.close,
                   size: 18, color: Colors.red),
               onPressed: () => setDialogState(() {
@@ -654,23 +653,22 @@ class RecipeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (ctrls.length > 1)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close,
-                      size: 18, color: Colors.red),
-                  onPressed: () => setDialogState(() {
-                    row.dispose();
-                    ctrls.removeAt(idx);
-                  }),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                      minWidth: 32, minHeight: 32),
-                ),
-              ],
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close,
+                    size: 18, color: Colors.red),
+                onPressed: () => setDialogState(() {
+                  row.dispose();
+                  ctrls.removeAt(idx);
+                }),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                    minWidth: 32, minHeight: 32),
+              ),
+            ],
+          ),
           TextField(
             controller: row.nameCtrl,
             decoration: _inputDecoration(t.itemName),
