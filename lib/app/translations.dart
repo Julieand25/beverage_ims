@@ -187,6 +187,10 @@ class Translations {
       isMs ? 'Tiada rekod audit' : 'No audit records';
   String get chooseIngredient =>
       isMs ? 'Pilih Bahan' : 'Select Ingredient';
+  String get createNewIngredient =>
+      isMs ? 'Tambah Bahan Baru' : 'Add New Ingredient';
+  String get newIngredientName =>
+      isMs ? 'Nama Bahan Baru' : 'New Ingredient Name';
   String get quantity =>
       isMs ? 'Kuantiti' : 'Quantity';
   String get purchasePriceLabel =>

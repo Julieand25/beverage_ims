@@ -72,6 +72,23 @@ class InventoryProvider extends ChangeNotifier {
     return created;
   }
 
+  Future<InventoryItem?> addItemQuick({
+    required String name,
+    required ItemCategory category,
+    required ItemUnit unit,
+    required String userId,
+  }) async {
+    return addItem(
+      name: name,
+      category: category,
+      unit: unit,
+      stock: 0,
+      minStock: 0,
+      costPerUnit: 0,
+      userId: userId,
+    );
+  }
+
   Future<void> restockItem({
     required String itemId,
     required double addedQty,
