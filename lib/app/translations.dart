@@ -191,6 +191,9 @@ class Translations {
       isMs ? 'Tambah Bahan Baru' : 'Add New Ingredient';
   String get addFromInventory =>
       isMs ? 'Pilih Dari Inventori' : 'Pick From Inventory';
+  String get noIngredientsHint =>
+      isMs ? 'Pilih dari inventori atau cipta bahan baru untuk bermula.'
+          : 'Select from inventory or add a new ingredient.';
   String get newIngredientName =>
       isMs ? 'Nama Bahan Baru' : 'New Ingredient Name';
   String get quantity =>

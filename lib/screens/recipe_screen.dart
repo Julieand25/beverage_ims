@@ -324,7 +324,6 @@ class RecipeScreen extends StatelessWidget {
         ));
       }
     } else {
-      ingredientCtrls.add(_IngredientRow());
     }
 
     showDialog(
@@ -379,7 +378,21 @@ class RecipeScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ...ingredientCtrls.asMap().entries.map((entry) {
+                    if (ingredientCtrls.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          t.noIngredientsHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.gray,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      )
+                    else
+                      ...ingredientCtrls.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final row = entry.value;
                       return row.isNew
