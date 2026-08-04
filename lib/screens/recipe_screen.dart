@@ -313,6 +313,8 @@ class RecipeScreen extends StatelessWidget {
 
     final nameCtrl =
         TextEditingController(text: isEdit ? recipe.name : '');
+    final priceCtrl = TextEditingController(
+        text: isEdit ? recipe.sellingPrice.toStringAsFixed(2) : '');
 
     final ingredientCtrls = <_IngredientRow>[];
     if (isEdit) {
@@ -355,6 +357,12 @@ class RecipeScreen extends StatelessWidget {
                     TextField(
                       controller: nameCtrl,
                       decoration: _inputDecoration(t.beverageName),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: priceCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: _inputDecoration(t.sellingPrice),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -503,13 +511,15 @@ class RecipeScreen extends StatelessWidget {
                             recipeProvider.updateRecipe(
                               id: recipe.id,
                               name: nameCtrl.text.trim(),
-                              sellingPrice: 0,
+                              sellingPrice:
+                                  double.tryParse(priceCtrl.text) ?? 0,
                               ingredients: ingredients,
                             );
                           } else {
                             recipeProvider.addRecipe(
                               name: nameCtrl.text.trim(),
-                              sellingPrice: 0,
+                              sellingPrice:
+                                  double.tryParse(priceCtrl.text) ?? 0,
                               ingredients: ingredients,
                               userId:
                                   auth.currentUser!.id,
