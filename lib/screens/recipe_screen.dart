@@ -194,6 +194,18 @@ class RecipeScreen extends StatelessWidget {
                     color: colors.text,
                   ),
                 ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    'RM ${recipe.sellingPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5BA154),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
 
                 if (isAdmin)
