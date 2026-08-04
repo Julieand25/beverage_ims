@@ -4,7 +4,7 @@ import '../models/inventory_item.dart';
 abstract class InventoryRepository {
   Future<List<InventoryItem>> getAll({ItemCategory? category, String? query});
   Future<InventoryItem> addItem(InventoryItem item, {required String userId});
-  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock});
+  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock, String? purchaseDate, String? note});
 }
 
 class SupabaseInventoryRepository implements InventoryRepository {
@@ -83,7 +83,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   @override
-  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock}) async {
+  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock, String? purchaseDate, String? note}) async {
     final response = await _client.from('inventory_items').select().eq('id', itemId).single();
     final currentStock = (response['stock'] as num).toDouble();
     final currentCostPerUnit = (response['cost_per_unit'] as num).toDouble();
@@ -107,6 +107,8 @@ class SupabaseInventoryRepository implements InventoryRepository {
       'cost_per_unit': totalCost / addedQty,
       'total_cost': totalCost,
       'user_id': userId,
+      'purchase_date': purchaseDate,
+      'note': note,
     });
 
     final updated = await _client.from('inventory_items').select().eq('id', itemId).single();

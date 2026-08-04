@@ -95,8 +95,10 @@ class InventoryProvider extends ChangeNotifier {
     required double totalCost,
     required String userId,
     double? minStock,
+    String? purchaseDate,
+    String? note,
   }) async {
-    final updated = await _repo.restockItem(itemId, addedQty, totalCost, userId: userId, minStock: minStock);
+    final updated = await _repo.restockItem(itemId, addedQty, totalCost, userId: userId, minStock: minStock, purchaseDate: purchaseDate, note: note);
     final index = _items.indexWhere((i) => i.id == itemId);
     if (index != -1) {
       _items[index].stock = updated.stock;

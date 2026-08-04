@@ -558,6 +558,8 @@ class _RestockDialogState extends State<_RestockDialog> {
                             totalCost: addedQty * cost,
                             userId: auth.currentUser!.id,
                             minStock: minStock,
+                            purchaseDate: dateCtrl.text,
+                            note: noteCtrl.text,
                           );
                         }
                       }
