@@ -258,6 +258,7 @@ class _RestockDialogState extends State<_RestockDialog> {
   String? selectedItemId;
   late TextEditingController qtyCtrl;
   late TextEditingController costCtrl;
+  late TextEditingController minStockCtrl;
   late TextEditingController dateCtrl;
   late TextEditingController noteCtrl;
   String selectedUnit = 'Kotak';
@@ -271,11 +272,13 @@ class _RestockDialogState extends State<_RestockDialog> {
       selectedItemId = widget.initialItem!.id;
       qtyCtrl = TextEditingController(text: widget.initialItem!.stock.toStringAsFixed(0));
       costCtrl = TextEditingController(text: widget.initialItem!.costPerUnit.toStringAsFixed(2));
+      minStockCtrl = TextEditingController(text: widget.initialItem!.minStock.toStringAsFixed(0));
       selectedUnit = _unitLabel(widget.initialItem!.unit);
     } else {
       selectedItemId = provider.items.isNotEmpty ? provider.items.first.id : null;
       qtyCtrl = TextEditingController(text: '10');
       costCtrl = TextEditingController(text: '7.80');
+      minStockCtrl = TextEditingController(text: '0');
     }
 
     dateCtrl = TextEditingController(text: '16/07/2026');
@@ -286,6 +289,7 @@ class _RestockDialogState extends State<_RestockDialog> {
   void dispose() {
     qtyCtrl.dispose();
     costCtrl.dispose();
+    minStockCtrl.dispose();
     dateCtrl.dispose();
     noteCtrl.dispose();
     super.dispose();
@@ -449,6 +453,31 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
+              t.minStock,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: minStockCtrl,
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                fillColor: colors.inputBg,
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            Text(
               t.purchaseDate,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
@@ -516,21 +545,23 @@ class _RestockDialogState extends State<_RestockDialog> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (selectedItemId != null) {
-                    final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
-                    final cost = double.tryParse(costCtrl.text) ?? 0;
-                    if (addedQty > 0) {
-                      final auth = context.read<AuthProvider>();
-                      if (auth.currentUser != null) {
-                        await provider.restockItem(
-                          itemId: selectedItemId!,
-                          addedQty: addedQty,
-                          totalCost: addedQty * cost,
-                          userId: auth.currentUser!.id,
-                        );
+                    if (selectedItemId != null) {
+                      final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
+                      final cost = double.tryParse(costCtrl.text) ?? 0;
+                      final minStock = double.tryParse(minStockCtrl.text);
+                      if (addedQty > 0) {
+                        final auth = context.read<AuthProvider>();
+                        if (auth.currentUser != null) {
+                          await provider.restockItem(
+                            itemId: selectedItemId!,
+                            addedQty: addedQty,
+                            totalCost: addedQty * cost,
+                            userId: auth.currentUser!.id,
+                            minStock: minStock,
+                          );
+                        }
                       }
                     }
-                  }
                   Navigator.of(context).pop();
                 },
                 style: ElevatedButton.styleFrom(

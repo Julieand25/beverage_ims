@@ -4,7 +4,7 @@ import '../models/inventory_item.dart';
 abstract class InventoryRepository {
   Future<List<InventoryItem>> getAll({ItemCategory? category, String? query});
   Future<InventoryItem> addItem(InventoryItem item, {required String userId});
-  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId});
+  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock});
 }
 
 class SupabaseInventoryRepository implements InventoryRepository {
@@ -83,7 +83,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   @override
-  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId}) async {
+  Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock}) async {
     final response = await _client.from('inventory_items').select().eq('id', itemId).single();
     final currentStock = (response['stock'] as num).toDouble();
     final currentCostPerUnit = (response['cost_per_unit'] as num).toDouble();
@@ -91,11 +91,14 @@ class SupabaseInventoryRepository implements InventoryRepository {
     final newStock = currentStock + addedQty;
     final newCostPerUnit = (currentValue + totalCost) / newStock;
 
-    await _client.from('inventory_items').update({
+    final updateData = <String, dynamic>{
       'stock': newStock,
       'cost_per_unit': newCostPerUnit,
       'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', itemId);
+    };
+    if (minStock != null) updateData['min_stock'] = minStock;
+
+    await _client.from('inventory_items').update(updateData).eq('id', itemId);
 
     await _client.from('stock_movements').insert({
       'inventory_item_id': itemId,
