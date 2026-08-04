@@ -313,8 +313,6 @@ class RecipeScreen extends StatelessWidget {
 
     final nameCtrl =
         TextEditingController(text: isEdit ? recipe.name : '');
-    // final priceCtrl = TextEditingController(
-    //     text: isEdit ? recipe.sellingPrice.toStringAsFixed(2) : '');
 
     final ingredientCtrls = <_IngredientRow>[];
     if (isEdit) {
@@ -329,363 +327,457 @@ class RecipeScreen extends StatelessWidget {
       ingredientCtrls.add(_IngredientRow());
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
-          // double calcCost() {
-          //   double total = 0;
-          //   for (final row in ingredientCtrls) {
-          //     if (row.itemId == null) continue;
-          //     final item = inventory.firstWhere(
-          //       (i) => i.id == row.itemId,
-          //       orElse: () => InventoryItem(
-          //           id: '',
-          //           name: '',
-          //           category: ItemCategory.bahan,
-          //           unit: ItemUnit.g,
-          //           stock: 0,
-          //           minStock: 0,
-          //           costPerUnit: 0),
-          //     );
-          //     final qty = double.tryParse(row.qtyCtrl.text) ?? 0;
-          //     total += item.costPerUnit * qty;
-          //   }
-          //   return total;
-          // }
-
-          // final cost = calcCost();
-          // final price = double.tryParse(priceCtrl.text) ?? 0;
-          // final profit = price - cost;
-
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            title: Text(
-              isEdit ? t.editRecipe : t.newRecipe,
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: _inputDecoration(t.beverageName),
-                  ),
-                  // const SizedBox(height: 12),
-                  // TextField(
-                  //   controller: priceCtrl,
-                  //   keyboardType: TextInputType.number,
-                  //   decoration: _inputDecoration(t.sellingPrice),
-                  // ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t.ingredientsTitle.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: colors.gray,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...ingredientCtrls.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final row = entry.value;
-                    final suffix = row.isNew
-                        ? _unitLabel(row.newUnit)
-                        : row.itemId != null
-                            ? _unitLabel(inventory
-                                .firstWhere((i) => i.id == row.itemId,
-                                    orElse: () => InventoryItem(
-                                        id: '',
-                                        name: '',
-                                        category: ItemCategory.bahan,
-                                        unit: ItemUnit.g,
-                                        stock: 0,
-                                        minStock: 0,
-                                        costPerUnit: 0))
-                                .unit)
-                            : null;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: row.isNew
-                                    ? _buildNewIngredientForm(
-                                        row, setDialogState, t)
-                                    : InputDecorator(
-                                        decoration: _inputDecoration(''),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<String>(
-                                            value: row.itemId,
-                                            isDense: true,
-                                            isExpanded: true,
-                                            hint: Text(t.selectHint,
-                                                style: const TextStyle(
-                                                    fontSize: 13)),
-                                            items: [
-                                              ...inventory.map((i) =>
-                                                  DropdownMenuItem(
-                                                    value: i.id,
-                                                    child: Text(i.name,
-                                                        style: const TextStyle(
-                                                            fontSize: 13)),
-                                                  )),
-                                              const DropdownMenuItem(
-                                                value: '__create_new__',
-                                                child: Text(''),
-                                              ),
-                                            ],
-                                            selectedItemBuilder: (ctx) => [
-                                              ...inventory.map((i) =>
-                                                  Text(i.name,
-                                                      style: const TextStyle(
-                                                          fontSize: 13))),
-                                              Text(
-                                                '+ ${t.createNewIngredient}',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Color(0xFF5BA154),
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                            onChanged: (v) {
-                                              if (v == '__create_new__') {
-                                                setDialogState(() {
-                                                  row.itemId = null;
-                                                  row.isNew = true;
-                                                });
-                                              } else {
-                                                setDialogState(() {
-                                                  row.itemId = v;
-                                                  row.isNew = false;
-                                                });
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 2,
-                                child: TextField(
-                                  controller: row.qtyCtrl,
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (_) => setDialogState(() {}),
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 10),
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8)),
-                                    suffixText: suffix,
-                                  ),
-                                ),
-                              ),
-                              if (ingredientCtrls.length > 1)
-                                IconButton(
-                                  icon: const Icon(Icons.close,
-                                      size: 18, color: Colors.red),
-                                  onPressed: () {
-                                    setDialogState(() {
-                                      row.dispose();
-                                      ingredientCtrls.removeAt(idx);
-                                    });
-                                  },
-                                ),
-                            ],
-                          ),
-                        ],
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.gray.withAlpha(80),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 4),
-                  TextButton.icon(
-                    onPressed: () => setDialogState(() {
-                      ingredientCtrls.add(_IngredientRow());
-                    }),
-                    icon: const Icon(Icons.add,
-                        size: 18, color: Color(0xFF5BA154)),
-                    label: Text(
-                      t.addIngredient,
-                      style: const TextStyle(color: Color(0xFF5BA154)),
                     ),
-                  ),
-                  // const Divider(height: 20),
-                  // _costRow(t.totalCostLabel, cost, colors.gray, Colors.black87),
-                  // _costRow(t.sellingPrice, price, colors.gray, const Color(0xFF5BA154)),
-                  // _costRow(
-                  //   t.grossProfitLabel,
-                  //   profit,
-                  //   colors.gray,
-                  //   profit >= 0 ? Colors.green : Colors.red,
-                  // ),
-                ],
+                    const SizedBox(height: 16),
+                    Text(
+                      isEdit ? t.editRecipe : t.newRecipe,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: _inputDecoration(t.beverageName),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          t.ingredientsTitle.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colors.gray,
+                          ),
+                        ),
+                        Text(
+                          ingredientCtrls.length.toString(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.gray,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...ingredientCtrls.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final row = entry.value;
+                      return row.isNew
+                          ? _buildNewIngredientCard(
+                              row, idx, ingredientCtrls,
+                              setDialogState, t, colors)
+                          : _buildExistingIngredientCard(
+                              row, idx, ingredientCtrls,
+                              inventory, setDialogState, t, colors);
+                    }),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => setDialogState(() =>
+                                ingredientCtrls.add(_IngredientRow())),
+                            icon: const Icon(Icons.list_alt, size: 16),
+                            label: Text(t.addFromInventory,
+                                style: const TextStyle(fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  const Color(0xFF5BA154),
+                              side: const BorderSide(
+                                  color: Color(0xFF5BA154)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => setDialogState(() =>
+                                ingredientCtrls.add(
+                                    _IngredientRow(isNew: true))),
+                            icon: const Icon(Icons.add_circle_outline,
+                                size: 16),
+                            label: Text(t.createNewIngredient,
+                                style: const TextStyle(fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  const Color(0xFFFF7B89),
+                              side: const BorderSide(
+                                  color: Color(0xFFFF7B89)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (nameCtrl.text.trim().isEmpty) return;
+                          final auth =
+                              context.read<AuthProvider>();
+                          if (auth.currentUser == null) return;
+                          final inventoryProvider =
+                              context.read<InventoryProvider>();
+                          final navigator = Navigator.of(ctx);
+
+                          for (final row in ingredientCtrls) {
+                            if (row.isNew) {
+                              final name =
+                                  row.nameCtrl.text.trim();
+                              if (name.isEmpty) continue;
+                              final created = await inventoryProvider
+                                  .addItemQuick(
+                                name: name,
+                                category: row.newCategory,
+                                unit: row.newUnit,
+                                userId:
+                                    auth.currentUser!.id,
+                              );
+                              if (created != null) {
+                                row.itemId = created.id;
+                              }
+                            }
+                          }
+
+                          final ingredients =
+                              <RecipeIngredient>[];
+                          for (final row in ingredientCtrls) {
+                            if (row.itemId == null) continue;
+                            final qty =
+                                double.tryParse(
+                                        row.qtyCtrl.text) ??
+                                    0;
+                            if (qty <= 0) continue;
+                            ingredients.add(RecipeIngredient(
+                              inventoryItemId: row.itemId!,
+                              quantity: qty,
+                            ));
+                          }
+                          if (ingredients.isEmpty) return;
+
+                          if (isEdit) {
+                            recipeProvider.updateRecipe(
+                              id: recipe.id,
+                              name: nameCtrl.text.trim(),
+                              sellingPrice: 0,
+                              ingredients: ingredients,
+                            );
+                          } else {
+                            recipeProvider.addRecipe(
+                              name: nameCtrl.text.trim(),
+                              sellingPrice: 0,
+                              ingredients: ingredients,
+                              userId:
+                                  auth.currentUser!.id,
+                            );
+                          }
+                          navigator.pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xFF5BA154),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(12)),
+                        ),
+                        child: Text(t.save,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BA154)),
-                onPressed: () async {
-                  if (nameCtrl.text.trim().isEmpty) return;
-                  final auth = context.read<AuthProvider>();
-                  if (auth.currentUser == null) return;
-                  final inventoryProvider =
-                      context.read<InventoryProvider>();
-                  final navigator = Navigator.of(ctx);
-
-                  for (final row in ingredientCtrls) {
-                    if (row.isNew) {
-                      final name = row.nameCtrl.text.trim();
-                      if (name.isEmpty) continue;
-                      final created =
-                          await inventoryProvider.addItemQuick(
-                        name: name,
-                        category: row.newCategory,
-                        unit: row.newUnit,
-                        userId: auth.currentUser!.id,
-                      );
-                      if (created != null) {
-                        row.itemId = created.id;
-                      }
-                    }
-                  }
-
-                  final ingredients = <RecipeIngredient>[];
-                  for (final row in ingredientCtrls) {
-                    if (row.itemId == null) continue;
-                    final qty = double.tryParse(row.qtyCtrl.text) ?? 0;
-                    if (qty <= 0) continue;
-                    ingredients.add(RecipeIngredient(
-                      inventoryItemId: row.itemId!,
-                      quantity: qty,
-                    ));
-                  }
-                  if (ingredients.isEmpty) return;
-
-                  if (isEdit) {
-                    recipeProvider.updateRecipe(
-                      id: recipe.id,
-                      name: nameCtrl.text.trim(),
-                      sellingPrice: 0,
-                      ingredients: ingredients,
-                    );
-                  } else {
-                    recipeProvider.addRecipe(
-                      name: nameCtrl.text.trim(),
-                      sellingPrice: 0,
-                      ingredients: ingredients,
-                      userId: auth.currentUser!.id,
-                    );
-                  }
-                  navigator.pop();
-                },
-                child: Text(t.save,
-                    style: const TextStyle(color: Colors.white)),
-              ),
-            ],
           );
         },
       ),
     );
   }
 
-  Column _buildNewIngredientForm(
+  Widget _buildExistingIngredientCard(
     _IngredientRow row,
-    void Function(VoidCallback) setDialogState,
+    int idx,
+    List<_IngredientRow> ctrls,
+    List<InventoryItem> inventory,
+    void Function(void Function()) setDialogState,
     Translations t,
+    AppColors colors,
   ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: row.nameCtrl,
-                decoration: _inputDecoration(t.newIngredientName),
-                style: const TextStyle(fontSize: 13),
+    final suffix = row.itemId != null
+        ? _unitLabel(inventory
+            .firstWhere((i) => i.id == row.itemId,
+                orElse: () => InventoryItem(
+                    id: '',
+                    name: '',
+                    category: ItemCategory.bahan,
+                    unit: ItemUnit.g,
+                    stock: 0,
+                    minStock: 0,
+                    costPerUnit: 0))
+            .unit)
+        : null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: InputDecorator(
+              decoration: _inputDecoration(''),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: row.itemId,
+                  isDense: true,
+                  isExpanded: true,
+                  hint: Text(t.selectHint,
+                      style: const TextStyle(fontSize: 13)),
+                  items: inventory
+                      .map((i) => DropdownMenuItem(
+                            value: i.id,
+                            child: Text(i.name,
+                                style: const TextStyle(
+                                    fontSize: 13)),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() {
+                    row.itemId = v;
+                    row.isNew = false;
+                  }),
+                ),
               ),
             ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: row.qtyCtrl,
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setDialogState(() {}),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 10),
+                border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(8)),
+                suffixText: suffix,
+              ),
+            ),
+          ),
+          if (ctrls.length > 1)
             IconButton(
-              icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+              icon: const Icon(Icons.close,
+                  size: 18, color: Colors.red),
               onPressed: () => setDialogState(() {
-                row.isNew = false;
+                row.dispose();
+                ctrls.removeAt(idx);
               }),
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              constraints: const BoxConstraints(
+                  minWidth: 32, minHeight: 32),
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: InputDecorator(
-                decoration: _inputDecoration(''),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ItemUnit>(
-                    value: row.newUnit,
-                    isDense: true,
-                    isExpanded: true,
-                    style: const TextStyle(fontSize: 13),
-                    items: ItemUnit.values
-                        .map((u) => DropdownMenuItem(
-                              value: u,
-                              child: Text(_unitLabel(u),
-                                  style: const TextStyle(fontSize: 13)),
-                            ))
-                        .toList(),
-                    onChanged: (v) =>
-                        setDialogState(() => row.newUnit = v!),
-                  ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewIngredientCard(
+    _IngredientRow row,
+    int idx,
+    List<_IngredientRow> ctrls,
+    void Function(void Function()) setDialogState,
+    Translations t,
+    AppColors colors,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFF5BA154)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (ctrls.length > 1)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close,
+                      size: 18, color: Colors.red),
+                  onPressed: () => setDialogState(() {
+                    row.dispose();
+                    ctrls.removeAt(idx);
+                  }),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                      minWidth: 32, minHeight: 32),
+                ),
+              ],
+            ),
+          TextField(
+            controller: row.nameCtrl,
+            decoration: _inputDecoration(t.itemName),
+            style: const TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(t.unit,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: colors.gray)),
+                    const SizedBox(height: 4),
+                    InputDecorator(
+                      decoration: _inputDecoration(''),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<ItemUnit>(
+                          value: row.newUnit,
+                          isDense: true,
+                          isExpanded: true,
+                          style: const TextStyle(
+                              fontSize: 13),
+                          items: ItemUnit.values
+                              .map((u) =>
+                                  DropdownMenuItem(
+                                    value: u,
+                                    child: Text(
+                                        _unitLabel(u),
+                                        style: const TextStyle(
+                                            fontSize:
+                                                13)),
+                                  ))
+                              .toList(),
+                          onChanged: (v) =>
+                              setDialogState(() =>
+                                  row.newUnit = v!),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: InputDecorator(
-                decoration: _inputDecoration(''),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ItemCategory>(
-                    value: row.newCategory,
-                    isDense: true,
-                    isExpanded: true,
-                    style: const TextStyle(fontSize: 13),
-                    items: ItemCategory.values
-                        .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(_categoryDisplay(c, t),
-                                  style: const TextStyle(fontSize: 13)),
-                            ))
-                        .toList(),
-                    onChanged: (v) =>
-                        setDialogState(() => row.newCategory = v!),
-                  ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(t.category,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: colors.gray)),
+                    const SizedBox(height: 4),
+                    InputDecorator(
+                      decoration: _inputDecoration(''),
+                      child: DropdownButtonHideUnderline(
+                        child:
+                            DropdownButton<ItemCategory>(
+                          value: row.newCategory,
+                          isDense: true,
+                          isExpanded: true,
+                          style: const TextStyle(
+                              fontSize: 13),
+                          items: ItemCategory.values
+                              .map((c) =>
+                                  DropdownMenuItem(
+                                    value: c,
+                                    child: Text(
+                                        _categoryDisplay(
+                                            c, t),
+                                        style: const TextStyle(
+                                            fontSize:
+                                                13)),
+                                  ))
+                              .toList(),
+                          onChanged: (v) =>
+                              setDialogState(() =>
+                                  row.newCategory =
+                                      v!),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: row.qtyCtrl,
+            keyboardType: TextInputType.number,
+            onChanged: (_) => setDialogState(() {}),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: t.quantity,
+              hintStyle:
+                  TextStyle(fontSize: 13, color: colors.gray),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 10),
+              border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(8)),
+              suffixText: _unitLabel(row.newUnit),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -836,6 +928,7 @@ class _IngredientRow {
   final TextEditingController nameCtrl;
 
   _IngredientRow({
+    this.isNew = false,
     this.itemId,
     TextEditingController? qtyCtrl,
     TextEditingController? nameCtrl,
