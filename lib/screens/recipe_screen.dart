@@ -569,7 +569,7 @@ class RecipeScreen extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: colors.border),
+        border: Border.all(color: const Color(0xFF5BA154)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -647,7 +647,7 @@ class RecipeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF5BA154)),
+        border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
