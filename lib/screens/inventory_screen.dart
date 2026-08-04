@@ -115,6 +115,13 @@ class InventoryScreen extends StatelessWidget {
             ),
           ),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Text(
+              t.ingredients,
+              style: TextStyle(fontSize: 13, color: colors.gray),
+            ),
+          ),
           const SizedBox(height: 8),
           Expanded(
             child: ClipRect(

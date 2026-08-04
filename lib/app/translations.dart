@@ -224,7 +224,7 @@ class Translations {
   String get recipeNote =>
       isMs ? 'Resipi ini akan digunakan setiap kali jualan direkod.' : 'This recipe will be used each time a sale is recorded.';
   String get setMeasurement =>
-      isMs ? 'Tetapkan sukatan' : 'Set Measurement';
+      isMs ? 'Resipi' : 'Recipes';
   String get selectHint =>
       isMs ? 'Pilih...' : 'Select...';
   String get manageUsers =>
