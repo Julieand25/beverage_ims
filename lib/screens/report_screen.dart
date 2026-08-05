@@ -161,7 +161,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: pinkAccent,
               bgColor: colors.subtlePurple,
               title: t.dailyCost,
-              value: 'RM ${(sales.todaySales * 0.4).toStringAsFixed(2)}',
+              value: 'RM ${sales.todayCogs.toStringAsFixed(2)}',
               valueColor: pinkAccent,
             ),
             _StatCard(
@@ -169,7 +169,7 @@ class _DailyReport extends StatelessWidget {
               iconColor: primaryGreen,
               bgColor: colors.subtleGreen,
               title: t.dailyProfit,
-              value: 'RM ${(sales.todaySales * 0.6).toStringAsFixed(2)}',
+              value: 'RM ${sales.todayProfit.toStringAsFixed(2)}',
               valueColor: primaryGreen,
             ),
             _StatCard(

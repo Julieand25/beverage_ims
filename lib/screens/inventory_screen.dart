@@ -261,7 +261,7 @@ class _RestockDialogState extends State<_RestockDialog> {
   late TextEditingController minStockCtrl;
   late TextEditingController dateCtrl;
   late TextEditingController noteCtrl;
-  String selectedUnit = 'Kotak';
+  String selectedUnit = 'g';
 
   @override
   void initState() {
@@ -356,9 +356,13 @@ class _RestockDialogState extends State<_RestockDialog> {
                       child: Text(item.name),
                     );
                   }).toList(),
-                  onChanged: (val) {
+                   onChanged: (val) {
                     setState(() {
                       selectedItemId = val;
+                      if (val != null) {
+                        final item = provider.items.firstWhere((i) => i.id == val);
+                        selectedUnit = _unitLabel(item.unit);
+                      }
                     });
                   },
                 ),
@@ -410,7 +414,7 @@ class _RestockDialogState extends State<_RestockDialog> {
                         isExpanded: true,
                         icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
                         style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w600),
-                        items: <String>['Kotak', 'g', 'kg', 'ml', 'L', 'unit'].map((String value) {
+                        items: <String>['g', 'kg', 'ml', 'L', 'unit'].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -428,7 +432,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              t.purchasePriceLabel,
+              t.totalPurchaseAmount,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -546,16 +550,18 @@ class _RestockDialogState extends State<_RestockDialog> {
               child: ElevatedButton(
                 onPressed: () async {
                     if (selectedItemId != null) {
-                      final addedQty = double.tryParse(qtyCtrl.text) ?? 0;
-                      final cost = double.tryParse(costCtrl.text) ?? 0;
+                      final enteredQty = double.tryParse(qtyCtrl.text) ?? 0;
+                      final totalCost = double.tryParse(costCtrl.text) ?? 0;
                       final minStock = double.tryParse(minStockCtrl.text);
-                      if (addedQty > 0) {
+                      if (enteredQty != 0) {
+                        final item = provider.items.firstWhere((i) => i.id == selectedItemId);
+                        final addedQty = _toBaseQuantity(enteredQty, selectedUnit, item.unit);
                         final auth = context.read<AuthProvider>();
                         if (auth.currentUser != null) {
                           await provider.restockItem(
                             itemId: selectedItemId!,
                             addedQty: addedQty,
-                            totalCost: addedQty * cost,
+                            totalCost: totalCost,
                             userId: auth.currentUser!.id,
                             minStock: minStock,
                             purchaseDate: dateCtrl.text,
@@ -692,6 +698,20 @@ String _unitLabel(ItemUnit unit) {
     case ItemUnit.l:
       return 'L';
   }
+}
+
+double _toBaseQuantity(double qty, String fromUnit, ItemUnit baseUnit) {
+  const massUnits = {'g': 1.0, 'kg': 1000.0};
+  const volUnits = {'ml': 1.0, 'L': 1000.0};
+  final baseLabel = _unitLabel(baseUnit);
+
+  if (massUnits.containsKey(fromUnit) && massUnits.containsKey(baseLabel)) {
+    return qty * massUnits[fromUnit]! / massUnits[baseLabel]!;
+  }
+  if (volUnits.containsKey(fromUnit) && volUnits.containsKey(baseLabel)) {
+    return qty * volUnits[fromUnit]! / volUnits[baseLabel]!;
+  }
+  return qty;
 }
 
 InputDecoration _dialogInputDecoration(String label) {

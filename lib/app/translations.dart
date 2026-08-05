@@ -200,6 +200,8 @@ class Translations {
       isMs ? 'Kuantiti' : 'Quantity';
   String get purchasePriceLabel =>
       isMs ? 'Harga Beli Seunit (RM)' : 'Purchase Price Per Unit (RM)';
+  String get totalPurchaseAmount =>
+      isMs ? 'Jumlah Harga Beli (RM)' : 'Total Purchase Amount (RM)';
   String get purchaseDate =>
       isMs ? 'Tarikh Beli' : 'Purchase Date';
   String get noteOptional =>

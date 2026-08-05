@@ -116,7 +116,7 @@ class DashboardScreen extends StatelessWidget {
                     iconColor: pinkAccent,
                     bgColor: colors.subtlePurple,
                     title: t.grossProfit,
-                    value: 'RM ${(sales.todaySales * 0.6).toStringAsFixed(2)}',
+                    value: 'RM ${sales.todayProfit.toStringAsFixed(2)}',
                     valueColor: pinkAccent,
                   ),
                   _StatCard(
