@@ -300,6 +300,9 @@ class _RestockDialogState extends State<_RestockDialog> {
     final t = Translations.of(context);
     final provider = context.watch<InventoryProvider>();
     final colors = Theme.of(context).extension<AppColors>()!;
+    final selectedItem = selectedItemId != null
+        ? provider.items.firstWhere((i) => i.id == selectedItemId)
+        : null;
     const primaryGreen = Color(0xFF5BA154);
 
     return Dialog(
@@ -457,7 +460,7 @@ class _RestockDialogState extends State<_RestockDialog> {
             const SizedBox(height: 14),
 
             Text(
-              t.minStock,
+              selectedItem != null ? '${t.minStock} (${_unitLabel(selectedItem.unit)})' : t.minStock,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
             ),
             const SizedBox(height: 6),
@@ -552,7 +555,10 @@ class _RestockDialogState extends State<_RestockDialog> {
                     if (selectedItemId != null) {
                       final enteredQty = double.tryParse(qtyCtrl.text) ?? 0;
                       final totalCost = double.tryParse(costCtrl.text) ?? 0;
-                      final minStock = double.tryParse(minStockCtrl.text);
+                      final enteredMinStock = double.tryParse(minStockCtrl.text);
+                      final minStock = enteredMinStock != null && selectedItem != null
+                          ? _toBaseQuantity(enteredMinStock, selectedUnit, selectedItem.unit)
+                          : enteredMinStock;
                       if (enteredQty != 0) {
                         final item = provider.items.firstWhere((i) => i.id == selectedItemId);
                         final addedQty = _toBaseQuantity(enteredQty, selectedUnit, item.unit);
@@ -644,6 +650,11 @@ class _InventoryCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: colors.text,
                   ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${t.minStock}: ${item.minStock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
+                  style: TextStyle(fontSize: 11, color: colors.gray),
                 ),
                 const SizedBox(height: 2),
                 Text(
