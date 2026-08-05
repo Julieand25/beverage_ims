@@ -64,7 +64,7 @@ class Translations {
 
   // Recipe
   String get recipeTitle =>
-      isMs ? 'Resipi Minuman' : 'Beverage Recipes';
+      isMs ? 'Resipi' : 'Recipes';
   String get beverageRecipe => isMs ? 'Resipi Minuman' : 'Beverage Recipe';
   String get searchRecipe => isMs ? 'Cari resipi...' : 'Search recipe...';
   String get addRecipe => isMs ? 'Tambah Resipi' : 'Add Recipe';
