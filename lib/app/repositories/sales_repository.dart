@@ -29,44 +29,13 @@ class SupabaseSalesRepository implements SalesRepository {
     required double totalAmount,
     required String userId,
   }) async {
-    await _client.from('sales').insert({
-      'recipe_id': recipeId,
-      'quantity': quantity,
-      'unit_price': unitPrice,
-      'total_amount': totalAmount,
-      'recorded_by': userId,
+    await _client.rpc('record_sale_atomic', params: {
+      'p_recipe_id': recipeId,
+      'p_quantity': quantity,
+      'p_unit_price': unitPrice,
+      'p_total_amount': totalAmount,
+      'p_user_id': userId,
     });
-
-    final ingredients = await _client
-        .from('recipe_ingredients')
-        .select()
-        .eq('recipe_id', recipeId);
-
-    for (final ing in (ingredients as List)) {
-      final itemId = (ing as Map<String, dynamic>)['inventory_item_id'] as String;
-      final qtyPerCup = (ing['quantity'] as num).toDouble();
-      final totalDeduct = qtyPerCup * quantity;
-
-      final item = await _client
-          .from('inventory_items')
-          .select()
-          .eq('id', itemId)
-          .single();
-
-      final newStock = (item['stock'] as num).toDouble() - totalDeduct;
-
-      await _client
-          .from('inventory_items')
-          .update({'stock': newStock, 'updated_at': DateTime.now().toIso8601String()})
-          .eq('id', itemId);
-
-      await _client.from('stock_movements').insert({
-        'inventory_item_id': itemId,
-        'type': 'sale',
-        'quantity': -totalDeduct,
-        'user_id': userId,
-      });
-    }
   }
 
   @override
@@ -88,7 +57,7 @@ class SupabaseSalesRepository implements SalesRepository {
       totalCups += (s['quantity'] as num).toInt();
     }
 
-    final cogs = await _computeSalesCOGS(salesToday);
+    final cogs = await _computeSalesCOGS(startOfDay, endOfDay);
 
     return {
       'total_sales': totalSales,
@@ -98,53 +67,17 @@ class SupabaseSalesRepository implements SalesRepository {
     };
   }
 
-  Future<double> _computeSalesCOGS(List sales) async {
-    if (sales.isEmpty) return 0;
-
-    final recipeIds = sales
-        .map((s) => (s as Map<String, dynamic>)['recipe_id'] as String)
-        .toSet()
-        .toList();
-
-    final ingredients = await _client
-        .from('recipe_ingredients')
-        .select('recipe_id, inventory_item_id, quantity')
-        .inFilter('recipe_id', recipeIds);
-
-    if ((ingredients as List).isEmpty) return 0;
-
-    final itemIds = ingredients
-        .map((i) => (i as Map<String, dynamic>)['inventory_item_id'] as String)
-        .toSet()
-        .toList();
-
-    final items = await _client
-        .from('inventory_items')
-        .select('id, cost_per_unit')
-        .inFilter('id', itemIds);
-
-    final costMap = {
-      for (final i in (items as List))
-        (i as Map<String, dynamic>)['id'] as String:
-            (i['cost_per_unit'] as num).toDouble()
-    };
-
-    final recipeIngredients = <String, List<Map<String, dynamic>>>{};
-    for (final ing in ingredients) {
-      final map = ing as Map<String, dynamic>;
-      recipeIngredients.putIfAbsent(map['recipe_id'] as String, () => []).add(map);
-    }
+  Future<double> _computeSalesCOGS(String start, String end) async {
+    final movements = await _client
+        .from('stock_movements')
+        .select('quantity, cost_per_unit')
+        .eq('type', 'sale')
+        .gte('moved_at', start)
+        .lte('moved_at', end);
 
     double total = 0;
-    for (final s in sales) {
-      final sm = s as Map<String, dynamic>;
-      final rid = sm['recipe_id'] as String;
-      final qty = (sm['quantity'] as num).toInt();
-      for (final ing in recipeIngredients[rid] ?? const <Map<String, dynamic>>[]) {
-        final itemId = ing['inventory_item_id'] as String;
-        final perCup = (ing['quantity'] as num).toDouble();
-        total += perCup * qty * (costMap[itemId] ?? 0);
-      }
+    for (final m in (movements as List)) {
+      total += (m['quantity'] as num).toDouble().abs() * (m['cost_per_unit'] as num? ?? 0).toDouble();
     }
     return total;
   }
@@ -195,8 +128,6 @@ class SupabaseSalesRepository implements SalesRepository {
         .gte('sold_at', startOfMonth)
         .lte('sold_at', endOfMonth);
 
-    final cogs = await _computeSalesCOGS(salesThisMonth);
-
     double totalRevenue = 0;
     final Map<int, Map<String, double>> weekly = {};
     for (final s in (salesThisMonth as List)) {
@@ -207,73 +138,29 @@ class SupabaseSalesRepository implements SalesRepository {
       weekly[weekNum]!['revenue'] = (weekly[weekNum]!['revenue']! + (s['total_amount'] as num).toDouble());
     }
 
-    final cogsPerSale = await _computeCogsPerSale(salesThisMonth);
-    for (final entry in cogsPerSale.entries) {
-      final s = (salesThisMonth as List)[entry.key] as Map<String, dynamic>;
-      final date = DateTime.parse(s['sold_at'] as String);
+    final monthMovements = await _client
+        .from('stock_movements')
+        .select('quantity, cost_per_unit, moved_at')
+        .eq('type', 'sale')
+        .gte('moved_at', startOfMonth)
+        .lte('moved_at', endOfMonth);
+
+    double totalCogs = 0;
+    for (final m in (monthMovements as List)) {
+      final cogs = (m['quantity'] as num).toDouble().abs() * (m['cost_per_unit'] as num? ?? 0).toDouble();
+      totalCogs += cogs;
+      final date = DateTime.parse(m['moved_at'] as String);
       final weekNum = ((date.day - 1) ~/ 7) + 1;
-      weekly[weekNum]!['cost'] = (weekly[weekNum]!['cost'] ?? 0) + entry.value;
+      weekly.putIfAbsent(weekNum, () => {'revenue': 0, 'cost': 0});
+      weekly[weekNum]!['cost'] = (weekly[weekNum]!['cost'] ?? 0) + cogs;
     }
 
     return {
       'total_revenue': totalRevenue,
-      'total_cogs': cogs,
-      'total_profit': totalRevenue - cogs,
+      'total_cogs': totalCogs,
+      'total_profit': totalRevenue - totalCogs,
       'weekly': weekly,
     };
-  }
-
-  Future<Map<int, double>> _computeCogsPerSale(List sales) async {
-    final result = <int, double>{};
-    if (sales.isEmpty) return result;
-
-    final recipeIds = sales
-        .map((s) => (s as Map<String, dynamic>)['recipe_id'] as String)
-        .toSet()
-        .toList();
-
-    final ingredients = await _client
-        .from('recipe_ingredients')
-        .select('recipe_id, inventory_item_id, quantity')
-        .inFilter('recipe_id', recipeIds);
-
-    if ((ingredients as List).isEmpty) return result;
-
-    final itemIds = ingredients
-        .map((i) => (i as Map<String, dynamic>)['inventory_item_id'] as String)
-        .toSet()
-        .toList();
-
-    final items = await _client
-        .from('inventory_items')
-        .select('id, cost_per_unit')
-        .inFilter('id', itemIds);
-
-    final costMap = {
-      for (final i in (items as List))
-        (i as Map<String, dynamic>)['id'] as String:
-            (i['cost_per_unit'] as num).toDouble()
-    };
-
-    final recipeIngredients = <String, List<Map<String, dynamic>>>{};
-    for (final ing in ingredients) {
-      final map = ing as Map<String, dynamic>;
-      recipeIngredients.putIfAbsent(map['recipe_id'] as String, () => []).add(map);
-    }
-
-    for (var idx = 0; idx < (sales as List).length; idx++) {
-      final sm = sales[idx] as Map<String, dynamic>;
-      final rid = sm['recipe_id'] as String;
-      final qty = (sm['quantity'] as num).toInt();
-      double saleCogs = 0;
-      for (final ing in recipeIngredients[rid] ?? const <Map<String, dynamic>>[]) {
-        final itemId = ing['inventory_item_id'] as String;
-        final perCup = (ing['quantity'] as num).toDouble();
-        saleCogs += perCup * qty * (costMap[itemId] ?? 0);
-      }
-      result[idx] = saleCogs;
-    }
-    return result;
   }
 
   @override

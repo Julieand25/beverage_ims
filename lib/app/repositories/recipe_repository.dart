@@ -105,6 +105,7 @@ class SupabaseRecipeRepository implements RecipeRepository {
 
   @override
   Future<void> deleteRecipe(String id) async {
+    await _client.from('recipe_ingredients').delete().eq('recipe_id', id);
     await _client.from('recipes').delete().eq('id', id);
   }
 }

@@ -84,34 +84,16 @@ class SupabaseInventoryRepository implements InventoryRepository {
 
   @override
   Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock, String? purchaseDate, String? note}) async {
-    final response = await _client.from('inventory_items').select().eq('id', itemId).single();
-    final currentStock = (response['stock'] as num).toDouble();
-    final currentCostPerUnit = (response['cost_per_unit'] as num).toDouble();
-    final currentValue = currentStock * currentCostPerUnit;
-    final newStock = currentStock + addedQty;
-    final newCostPerUnit = (currentValue + totalCost) / newStock;
-
-    final updateData = <String, dynamic>{
-      'stock': newStock,
-      'cost_per_unit': newCostPerUnit,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    if (minStock != null) updateData['min_stock'] = minStock;
-
-    await _client.from('inventory_items').update(updateData).eq('id', itemId);
-
-    await _client.from('stock_movements').insert({
-      'inventory_item_id': itemId,
-      'type': 'restock',
-      'quantity': addedQty,
-      'cost_per_unit': totalCost / addedQty,
-      'total_cost': totalCost,
-      'user_id': userId,
-      'purchase_date': purchaseDate,
-      'note': note,
+    final result = await _client.rpc('restock_item_atomic', params: {
+      'p_item_id': itemId,
+      'p_added_qty': addedQty,
+      'p_total_cost': totalCost,
+      'p_user_id': userId,
+      'p_min_stock': minStock,
+      'p_purchase_date': purchaseDate,
+      'p_note': note,
     });
 
-    final updated = await _client.from('inventory_items').select().eq('id', itemId).single();
-    return _fromJson(updated);
+    return _fromJson((result as List).first as Map<String, dynamic>);
   }
 }
