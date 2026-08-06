@@ -208,6 +208,9 @@ class Translations {
       isMs ? 'Nota (pilihan)' : 'Note (optional)';
   String get loginError =>
       isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password';
+  String get connectionError =>
+      isMs ? 'Gagal menyambung ke pelayan. Sila periksa sambungan internet.'
+          : 'Could not connect to the server. Please check your internet connection.';
   String get wrongPassword =>
       isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect';
   String get fillAllFields =>

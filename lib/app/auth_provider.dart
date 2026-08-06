@@ -30,14 +30,16 @@ class AuthProvider extends ChangeNotifier {
     if (user != null) {
       _currentUser = user;
       notifyListeners();
-      await _auditRepo.addLog(AuditLog(
-        userId: user.id,
-        userName: user.name,
-        action: 'LOGIN',
-        targetType: 'auth',
-        details: {'email': email},
-        timestamp: DateTime.now(),
-      ));
+      try {
+        await _auditRepo.addLog(AuditLog(
+          userId: user.id,
+          userName: user.name,
+          action: 'LOGIN',
+          targetType: 'auth',
+          details: {'email': email},
+          timestamp: DateTime.now(),
+        ));
+      } catch (_) {}
       return true;
     }
     return false;
