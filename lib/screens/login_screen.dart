@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset(
                   'assets/sipsync.png',
-                  height: 72,
+                  height: 96,
                 ),
                 const SizedBox(height: 12),
                 Text(
