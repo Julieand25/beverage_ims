@@ -40,9 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  '🥤',
-                  style: const TextStyle(fontSize: 48),
+                Image.asset(
+                  'assets/sipsync.png',
+                  height: 72,
                 ),
                 const SizedBox(height: 12),
                 Text(
