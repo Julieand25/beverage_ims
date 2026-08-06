@@ -17,6 +17,7 @@ import 'repositories/inventory_repository.dart';
 import 'repositories/recipe_repository.dart';
 import 'repositories/sales_repository.dart';
 import 'router/router.dart';
+import 'services/notification_service.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -72,6 +73,16 @@ class _AppRouterState extends State<_AppRouter> {
     super.initState();
     final authProvider = context.read<AuthProvider>();
     _router = createRouter(authProvider: authProvider);
+    _handleColdStartNotification();
+  }
+
+  void _handleColdStartNotification() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final itemId = NotificationService.instance.consumeColdStartItemId();
+      if (itemId != null && mounted) {
+        _router.goNamed('inventori', queryParameters: {'itemId': itemId});
+      }
+    });
   }
 
   @override

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "651893550080",
+    "project_id": "beverage-ims",
+    "storage_bucket": "beverage-ims.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651893550080:android:141cfd44ea61de7ab1fce5",
+        "android_client_info": {
+          "package_name": "com.example.beverage_ims"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLSjyi6FWgeoj91kn8Gap-wZgAFt9dilM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

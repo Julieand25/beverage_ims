@@ -266,4 +266,22 @@ class Translations {
       isMs ? 'Edit Nama' : 'Edit Name';
   String get nameUpdated =>
       isMs ? 'Nama dikemaskini' : 'Name updated';
+  String get lowStockAlertTitle =>
+      isMs ? 'Stok Rendah!' : 'Low Stock!';
+  String lowStockAlertBody(String name, double stock, double minStock, String unit) {
+    var unitStr = unit;
+    if (unit == 'g') unitStr = 'g';
+    if (unit == 'kg') unitStr = 'kg';
+    if (unit == 'ml') unitStr = 'ml';
+    if (unit == 'l') unitStr = 'l';
+    return isMs
+        ? '$name - baki $stock$unitStr (min: $minStock$unitStr)'
+        : '$name - $stock$unitStr left (min: $minStock$unitStr)';
+  }
+  String get notificationPermissionTitle =>
+      isMs ? 'Benarkan Pemberitahuan' : 'Allow Notifications';
+  String get notificationPermissionBody =>
+      isMs
+          ? 'Dapatkan amaran segera apabila stok rendah.'
+          : 'Get instant alerts when stock runs low.';
 }

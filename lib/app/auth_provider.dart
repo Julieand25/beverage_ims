@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'models/audit_log.dart';
 import 'models/user.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/audit_repository.dart';
+import 'services/notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepo;
@@ -30,6 +32,10 @@ class AuthProvider extends ChangeNotifier {
     if (user != null) {
       _currentUser = user;
       notifyListeners();
+      NotificationService.instance.registerToken(
+        user.id,
+        Supabase.instance.client,
+      );
       try {
         await _auditRepo.addLog(AuditLog(
           userId: user.id,
@@ -47,13 +53,18 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     if (_currentUser != null) {
+      final currentId = _currentUser!.id;
       await _auditRepo.addLog(AuditLog(
-        userId: _currentUser!.id,
+        userId: currentId,
         userName: _currentUser!.name,
         action: 'SIGN_OUT',
         targetType: 'auth',
         timestamp: DateTime.now(),
       ));
+      NotificationService.instance.removeToken(
+        currentId,
+        Supabase.instance.client,
+      );
     }
     await _authRepo.logout();
     _currentUser = null;

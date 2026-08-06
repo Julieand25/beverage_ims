@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/about_screen.dart';
 import '../../screens/audit_log_screen.dart';
@@ -15,8 +16,14 @@ import '../../screens/settings_screen.dart';
 import '../auth_provider.dart';
 import '../widgets/app_shell.dart';
 
+class AppRouter {
+  static final navigatorKey = GlobalKey<NavigatorState>();
+  static GoRouter? goRouter;
+}
+
 GoRouter createRouter({required AuthProvider authProvider}) {
-  return GoRouter(
+  final router = GoRouter(
+    navigatorKey: AppRouter.navigatorKey,
     initialLocation: '/login',
     refreshListenable: authProvider,
     redirect: (context, state) {
@@ -74,7 +81,11 @@ GoRouter createRouter({required AuthProvider authProvider}) {
             routes: [
               GoRoute(
                 path: '/inventori',
-                builder: (context, state) => const InventoryScreen(),
+                name: 'inventori',
+                builder: (context, state) {
+                  final itemId = state.uri.queryParameters['itemId'];
+                  return InventoryScreen(focusItemId: itemId);
+                },
               ),
             ],
           ),
@@ -106,4 +117,6 @@ GoRouter createRouter({required AuthProvider authProvider}) {
       ),
     ],
   );
+  AppRouter.goRouter = router;
+  return router;
 }

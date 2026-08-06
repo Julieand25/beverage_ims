@@ -6,10 +6,21 @@ import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/translations.dart';
 
-class InventoryScreen extends StatelessWidget {
-  const InventoryScreen({super.key});
+class InventoryScreen extends StatefulWidget {
+  final String? focusItemId;
 
-  void _showRestockDialog(BuildContext context, {InventoryItem? selectedItem}) {
+  const InventoryScreen({super.key, this.focusItemId});
+
+  @override
+  State<InventoryScreen> createState() => _InventoryScreenState();
+}
+
+class _InventoryScreenState extends State<InventoryScreen> {
+  final _scrollController = ScrollController();
+  bool _didFocusItem = false;
+
+  void _showRestockDialog({InventoryItem? selectedItem}) {
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -17,6 +28,37 @@ class InventoryScreen extends StatelessWidget {
         return _RestockDialog(initialItem: selectedItem);
       },
     );
+  }
+
+  void _scrollToItem(String itemId) {
+    final provider = context.read<InventoryProvider>();
+    final index = provider.filteredItems.indexWhere((i) => i.id == itemId);
+    if (index == -1) return;
+    final offset = index * 180.0;
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _tryFocusItem() {
+    if (_didFocusItem) return;
+    final itemId = widget.focusItemId;
+    if (itemId == null) return;
+    _didFocusItem = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToItem(itemId);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -27,6 +69,10 @@ class InventoryScreen extends StatelessWidget {
     final isAdmin = auth.isAdmin;
     final colors = Theme.of(context).extension<AppColors>()!;
     const pinkAccent = Color(0xFFFF7B89);
+
+    if (!_didFocusItem && widget.focusItemId != null && !provider.isLoading) {
+      _tryFocusItem();
+    }
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -105,7 +151,7 @@ class InventoryScreen extends StatelessWidget {
               child: TextField(
                 onChanged: (v) => provider.setSearchQuery(v),
                 decoration: InputDecoration(
-                  hintText: t.searchItem ?? 'Cari bahan...',
+                  hintText: t.searchItem,
                   hintStyle: TextStyle(fontSize: 14, color: colors.gray),
                   prefixIcon: Icon(Icons.search, size: 20, color: colors.gray),
                   border: InputBorder.none,
@@ -134,12 +180,14 @@ class InventoryScreen extends StatelessWidget {
                       ),
                     )
                   : ListView.builder(
+                      controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: provider.filteredItems.length,
                       itemBuilder: (context, index) {
                         final item = provider.filteredItems[index];
                         return GestureDetector(
-                          onTap: isAdmin ? () => _showRestockDialog(context, selectedItem: item) : null,
+                          key: ValueKey('item_${item.id}'),
+                          onTap: isAdmin ? () => _showRestockDialog(selectedItem: item) : null,
                           child: _InventoryCard(item: item),
                         );
                       },
