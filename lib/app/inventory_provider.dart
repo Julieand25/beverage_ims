@@ -107,4 +107,45 @@ class InventoryProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  Future<void> adjustStock({
+    required String itemId,
+    required double changeQty,
+    required String userId,
+    required double costPerUnit,
+    required String note,
+  }) async {
+    final updated = await _repo.adjustStock(itemId, changeQty, userId: userId, costPerUnit: costPerUnit, note: note);
+    final index = _items.indexWhere((i) => i.id == itemId);
+    if (index != -1) {
+      _items[index].stock = updated.stock;
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateItem({
+    required String id,
+    String? name,
+    ItemCategory? category,
+    ItemUnit? unit,
+    double? minStock,
+    double? costPerUnit,
+  }) async {
+    final updated = await _repo.updateItem(id, name: name, category: category, unit: unit, minStock: minStock, costPerUnit: costPerUnit);
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index != -1) {
+      _items[index] = updated;
+    }
+    notifyListeners();
+  }
+
+  Future<int> getRecipeUsageCount(String itemId) async {
+    return _repo.getRecipeUsageCount(itemId);
+  }
+
+  Future<void> deleteItem(String id) async {
+    await _repo.deleteItem(id);
+    _items.removeWhere((i) => i.id == id);
+    notifyListeners();
+  }
 }

@@ -61,6 +61,310 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
+  void _showEditItemDialog(BuildContext context, InventoryItem item) {
+    final t = Translations.of(context);
+    final nameCtrl = TextEditingController(text: item.name);
+    final minStockCtrl = TextEditingController(text: item.minStock.toStringAsFixed(0));
+    final costCtrl = TextEditingController(text: item.costPerUnit.toStringAsFixed(2));
+    var category = item.category;
+    var unit = item.unit;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(t.edit, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                _dialogField(t.itemName, nameCtrl),
+                const SizedBox(height: 12),
+                InputDecorator(
+                  decoration: _dialogInputDecoration(t.category),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<ItemCategory>(
+                      value: category,
+                      isDense: true,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: ItemCategory.bahan, child: Text('Bahan')),
+                        DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Pembungkusan')),
+                        DropdownMenuItem(value: ItemCategory.lain, child: Text('Lain-lain')),
+                      ],
+                      onChanged: (v) => setDialogState(() => category = v!),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InputDecorator(
+                  decoration: _dialogInputDecoration(t.unit),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<ItemUnit>(
+                      value: unit,
+                      isDense: true,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: ItemUnit.g, child: Text('g')),
+                        DropdownMenuItem(value: ItemUnit.ml, child: Text('ml')),
+                        DropdownMenuItem(value: ItemUnit.unit, child: Text('unit')),
+                        DropdownMenuItem(value: ItemUnit.kg, child: Text('kg')),
+                        DropdownMenuItem(value: ItemUnit.l, child: Text('L')),
+                      ],
+                      onChanged: (v) => setDialogState(() => unit = v!),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _dialogField(t.minStock, minStockCtrl, isNumber: true),
+                const SizedBox(height: 12),
+                _dialogField(t.costPerUnit, costCtrl, isNumber: true),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+                final auth = context.read<AuthProvider>();
+                if (auth.currentUser == null) return;
+                await context.read<InventoryProvider>().updateItem(
+                  id: item.id,
+                  name: nameCtrl.text.trim(),
+                  category: category,
+                  unit: unit,
+                  minStock: double.tryParse(minStockCtrl.text) ?? item.minStock,
+                  costPerUnit: double.tryParse(costCtrl.text) ?? item.costPerUnit,
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(t.save, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAdjustStockDialog(BuildContext context, InventoryItem item) {
+    final t = Translations.of(context);
+    final qtyCtrl = TextEditingController(text: '1');
+    final noteCtrl = TextEditingController();
+    final colors = Theme.of(context).extension<AppColors>()!;
+    var isAdd = true;
+    var selectedUnit = _unitLabel(item.unit);
+    const primaryGreen = Color(0xFF5BA154);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Text(
+                '${item.name}',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.text),
+              ),
+              const Spacer(),
+              Text(
+                '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.gray),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isAdd = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isAdd ? primaryGreen.withAlpha(30) : colors.gray.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                            border: Border.all(color: isAdd ? primaryGreen : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text('+ ${t.addStock}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isAdd ? primaryGreen : colors.gray,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isAdd = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: !isAdd ? const Color(0xFFD32F2F).withAlpha(30) : colors.gray.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                            border: Border.all(color: !isAdd ? const Color(0xFFD32F2F) : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text('- ${t.delete}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: !isAdd ? const Color(0xFFD32F2F) : colors.gray,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: qtyCtrl,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        decoration: InputDecoration(
+                          labelText: t.quantity,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: colors.border),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedUnit,
+                            isDense: true,
+                            isExpanded: true,
+                            style: TextStyle(fontSize: 14, color: colors.text),
+                            items: ['g', 'kg', 'ml', 'L', 'unit']
+                              .where((u) {
+                                if (u == 'g' || u == 'kg') return item.unit == ItemUnit.g || item.unit == ItemUnit.kg;
+                                if (u == 'ml' || u == 'L') return item.unit == ItemUnit.ml || item.unit == ItemUnit.l;
+                                return u == 'unit';
+                              })
+                              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                              .toList(),
+                            onChanged: (v) => setDialogState(() => selectedUnit = v!),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(
+                    labelText: t.noteOptional,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    isDense: true,
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+              onPressed: () async {
+                final qty = double.tryParse(qtyCtrl.text) ?? 0;
+                if (qty <= 0) return;
+                final changeQty = isAdd
+                    ? _toBaseQuantity(qty, selectedUnit, item.unit)
+                    : -_toBaseQuantity(qty, selectedUnit, item.unit);
+                final auth = context.read<AuthProvider>();
+                if (auth.currentUser == null) return;
+                await context.read<InventoryProvider>().adjustStock(
+                  itemId: item.id,
+                  changeQty: changeQty,
+                  userId: auth.currentUser!.id,
+                  costPerUnit: item.costPerUnit,
+                  note: noteCtrl.text.isNotEmpty ? noteCtrl.text : (isAdd ? 'Manual add' : 'Manual deduction'),
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(t.save, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteItem(BuildContext context, InventoryItem item) {
+    final t = Translations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(t.delete),
+        content: FutureBuilder<int>(
+          future: context.read<InventoryProvider>().getRecipeUsageCount(item.id),
+          builder: (context, snapshot) {
+            final count = snapshot.data ?? 0;
+            if (count > 0) {
+              return Text(
+                t.isMs
+                    ? '${item.name} digunakan dalam $count resipi. Tidak boleh dipadam.'
+                    : '${item.name} is used in $count recipe(s). Cannot delete.',
+              );
+            }
+            return Text('${t.deleteConfirm} "${item.name}"?');
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
+          FutureBuilder<int>(
+            future: context.read<InventoryProvider>().getRecipeUsageCount(item.id),
+            builder: (context, snapshot) {
+              final count = snapshot.data ?? 0;
+              if (count > 0) {
+                return TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('OK'),
+                );
+              }
+              return TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.read<InventoryProvider>().deleteItem(item.id);
+                },
+                child: Text(t.delete, style: const TextStyle(color: Colors.red)),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
@@ -179,19 +483,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         style: TextStyle(color: colors.gray, fontSize: 14),
                       ),
                     )
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: provider.filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = provider.filteredItems[index];
-                        return GestureDetector(
-                          key: ValueKey('item_${item.id}'),
-                          onTap: isAdmin ? () => _showRestockDialog(selectedItem: item) : null,
-                          child: _InventoryCard(item: item),
-                        );
-                      },
-                    ),
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: provider.filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = provider.filteredItems[index];
+                          return GestureDetector(
+                            key: ValueKey('item_${item.id}'),
+                            onTap: isAdmin ? () => _showRestockDialog(selectedItem: item) : null,
+                            child: _InventoryCard(
+                              item: item,
+                              isAdmin: isAdmin,
+                              onEdit: () => _showEditItemDialog(context, item),
+                              onAdjust: () => _showAdjustStockDialog(context, item),
+                              onDelete: () => _confirmDeleteItem(context, item),
+                            ),
+                          );
+                        },
+                      ),
             ),
           ),
           ],
@@ -653,7 +963,18 @@ class _RestockDialogState extends State<_RestockDialog> {
 
 class _InventoryCard extends StatelessWidget {
   final InventoryItem item;
-  const _InventoryCard({required this.item});
+  final bool isAdmin;
+  final VoidCallback? onEdit;
+  final VoidCallback? onAdjust;
+  final VoidCallback? onDelete;
+
+  const _InventoryCard({
+    required this.item,
+    this.isAdmin = false,
+    this.onEdit,
+    this.onAdjust,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -663,11 +984,17 @@ class _InventoryCard extends StatelessWidget {
     const textGreen = Color(0xFF4CAF50);
     const softOrangeBg = Color(0xFFFFF3E0);
     const textOrange = Color(0xFFFB8C00);
+    const softRedBg = Color(0xFFFFEBEE);
+    const textRed = Color(0xFFD32F2F);
 
     final isLow = item.isLowStock;
-    final statusBgColor = isLow ? softOrangeBg : softGreenBg;
-    final statusTextColor = isLow ? textOrange : textGreen;
-    final statusText = isLow ? t.lowStock : t.sufficient;
+    final isOut = item.stock <= 0;
+    final statusBgColor = isOut ? softRedBg : (isLow ? softOrangeBg : softGreenBg);
+    final statusTextColor = isOut ? textRed : (isLow ? textOrange : textGreen);
+    final statusText = isOut ? t.nearlyOut : (isLow ? t.lowStock : t.sufficient);
+
+    final ratio = item.minStock > 0 ? (item.stock / item.minStock).clamp(0.0, 1.5) : 1.5;
+    final barColor = isOut ? textRed : (isLow ? textOrange : textGreen);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -676,13 +1003,13 @@ class _InventoryCard extends StatelessWidget {
         color: colors.card,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              Expanded(
+                child: Text(
                   item.name,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -690,31 +1017,7 @@ class _InventoryCard extends StatelessWidget {
                     color: colors.text,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.text,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${t.minStock}: ${item.minStock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                  style: TextStyle(fontSize: 11, color: colors.gray),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Harga: RM${item.costPerUnit.toStringAsFixed(2)} / ${_unitLabel(item.unit)}',
-                  style: TextStyle(fontSize: 11, color: colors.gray),
-                ),
-              ],
-            ),
-          ),
-
-          Row(
-            children: [
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -730,15 +1033,103 @@ class _InventoryCard extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text(
+                '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
+                ),
+              ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: colors.gray,
-                size: 20,
+              Text(
+                'RM ${item.stockValue.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 12, color: colors.gray),
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: SizedBox(
+              height: 6,
+              child: LinearProgressIndicator(
+                value: ratio,
+                backgroundColor: colors.gray.withAlpha(40),
+                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${t.minStock}: ${item.minStock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
+                style: TextStyle(fontSize: 11, color: colors.gray),
+              ),
+              Text(
+                'RM${item.costPerUnit.toStringAsFixed(2)} / ${_unitLabel(item.unit)}',
+                style: TextStyle(fontSize: 11, color: colors.gray),
+              ),
+            ],
+          ),
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _ActionButton(
+                    icon: Icons.edit_outlined,
+                    color: const Color(0xFF5BA154),
+                    onTap: onEdit,
+                  ),
+                  const SizedBox(width: 4),
+                  _ActionButton(
+                    icon: Icons.add_circle_outline,
+                    color: const Color(0xFF1976D2),
+                    onTap: onAdjust,
+                  ),
+                  const SizedBox(width: 4),
+                  _ActionButton(
+                    icon: Icons.delete_outline,
+                    color: const Color(0xFFD32F2F),
+                    onTap: onDelete,
+                  ),
+                ],
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _ActionButton({required this.icon, required this.color, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: color.withAlpha(25),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }

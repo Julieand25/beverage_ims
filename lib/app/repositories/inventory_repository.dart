@@ -5,6 +5,10 @@ abstract class InventoryRepository {
   Future<List<InventoryItem>> getAll({ItemCategory? category, String? query});
   Future<InventoryItem> addItem(InventoryItem item, {required String userId});
   Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock, String? purchaseDate, String? note});
+  Future<InventoryItem> adjustStock(String itemId, double changeQty, {required String userId, required double costPerUnit, required String note});
+  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit});
+  Future<int> getRecipeUsageCount(String itemId);
+  Future<void> deleteItem(String id);
 }
 
 class SupabaseInventoryRepository implements InventoryRepository {
@@ -95,5 +99,43 @@ class SupabaseInventoryRepository implements InventoryRepository {
     });
 
     return _fromJson((result as List).first as Map<String, dynamic>);
+  }
+
+  @override
+  Future<InventoryItem> adjustStock(String itemId, double changeQty, {required String userId, required double costPerUnit, required String note}) async {
+    final result = await _client.rpc('adjust_stock_atomic', params: {
+      'p_item_id': itemId,
+      'p_change_qty': changeQty,
+      'p_cost_per_unit': costPerUnit,
+      'p_user_id': userId,
+      'p_note': note,
+    });
+
+    return _fromJson((result as List).first as Map<String, dynamic>);
+  }
+
+  @override
+  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit}) async {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (category != null) data['category'] = category.name;
+    if (unit != null) data['unit'] = unit.name;
+    if (minStock != null) data['min_stock'] = minStock;
+    if (costPerUnit != null) data['cost_per_unit'] = costPerUnit;
+    data['updated_at'] = DateTime.now().toIso8601String();
+
+    final result = await _client.from('inventory_items').update(data).eq('id', id).select().single();
+    return _fromJson(result);
+  }
+
+  @override
+  Future<int> getRecipeUsageCount(String itemId) async {
+    final result = await _client.from('recipe_ingredients').select().eq('inventory_item_id', itemId);
+    return (result as List).length;
+  }
+
+  @override
+  Future<void> deleteItem(String id) async {
+    await _client.from('inventory_items').delete().eq('id', id);
   }
 }
