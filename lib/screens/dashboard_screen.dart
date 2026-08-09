@@ -388,7 +388,9 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                     style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w500),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
+                        final selected = recipes.firstWhere((r) => r.id == newValue);
                         setState(() => _selectedRecipeId = newValue);
+                        priceController.text = selected.sellingPrice.toStringAsFixed(2);
                       }
                     },
                     items: recipes.map((r) => DropdownMenuItem<String>(
