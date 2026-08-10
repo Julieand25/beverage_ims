@@ -49,6 +49,11 @@ class Translations {
   String get restock => isMs ? 'Perlu Restok?' : 'Need to Restock?';
   String get addStock => isMs ? 'Tambah Stok' : 'Add Stock';
   String get addNewItem => isMs ? 'Tambah Barang Baru' : 'Add New Item';
+  String get stepItemInfo => isMs ? 'Maklumat Item' : 'Item Info';
+  String get stepPricing => isMs ? 'Harga' : 'Pricing';
+  String get stepMinStock => isMs ? 'Stok Minimum' : 'Min Stock';
+  String stepOf(String step, int current, int total) =>
+      isMs ? '$step (Langkah $current/$total)' : '$step (Step $current/$total)';
   String get itemName => isMs ? 'Nama Barang' : 'Item Name';
   String get category => isMs ? 'Kategori' : 'Category';
   String get unit => isMs ? 'Unit' : 'Unit';
@@ -57,6 +62,8 @@ class Translations {
   String get costPerUnit => isMs ? 'Kos Seunit' : 'Cost Per Unit';
   String get cancel => isMs ? 'Batal' : 'Cancel';
   String get save => isMs ? 'Simpan' : 'Save';
+  String get next => isMs ? 'Seterusnya' : 'Next';
+  String get back => isMs ? 'Kembali' : 'Back';
   String get item => isMs ? 'Barang' : 'Item';
   String get addedQty => isMs ? 'Kuantiti Ditambah' : 'Added Quantity';
   String get totalCost => isMs ? 'Jumlah Kos' : 'Total Cost';
@@ -203,9 +210,9 @@ class Translations {
   String get totalPurchaseAmount =>
       isMs ? 'Jumlah Harga Beli (RM)' : 'Total Purchase Amount (RM)';
   String get itemsPerPack =>
-      isMs ? 'Bil. Pek' : 'Items per Pack';
+      isMs ? 'Kuantiti Item' : 'Item Quantity';
   String get qtyPerItem =>
-      isMs ? 'Saiz Seunit' : 'Qty per Item';
+      isMs ? 'Sukatan Item' : 'Item Measurement';
   String get totalPrice =>
       isMs ? 'Jumlah (RM)' : 'Total (RM)';
   String get pricePerItem =>
