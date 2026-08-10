@@ -149,168 +149,154 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   void _showAdjustStockDialog(BuildContext context, InventoryItem item) {
     final t = Translations.of(context);
-    final qtyCtrl = TextEditingController(text: '1');
+    final itemCountCtrl = TextEditingController(text: '1');
+    final perItemSizeCtrl = TextEditingController(text: '1');
+    final priceCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
     final colors = Theme.of(context).extension<AppColors>()!;
     var isAdd = true;
-    var selectedUnit = _unitLabel(item.unit);
+    var isTotalPrice = true;
+    var sizeUnit = item.unit;
+    var currentStep = 0;
     const primaryGreen = Color(0xFF5BA154);
+    const redColor = Color(0xFFD32F2F);
+    final itemUnitLabel = _unitLabel(item.unit);
+
+    final stepLabels = [t.stepAdjustType, t.stepAdjustDetails, t.stepAdjustNote];
+
+    double calcCostPerUnit() {
+      final count = double.tryParse(itemCountCtrl.text) ?? 1;
+      final rawSize = double.tryParse(perItemSizeCtrl.text) ?? 0;
+      final sizeInBase = _toBaseQuantity(rawSize, _unitLabel(sizeUnit), item.unit);
+      final totalQty = count * sizeInBase;
+      final price = double.tryParse(priceCtrl.text) ?? 0;
+      if (isTotalPrice) return totalQty > 0 ? price / totalQty : 0.0;
+      return sizeInBase > 0 ? price / sizeInBase : 0.0;
+    }
+
+    double calcChangeQty() {
+      final count = double.tryParse(itemCountCtrl.text) ?? 0;
+      final rawSize = double.tryParse(perItemSizeCtrl.text) ?? 0;
+      final sizeInBase = _toBaseQuantity(rawSize, _unitLabel(sizeUnit), item.unit);
+      final baseQty = count * sizeInBase;
+      return isAdd ? baseQty : -baseQty;
+    }
+
+    bool canProceed() {
+      if (currentStep == 1) {
+        final count = double.tryParse(itemCountCtrl.text) ?? 0;
+        final size = double.tryParse(perItemSizeCtrl.text) ?? 0;
+        return count > 0 && size > 0;
+      }
+      return true;
+    }
+
+    void doSave() async {
+      final changeQty = calcChangeQty();
+      if (changeQty == 0) return;
+      final auth = context.read<AuthProvider>();
+      if (auth.currentUser == null) return;
+      final cost = calcCostPerUnit();
+      await context.read<InventoryProvider>().adjustStock(
+        itemId: item.id,
+        changeQty: changeQty,
+        userId: auth.currentUser!.id,
+        costPerUnit: cost > 0 ? cost : item.costPerUnit,
+        note: noteCtrl.text.isNotEmpty ? noteCtrl.text : (isAdd ? 'Manual add' : 'Manual deduction'),
+      );
+      Navigator.of(context).pop();
+    }
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Text(
-                item.name,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.text),
-              ),
-              const Spacer(),
-              Text(
-                '${item.stock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.gray),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
+        builder: (ctx, setDialogState) {
+          final changeQty = calcChangeQty();
+          final newCostPerUnit = calcCostPerUnit();
+          final afterStock = item.stock + changeQty;
+          final currentValue = item.stock * item.costPerUnit;
+          final afterValue = afterStock * (newCostPerUnit > 0 ? newCostPerUnit : item.costPerUnit);
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () => setDialogState(() => isAdd = true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isAdd ? primaryGreen.withAlpha(30) : colors.gray.withAlpha(15),
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-                            border: Border.all(color: isAdd ? primaryGreen : Colors.transparent),
-                          ),
-                          child: Center(
-                            child: Text('+ ${t.addStock}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isAdd ? primaryGreen : colors.gray,
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: Text(item.name,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.text),
                       ),
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setDialogState(() => isAdd = false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: !isAdd ? const Color(0xFFD32F2F).withAlpha(30) : colors.gray.withAlpha(15),
-                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-                            border: Border.all(color: !isAdd ? const Color(0xFFD32F2F) : Colors.transparent),
-                          ),
-                          child: Center(
-                            child: Text('- ${t.delete}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: !isAdd ? const Color(0xFFD32F2F) : colors.gray,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    Text(
+                      '${t.quantity}: ${item.stock.toStringAsFixed(0)} $itemUnitLabel',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.gray),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: qtyCtrl,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        decoration: InputDecoration(
-                          labelText: t.quantity,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: colors.border),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: selectedUnit,
-                            isDense: true,
-                            isExpanded: true,
-                            style: TextStyle(fontSize: 14, color: colors.text),
-                            items: ['g', 'kg', 'ml', 'L', 'unit']
-                              .where((u) {
-                                if (u == 'g' || u == 'kg') return item.unit == ItemUnit.g || item.unit == ItemUnit.kg;
-                                if (u == 'ml' || u == 'L') return item.unit == ItemUnit.ml || item.unit == ItemUnit.l;
-                                return u == 'unit';
-                              })
-                              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                              .toList(),
-                            onChanged: (v) => setDialogState(() => selectedUnit = v!),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: noteCtrl,
-                  decoration: InputDecoration(
-                    labelText: t.noteOptional,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    isDense: true,
-                  ),
-                  maxLines: 2,
-                ),
+                const SizedBox(height: 4),
+                Text(t.stepOf(stepLabels[currentStep], currentStep + 1, 3),
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
-              onPressed: () async {
-                final qty = double.tryParse(qtyCtrl.text) ?? 0;
-                if (qty <= 0) return;
-                final changeQty = isAdd
-                    ? _toBaseQuantity(qty, selectedUnit, item.unit)
-                    : -_toBaseQuantity(qty, selectedUnit, item.unit);
-                final auth = context.read<AuthProvider>();
-                if (auth.currentUser == null) return;
-                await context.read<InventoryProvider>().adjustStock(
-                  itemId: item.id,
-                  changeQty: changeQty,
-                  userId: auth.currentUser!.id,
-                  costPerUnit: item.costPerUnit,
-                  note: noteCtrl.text.isNotEmpty ? noteCtrl.text : (isAdd ? 'Manual add' : 'Manual deduction'),
-                );
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: Text(t.save, style: const TextStyle(color: Colors.white)),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: _buildAdjustStep(
+                currentStep,
+                t,
+                itemCountCtrl,
+                perItemSizeCtrl,
+                priceCtrl,
+                noteCtrl,
+                item,
+                isAdd,
+                isTotalPrice,
+                sizeUnit,
+                primaryGreen,
+                redColor,
+                colors,
+                setDialogState,
+                (v) => isAdd = v,
+                (v) => isTotalPrice = v,
+                (v) => sizeUnit = v,
+                changeQty,
+                afterStock,
+                currentValue,
+                afterValue,
+              ),
             ),
-          ],
-        ),
+            actions: [
+              if (currentStep > 0)
+                TextButton(
+                  onPressed: () => setDialogState(() => currentStep--),
+                  child: Text(t.back),
+                )
+              else
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(t.cancel),
+                ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  disabledBackgroundColor: primaryGreen.withAlpha(100),
+                ),
+                onPressed: canProceed()
+                    ? () {
+                        if (currentStep < 2) {
+                          setDialogState(() => currentStep++);
+                        } else {
+                          doSave();
+                        }
+                      }
+                    : null,
+                child: Text(currentStep < 2 ? t.next : t.save,
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -743,6 +729,219 @@ class _InventoryScreenState extends State<InventoryScreen> {
           shrinkWrap: true,
           children: [
             _dialogField('${t.minStock} ($unitLabel)', minStockCtrl, isNumber: true),
+          ],
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildAdjustStep(
+    int step,
+    Translations t,
+    TextEditingController itemCountCtrl,
+    TextEditingController perItemSizeCtrl,
+    TextEditingController priceCtrl,
+    TextEditingController noteCtrl,
+    InventoryItem item,
+    bool isAdd,
+    bool isTotalPrice,
+    ItemUnit sizeUnit,
+    Color primaryGreen,
+    Color redColor,
+    AppColors colors,
+    void Function(VoidCallback) setDialogState,
+    void Function(bool) setIsAdd,
+    void Function(bool) setIsTotalPrice,
+    void Function(ItemUnit) setSizeUnit,
+    double changeQty,
+    double afterStock,
+    double currentValue,
+    double afterValue,
+  ) {
+    final itemUnitLabel = _unitLabel(item.unit);
+    final changeLabel = isAdd
+        ? '+${_displayQty(changeQty)} $itemUnitLabel'
+        : '${_displayQty(changeQty)} $itemUnitLabel';
+    final changeColor = isAdd ? primaryGreen : redColor;
+
+    switch (step) {
+      case 0:
+        return ListView(
+          shrinkWrap: true,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setDialogState(() => setIsAdd(true)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isAdd ? primaryGreen.withAlpha(30) : colors.gray.withAlpha(15),
+                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                        border: Border.all(color: isAdd ? primaryGreen : Colors.transparent),
+                      ),
+                      child: Center(
+                        child: Text('+ ${t.addStock}',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                              color: isAdd ? primaryGreen : colors.gray),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setDialogState(() => setIsAdd(false)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: !isAdd ? redColor.withAlpha(30) : colors.gray.withAlpha(15),
+                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                        border: Border.all(color: !isAdd ? redColor : Colors.transparent),
+                      ),
+                      child: Center(
+                        child: Text('- ${t.removeStock}',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                              color: !isAdd ? redColor : colors.gray),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      case 1:
+        return ListView(
+          shrinkWrap: true,
+          children: [
+            TextField(
+              controller: itemCountCtrl,
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+              decoration: _dialogInputDecoration(t.itemsPerPack),
+              onChanged: (_) => setDialogState(() {}),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: perItemSizeCtrl,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+                    decoration: _dialogInputDecoration(t.qtyPerItem),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: InputDecorator(
+                    decoration: _dialogInputDecoration(''),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<ItemUnit>(
+                        value: sizeUnit,
+                        isDense: true,
+                        isExpanded: true,
+                        items: [ItemUnit.g, ItemUnit.kg, ItemUnit.ml, ItemUnit.l, ItemUnit.unit]
+                          .where((u) {
+                            if (u == ItemUnit.g || u == ItemUnit.kg) return item.unit == ItemUnit.g || item.unit == ItemUnit.kg;
+                            if (u == ItemUnit.ml || u == ItemUnit.l) return item.unit == ItemUnit.ml || item.unit == ItemUnit.l;
+                            return u == ItemUnit.unit;
+                          })
+                          .map((u) => DropdownMenuItem(value: u, child: Text(_unitLabel(u))))
+                          .toList(),
+                        onChanged: (v) => setDialogState(() => setSizeUnit(v!)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setDialogState(() => setIsTotalPrice(true)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isTotalPrice ? primaryGreen.withAlpha(30) : colors.gray.withAlpha(15),
+                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                        border: Border.all(color: isTotalPrice ? primaryGreen : Colors.transparent),
+                      ),
+                      child: Center(
+                        child: Text(t.totalPrice,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                              color: isTotalPrice ? primaryGreen : colors.gray),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setDialogState(() => setIsTotalPrice(false)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: !isTotalPrice ? primaryGreen.withAlpha(30) : colors.gray.withAlpha(15),
+                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                        border: Border.all(color: !isTotalPrice ? primaryGreen : Colors.transparent),
+                      ),
+                      child: Center(
+                        child: Text(t.pricePerItem,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                              color: !isTotalPrice ? primaryGreen : colors.gray),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _dialogField(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, priceCtrl, isNumber: true),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                children: [
+                  _previewRow('${t.quantity}:', '${item.stock.toStringAsFixed(0)} $itemUnitLabel', 'RM ${currentValue.toStringAsFixed(2)}', colors),
+                  Divider(color: colors.border, height: 1),
+                  const SizedBox(height: 6),
+                  _previewRow(t.isMs ? 'Perubahan:' : 'Change:', changeLabel, 'RM ${(afterValue - currentValue).abs().toStringAsFixed(2)}', colors, valueColor: changeColor),
+                  const SizedBox(height: 2),
+                  _previewRow(t.isMs ? 'Selepas:' : 'After:', '${afterStock.toStringAsFixed(0)} $itemUnitLabel', 'RM ${afterValue.toStringAsFixed(2)}', colors, valueColor: primaryGreen),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 2:
+        return ListView(
+          shrinkWrap: true,
+          children: [
+            TextField(
+              controller: noteCtrl,
+              decoration: InputDecoration(
+                labelText: t.noteOptional,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                isDense: true,
+              ),
+              maxLines: 2,
+            ),
           ],
         );
       default:
@@ -1309,6 +1508,23 @@ double _toBaseQuantity(double qty, String fromUnit, ItemUnit baseUnit) {
     return qty * volUnits[fromUnit]! / volUnits[baseLabel]!;
   }
   return qty;
+}
+
+Widget _previewRow(String label, String qty, String value, AppColors colors, {Color? valueColor}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        SizedBox(width: 70, child: Text(label, style: TextStyle(fontSize: 12, color: colors.gray))),
+        Expanded(child: Text(qty, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: valueColor ?? colors.text))),
+        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: valueColor ?? colors.text)),
+      ],
+    ),
+  );
+}
+
+String _displayQty(double qty) {
+  return qty > 0 ? '+${qty.toStringAsFixed(0)}' : qty.toStringAsFixed(0);
 }
 
 InputDecoration _dialogInputDecoration(String label) {

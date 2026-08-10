@@ -48,10 +48,14 @@ class Translations {
   String get lowStock => isMs ? 'Stok Rendah' : 'Low Stock';
   String get restock => isMs ? 'Perlu Restok?' : 'Need to Restock?';
   String get addStock => isMs ? 'Tambah Stok' : 'Add Stock';
+  String get removeStock => isMs ? 'Kurang Stok' : 'Remove Stock';
   String get addNewItem => isMs ? 'Tambah Barang Baru' : 'Add New Item';
   String get stepItemInfo => isMs ? 'Maklumat Item' : 'Item Info';
   String get stepPricing => isMs ? 'Harga' : 'Pricing';
   String get stepMinStock => isMs ? 'Stok Minimum' : 'Min Stock';
+  String get stepAdjustType => isMs ? 'Jenis' : 'Type';
+  String get stepAdjustDetails => isMs ? 'Butiran' : 'Details';
+  String get stepAdjustNote => isMs ? 'Nota' : 'Note';
   String stepOf(String step, int current, int total) =>
       isMs ? '$step (Langkah $current/$total)' : '$step (Step $current/$total)';
   String get itemName => isMs ? 'Nama Barang' : 'Item Name';
