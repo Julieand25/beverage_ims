@@ -536,6 +536,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                             userId: auth.currentUser!.id,
                             userName: auth.currentUser!.name,
                           );
+                          await context.read<InventoryProvider>().loadAll();
 
                           if (!mounted) return;
                           setState(() => _isSaving = false);

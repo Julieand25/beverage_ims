@@ -27,10 +27,12 @@ class NotificationService {
       showBadge: true,
     );
 
-    await _localNotifications
+    final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidChannel);
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.requestNotificationsPermission();
+
+    await androidPlugin?.createNotificationChannel(androidChannel);
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');

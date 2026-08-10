@@ -1,6 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { initializeApp, cert, getApps } from "npm:firebase-admin@^12.0.0";
-import { getMessaging } from "npm:firebase-admin@^12.0.0/messaging";
+import { initializeApp, cert, getApps } from "npm:firebase-admin@12/app";
+import { getMessaging } from "npm:firebase-admin@12/messaging";
 
 // Firebase Admin SDK service account key
 // Set via: npx supabase secrets set FIREBASE_SERVICE_ACCOUNT='{...}'
