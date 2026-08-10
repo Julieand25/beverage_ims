@@ -224,7 +224,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           title: Row(
             children: [
               Text(
-                '${item.name}',
+                item.name,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.text),
               ),
               const Spacer(),
@@ -410,7 +410,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               }
               return TextButton(
                 onPressed: () {
-      Navigator.of(context).pop();
+                  Navigator.pop(ctx);
                   context.read<InventoryProvider>().deleteItem(item.id);
                 },
                 child: Text(t.delete, style: const TextStyle(color: Colors.red)),
