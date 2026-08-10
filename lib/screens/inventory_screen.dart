@@ -65,9 +65,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final t = Translations.of(context);
     final nameCtrl = TextEditingController(text: item.name);
     final minStockCtrl = TextEditingController(text: item.minStock.toStringAsFixed(0));
-    final costCtrl = TextEditingController(text: item.costPerUnit.toStringAsFixed(2));
+    final itemCountCtrl = TextEditingController(text: '1');
+    final perItemSizeCtrl = TextEditingController(text: '1');
+    final priceCtrl = TextEditingController(text: item.costPerUnit.toStringAsFixed(2));
     var category = item.category;
     var unit = item.unit;
+    var isTotalPrice = false;
+    const primaryGreen = Color(0xFF5BA154);
 
     showDialog(
       context: context,
@@ -118,27 +122,79 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _dialogField(t.minStock, minStockCtrl, isNumber: true),
+                _dialogField(t.itemsPerPack, itemCountCtrl, isNumber: true),
                 const SizedBox(height: 12),
-                _dialogField(t.costPerUnit, costCtrl, isNumber: true),
+                _dialogField(t.qtyPerItem, perItemSizeCtrl, isNumber: true),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isTotalPrice = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isTotalPrice ? primaryGreen.withAlpha(30) : Colors.grey.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                            border: Border.all(color: isTotalPrice ? primaryGreen : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text(t.totalPrice,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isTotalPrice ? primaryGreen : Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isTotalPrice = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: !isTotalPrice ? primaryGreen.withAlpha(30) : Colors.grey.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                            border: Border.all(color: !isTotalPrice ? primaryGreen : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text(t.pricePerItem,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: !isTotalPrice ? primaryGreen : Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _dialogField(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, priceCtrl, isNumber: true),
+                const SizedBox(height: 12),
+                _dialogField(t.minStock, minStockCtrl, isNumber: true),
               ],
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
+              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
                 final auth = context.read<AuthProvider>();
                 if (auth.currentUser == null) return;
+                final itemCount = double.tryParse(itemCountCtrl.text) ?? 1;
+                final perItemSize = double.tryParse(perItemSizeCtrl.text) ?? 0;
+                final price = double.tryParse(priceCtrl.text) ?? 0;
+                final totalQty = itemCount * perItemSize;
+                final costPerUnit = isTotalPrice
+                    ? (totalQty > 0 ? price / totalQty : 0.0)
+                    : (perItemSize > 0 ? price / perItemSize : 0.0);
                 await context.read<InventoryProvider>().updateItem(
                   id: item.id,
                   name: nameCtrl.text.trim(),
                   category: category,
                   unit: unit,
                   minStock: double.tryParse(minStockCtrl.text) ?? item.minStock,
-                  costPerUnit: double.tryParse(costCtrl.text) ?? item.costPerUnit,
+                  costPerUnit: costPerUnit,
                 );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
@@ -513,11 +569,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void _showAddItemDialog(BuildContext context) {
     final t = Translations.of(context);
     final nameCtrl = TextEditingController();
-    final stockCtrl = TextEditingController();
     final minStockCtrl = TextEditingController();
-    final costCtrl = TextEditingController();
+    final itemCountCtrl = TextEditingController(text: '1');
+    final perItemSizeCtrl = TextEditingController(text: '1');
+    final priceCtrl = TextEditingController();
     var category = ItemCategory.bahan;
     var unit = ItemUnit.g;
+    var isTotalPrice = true;
+    const primaryGreen = Color(0xFF5BA154);
 
     showDialog(
       context: context,
@@ -568,29 +627,79 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _dialogField(t.initialStock, stockCtrl, isNumber: true),
+                _dialogField(t.itemsPerPack, itemCountCtrl, isNumber: true),
+                const SizedBox(height: 12),
+                _dialogField(t.qtyPerItem, perItemSizeCtrl, isNumber: true),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isTotalPrice = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isTotalPrice ? primaryGreen.withAlpha(30) : Colors.grey.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                            border: Border.all(color: isTotalPrice ? primaryGreen : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text(t.totalPrice,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isTotalPrice ? primaryGreen : Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setDialogState(() => isTotalPrice = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: !isTotalPrice ? primaryGreen.withAlpha(30) : Colors.grey.withAlpha(15),
+                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                            border: Border.all(color: !isTotalPrice ? primaryGreen : Colors.transparent),
+                          ),
+                          child: Center(
+                            child: Text(t.pricePerItem,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: !isTotalPrice ? primaryGreen : Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _dialogField(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, priceCtrl, isNumber: true),
                 const SizedBox(height: 12),
                 _dialogField(t.minStock, minStockCtrl, isNumber: true),
-                const SizedBox(height: 12),
-                _dialogField(t.costPerUnit, costCtrl, isNumber: true),
               ],
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
+              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
                 final auth = context.read<AuthProvider>();
                 if (auth.currentUser == null) return;
+                final itemCount = double.tryParse(itemCountCtrl.text) ?? 1;
+                final perItemSize = double.tryParse(perItemSizeCtrl.text) ?? 0;
+                final price = double.tryParse(priceCtrl.text) ?? 0;
+                final totalQty = itemCount * perItemSize;
+                final costPerUnit = isTotalPrice
+                    ? (totalQty > 0 ? price / totalQty : 0.0)
+                    : (perItemSize > 0 ? price / perItemSize : 0.0);
                 await context.read<InventoryProvider>().addItem(
                       name: nameCtrl.text.trim(),
                       category: category,
                       unit: unit,
-                      stock: double.tryParse(stockCtrl.text) ?? 0,
+                      stock: 0,
                       minStock: double.tryParse(minStockCtrl.text) ?? 0,
-                      costPerUnit: double.tryParse(costCtrl.text) ?? 0,
+                      costPerUnit: costPerUnit,
                       userId: auth.currentUser!.id,
                     );
                 Navigator.pop(ctx);
@@ -629,13 +738,13 @@ class _RestockDialogState extends State<_RestockDialog> {
     if (widget.initialItem != null) {
       selectedItemId = widget.initialItem!.id;
       qtyCtrl = TextEditingController(text: widget.initialItem!.stock.toStringAsFixed(0));
-      costCtrl = TextEditingController(text: widget.initialItem!.costPerUnit.toStringAsFixed(2));
+      costCtrl = TextEditingController();
       minStockCtrl = TextEditingController(text: widget.initialItem!.minStock.toStringAsFixed(0));
       selectedUnit = _unitLabel(widget.initialItem!.unit);
     } else {
       selectedItemId = provider.items.isNotEmpty ? provider.items.first.id : null;
       qtyCtrl = TextEditingController(text: '10');
-      costCtrl = TextEditingController(text: '7.80');
+      costCtrl = TextEditingController();
       minStockCtrl = TextEditingController(text: '0');
     }
 

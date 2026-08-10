@@ -202,6 +202,18 @@ class Translations {
       isMs ? 'Harga Beli Seunit (RM)' : 'Purchase Price Per Unit (RM)';
   String get totalPurchaseAmount =>
       isMs ? 'Jumlah Harga Beli (RM)' : 'Total Purchase Amount (RM)';
+  String get itemsPerPack =>
+      isMs ? 'Bil. Pek' : 'Items per Pack';
+  String get qtyPerItem =>
+      isMs ? 'Saiz Seunit' : 'Qty per Item';
+  String get totalPrice =>
+      isMs ? 'Jumlah (RM)' : 'Total (RM)';
+  String get pricePerItem =>
+      isMs ? 'Seunit' : 'Per Item';
+  String get totalPaidLabel =>
+      isMs ? 'Jumlah Dibayar (RM)' : 'Total Paid (RM)';
+  String get priceEachLabel =>
+      isMs ? 'Harga Seunit (RM)' : 'Price Each (RM)';
   String get purchaseDate =>
       isMs ? 'Tarikh Beli' : 'Purchase Date';
   String get noteOptional =>
