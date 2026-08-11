@@ -229,6 +229,11 @@ class Translations {
       isMs ? 'Tarikh Beli' : 'Purchase Date';
   String get noteOptional =>
       isMs ? 'Nota (pilihan)' : 'Note (optional)';
+  String get stockClampedTitle =>
+      isMs ? 'Stok Tidak Mencukupi' : 'Insufficient Stock';
+  String stockClampedBody(String name) =>
+      isMs ? 'Pengurangan melebihi stok semasa "$name". Stok akan ditetapkan kepada 0. Teruskan?'
+          : 'Deduction exceeds current stock of "$name". Stock will be set to 0. Continue?';
   String get loginError =>
       isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password';
   String get connectionError =>

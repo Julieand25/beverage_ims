@@ -14,7 +14,7 @@ DECLARE
   v_new_stock REAL;
 BEGIN
   UPDATE inventory_items
-  SET stock = stock + p_change_qty,
+  SET stock = GREATEST(0, stock + p_change_qty),
       cost_per_unit = CASE WHEN p_cost_per_unit > 0 THEN p_cost_per_unit ELSE cost_per_unit END,
       updated_at = now()
   WHERE id = p_item_id

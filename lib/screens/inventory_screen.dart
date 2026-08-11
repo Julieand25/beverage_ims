@@ -192,10 +192,33 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
 
     void doSave() async {
-      final changeQty = calcChangeQty();
+      var changeQty = calcChangeQty();
       if (changeQty == 0) return;
       final auth = context.read<AuthProvider>();
       if (auth.currentUser == null) return;
+
+      final afterStock = item.stock + changeQty;
+      if (!isAdd && afterStock < 0) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(t.stockClampedTitle),
+            content: Text(t.stockClampedBody(item.name)),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(t.save, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+        changeQty = -item.stock;
+      }
+
       final cost = calcCostPerUnit();
       await context.read<InventoryProvider>().adjustStock(
         itemId: item.id,
@@ -204,7 +227,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         costPerUnit: cost > 0 ? cost : item.costPerUnit,
         note: noteCtrl.text.isNotEmpty ? noteCtrl.text : (isAdd ? 'Manual add' : 'Manual deduction'),
       );
-      Navigator.of(context).pop();
+      Navigator.of(context, rootNavigator: true).pop();
     }
 
     showDialog(
@@ -533,7 +556,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             costPerUnit: costPerUnit,
             userId: auth.currentUser!.id,
           );
-      Navigator.of(context).pop();
+      Navigator.of(context, rootNavigator: true).pop();
     }
 
     showDialog(
@@ -1280,7 +1303,7 @@ class _RestockDialogState extends State<_RestockDialog> {
                         }
                       }
                     }
-                  Navigator.of(context).pop();
+                  Navigator.of(context, rootNavigator: true).pop();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryGreen,
