@@ -5,7 +5,6 @@ import '../app/app_colors.dart';
 import '../app/auth_provider.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
-import '../app/models/recipe.dart';
 import '../app/recipe_provider.dart';
 import '../app/sales_provider.dart';
 import '../app/translations.dart';
@@ -16,10 +15,7 @@ class DashboardScreen extends StatelessWidget {
   void _showRecordSaleDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        final recipes = context.read<RecipeProvider>().recipes;
-        return _RecordSaleModal(recipes: recipes);
-      },
+      builder: (BuildContext context) => const _RecordSaleModal(),
     );
   }
 
@@ -299,8 +295,7 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _RecordSaleModal extends StatefulWidget {
-  final List<Recipe> recipes;
-  const _RecordSaleModal({required this.recipes});
+  const _RecordSaleModal();
 
   @override
   State<_RecordSaleModal> createState() => _RecordSaleModalState();
@@ -331,7 +326,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
     final colors = Theme.of(context).extension<AppColors>()!;
     final t = Translations.of(context);
     const saveButtonColor = Color(0xFFFF7B89);
-    final recipes = widget.recipes;
+    final recipes = context.watch<RecipeProvider>().recipes;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -525,7 +520,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                           setState(() => _isSaving = true);
                           final auth = context.read<AuthProvider>();
                           final salesProvider = context.read<SalesProvider>();
-                          final selectedRecipe = widget.recipes.firstWhere((r) => r.id == _selectedRecipeId);
+                          final selectedRecipe = recipes.firstWhere((r) => r.id == _selectedRecipeId);
 
                           await salesProvider.recordSale(
                             recipeId: selectedRecipe.id,
