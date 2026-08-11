@@ -166,7 +166,6 @@ class _ReportScreenState extends State<ReportScreen> {
     final isMs = t.isMs;
 
     Uint8List bytes;
-    String filename;
 
     switch (option) {
       case 0: // Daily
@@ -187,7 +186,6 @@ class _ReportScreenState extends State<ReportScreen> {
           unknownItemLabel: t.unknownItem,
           cupUnit: t.cupUnit,
         );
-        filename = 'daily_report_${_dailyDate.day}_${_dailyDate.month}_${_dailyDate.year}.pdf';
         break;
       case 1: // Stock
         await sales.loadStockMovements(startDate: _stockStartDate, endDate: _stockEndDate);
@@ -201,7 +199,6 @@ class _ReportScreenState extends State<ReportScreen> {
           startDate: _stockStartDate,
           endDate: _stockEndDate,
         );
-        filename = 'stock_history.pdf';
         break;
       case 2: // Monthly
         await sales.loadMonthlyComparison(_monthlyMonth);
@@ -216,7 +213,6 @@ class _ReportScreenState extends State<ReportScreen> {
           lastMonthProfit: sales.lastMonthProfit,
           weeklyStats: sales.weeklyStats,
         );
-        filename = 'monthly_summary_${_monthName(_monthlyMonth.month, isMs)}_${_monthlyMonth.year}.pdf';
         break;
       case 3: // All
         await Future.wait([
@@ -254,13 +250,12 @@ class _ReportScreenState extends State<ReportScreen> {
           stockStartDate: _stockStartDate,
           stockEndDate: _stockEndDate,
         );
-        filename = 'full_report_${_dateStr(DateTime.now()).replaceAll('/', '_')}.pdf';
         break;
       default:
         return;
     }
 
-    await ReportPdfExporter.sharePdf(bytes, filename);
+    await ReportPdfExporter.previewPdf(bytes);
   }
 
   String _dateStr(DateTime? d) {

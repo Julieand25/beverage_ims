@@ -106,8 +106,8 @@ class ReportPdfExporter {
     return pdf.save();
   }
 
-  static Future<void> sharePdf(Uint8List bytes, String filename) async {
-    await Printing.sharePdf(bytes: bytes, filename: filename);
+  static Future<void> previewPdf(Uint8List bytes) async {
+    await Printing.layoutPdf(onLayout: (_) async => bytes);
   }
 
   static Future<Uint8List> generateDailyReport({
