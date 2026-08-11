@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app/app_colors.dart';
+import '../app/report_pdf_exporter.dart';
 import '../app/sales_provider.dart';
 import '../app/translations.dart';
 
@@ -13,6 +15,258 @@ class ReportScreen extends StatefulWidget {
 
 class _ReportScreenState extends State<ReportScreen> {
   int _selectedTab = 0;
+
+  DateTime _dailyDate = DateTime.now();
+  DateTime _monthlyMonth = DateTime.now();
+
+  int _stockQuickFilter = 0;
+  DateTime? _stockStartDate;
+  DateTime? _stockEndDate;
+
+  bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final sales = context.read<SalesProvider>();
+    sales.loadDailyComparison(_dailyDate);
+    sales.loadMonthlyComparison(_monthlyMonth);
+    sales.loadStockMovements();
+  }
+
+  void _onDateChanged(SalesProvider sales, DateTime date) {
+    setState(() => _dailyDate = date);
+    sales.loadDailyComparison(date);
+  }
+
+  void _onMonthChanged(SalesProvider sales, int delta) {
+    setState(() {
+      _monthlyMonth = DateTime(_monthlyMonth.year, _monthlyMonth.month + delta, 1);
+    });
+    sales.loadMonthlyComparison(_monthlyMonth);
+  }
+
+  bool get _canGoNextMonth =>
+      DateTime(_monthlyMonth.year, _monthlyMonth.month + 1, 0).isBefore(DateTime.now());
+
+  void _onStockFilterChanged(SalesProvider sales, int filter, {DateTime? start, DateTime? end}) {
+    setState(() {
+      _stockQuickFilter = filter;
+      _stockStartDate = start;
+      _stockEndDate = end;
+    });
+    sales.loadStockMovements(startDate: start, endDate: end);
+  }
+
+  Future<void> _showExportSheet() async {
+    final t = Translations.of(context);
+    final colors = Theme.of(context).extension<AppColors>()!;
+
+    int selectedExport = 0;
+
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: colors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Text(
+                      t.exportPdfTitle,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.text),
+                    ),
+                  ),
+                  const Divider(),
+                  _ExportTile(
+                    title: t.dailyReport,
+                    subtitle: '${_dailyDate.day} ${_monthName(_dailyDate.month, t.isMs)} ${_dailyDate.year}',
+                    isSelected: selectedExport == 0,
+                    onTap: () => setModalState(() => selectedExport = 0),
+                  ),
+                  _ExportTile(
+                    title: t.stockHistory,
+                    subtitle: _stockQuickFilter == 0
+                        ? t.allTime
+                        : _stockQuickFilter == 1
+                            ? t.last7Days
+                            : _stockQuickFilter == 2
+                                ? t.last30Days
+                                : '${_dateStr(_stockStartDate)} - ${_dateStr(_stockEndDate)}',
+                    isSelected: selectedExport == 1,
+                    onTap: () => setModalState(() => selectedExport = 1),
+                  ),
+                  _ExportTile(
+                    title: t.monthlySummary,
+                    subtitle: '${_monthName(_monthlyMonth.month, t.isMs)} ${_monthlyMonth.year}',
+                    isSelected: selectedExport == 2,
+                    onTap: () => setModalState(() => selectedExport = 2),
+                  ),
+                  _ExportTile(
+                    title: t.allReports,
+                    subtitle: t.allReportsSubtitle,
+                    isSelected: selectedExport == 3,
+                    onTap: () => setModalState(() => selectedExport = 3),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: _isExporting
+                          ? const Center(child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(),
+                            ))
+                          : ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF5BA154),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx, selectedExport);
+                              },
+                              child: Text(t.generatePdf, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (result != null) {
+      setState(() => _isExporting = true);
+      try {
+        await _generateAndExport(result);
+      } finally {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  Future<void> _generateAndExport(int option) async {
+    final t = Translations.of(context);
+    final sales = context.read<SalesProvider>();
+    final isMs = t.isMs;
+
+    Uint8List bytes;
+    String filename;
+
+    switch (option) {
+      case 0: // Daily
+        await sales.loadDailyComparison(_dailyDate);
+        bytes = await ReportPdfExporter.generateDailyReport(
+          date: _dailyDate,
+          isMs: isMs,
+          sales: sales.todaySales,
+          cost: sales.todayCogs,
+          profit: sales.todayProfit,
+          cups: sales.todayCups,
+          yesterdaySales: sales.yesterdaySales,
+          yesterdayCogs: sales.yesterdayCogs,
+          yesterdayProfit: sales.yesterdayProfit,
+          yesterdayCups: sales.yesterdayCups,
+          bestSellers: sales.bestSellers,
+          transactions: sales.dailyTransactions,
+          unknownItemLabel: t.unknownItem,
+          cupUnit: t.cupUnit,
+        );
+        filename = 'daily_report_${_dailyDate.day}_${_dailyDate.month}_${_dailyDate.year}.pdf';
+        break;
+      case 1: // Stock
+        await sales.loadStockMovements(startDate: _stockStartDate, endDate: _stockEndDate);
+        bytes = await ReportPdfExporter.generateStockHistory(
+          isMs: isMs,
+          movements: sales.stockMovements,
+          unknownItemLabel: t.unknownItem,
+          restockLabel: t.restockEntry,
+          deductionLabel: t.deductionEntry,
+          adjustmentLabel: t.adjustmentEntry,
+          startDate: _stockStartDate,
+          endDate: _stockEndDate,
+        );
+        filename = 'stock_history.pdf';
+        break;
+      case 2: // Monthly
+        await sales.loadMonthlyComparison(_monthlyMonth);
+        bytes = await ReportPdfExporter.generateMonthlySummary(
+          month: _monthlyMonth,
+          isMs: isMs,
+          revenue: sales.monthlyRevenue,
+          cogs: sales.monthlyCogs,
+          profit: sales.monthlyProfit,
+          lastMonthRevenue: sales.lastMonthRevenue,
+          lastMonthCogs: sales.lastMonthCogs,
+          lastMonthProfit: sales.lastMonthProfit,
+          weeklyStats: sales.weeklyStats,
+        );
+        filename = 'monthly_summary_${_monthName(_monthlyMonth.month, isMs)}_${_monthlyMonth.year}.pdf';
+        break;
+      case 3: // All
+        await Future.wait([
+          sales.loadDailyComparison(_dailyDate),
+          sales.loadStockMovements(startDate: _stockStartDate, endDate: _stockEndDate),
+          sales.loadMonthlyComparison(_monthlyMonth),
+        ]);
+        bytes = await ReportPdfExporter.generateAllReports(
+          dailyDate: _dailyDate,
+          monthlyMonth: _monthlyMonth,
+          isMs: isMs,
+          sales: sales.todaySales,
+          cost: sales.todayCogs,
+          profit: sales.todayProfit,
+          cups: sales.todayCups,
+          yesterdaySales: sales.yesterdaySales,
+          yesterdayCogs: sales.yesterdayCogs,
+          yesterdayProfit: sales.yesterdayProfit,
+          yesterdayCups: sales.yesterdayCups,
+          bestSellers: sales.bestSellers,
+          transactions: sales.dailyTransactions,
+          movements: sales.stockMovements,
+          monthlyRevenue: sales.monthlyRevenue,
+          monthlyCogs: sales.monthlyCogs,
+          monthlyProfit: sales.monthlyProfit,
+          lastMonthRevenue: sales.lastMonthRevenue,
+          lastMonthCogs: sales.lastMonthCogs,
+          lastMonthProfit: sales.lastMonthProfit,
+          weeklyStats: sales.weeklyStats,
+          unknownItemLabel: t.unknownItem,
+          cupUnit: t.cupUnit,
+          restockLabel: t.restockEntry,
+          deductionLabel: t.deductionEntry,
+          adjustmentLabel: t.adjustmentEntry,
+          stockStartDate: _stockStartDate,
+          stockEndDate: _stockEndDate,
+        );
+        filename = 'full_report_${_dateStr(DateTime.now()).replaceAll('/', '_')}.pdf';
+        break;
+      default:
+        return;
+    }
+
+    await ReportPdfExporter.sharePdf(bytes, filename);
+  }
+
+  String _dateStr(DateTime? d) {
+    if (d == null) return '-';
+    return '${d.day}/${d.month}/${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +290,13 @@ class _ReportScreenState extends State<ReportScreen> {
             fontSize: 18,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf, color: colors.text),
+            tooltip: t.exportPdfTitle,
+            onPressed: _isExporting ? null : _showExportSheet,
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -53,11 +314,86 @@ class _ReportScreenState extends State<ReportScreen> {
                 onChanged: (index) => setState(() => _selectedTab = index),
               ),
               const SizedBox(height: 16),
-              if (_selectedTab == 0) _DailyReport(t: t, primaryGreen: primaryGreen, pinkAccent: pinkAccent, sales: sales),
-              if (_selectedTab == 1) _StockHistory(t: t, primaryGreen: primaryGreen, sales: sales),
-              if (_selectedTab == 2) _MonthlySummary(t: t, primaryGreen: primaryGreen, sales: sales),
+              if (_selectedTab == 0)
+                _DailyReport(
+                  t: t,
+                  primaryGreen: primaryGreen,
+                  pinkAccent: pinkAccent,
+                  sales: sales,
+                  selectedDate: _dailyDate,
+                  onDateChanged: (date) => _onDateChanged(sales, date),
+                ),
+              if (_selectedTab == 1)
+                _StockHistory(
+                  t: t,
+                  primaryGreen: primaryGreen,
+                  sales: sales,
+                  quickFilter: _stockQuickFilter,
+                  startDate: _stockStartDate,
+                  endDate: _stockEndDate,
+                  onFilterChanged: (filter, {start, end}) => _onStockFilterChanged(sales, filter, start: start, end: end),
+                ),
+              if (_selectedTab == 2)
+                _MonthlySummary(
+                  t: t,
+                  primaryGreen: primaryGreen,
+                  sales: sales,
+                  selectedMonth: _monthlyMonth,
+                  canGoNext: _canGoNextMonth,
+                  onMonthChanged: (delta) => _onMonthChanged(sales, delta),
+                ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExportTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ExportTile({
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.subtleGreen : Colors.transparent,
+          border: isSelected
+              ? const Border(left: BorderSide(color: Color(0xFF5BA154), width: 3))
+              : const Border(left: BorderSide(color: Colors.transparent, width: 3)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 18,
+              color: isSelected ? const Color(0xFF5BA154) : colors.gray,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.text)),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: colors.gray)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -116,31 +452,22 @@ class _TabToggle extends StatelessWidget {
   }
 }
 
-class _DailyReport extends StatefulWidget {
+class _DailyReport extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
   final Color pinkAccent;
   final SalesProvider sales;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
 
   const _DailyReport({
     required this.t,
     required this.primaryGreen,
     required this.pinkAccent,
     required this.sales,
+    required this.selectedDate,
+    required this.onDateChanged,
   });
-
-  @override
-  State<_DailyReport> createState() => _DailyReportState();
-}
-
-class _DailyReportState extends State<_DailyReport> {
-  late DateTime _selectedDate = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    widget.sales.loadDailyComparison(_selectedDate);
-  }
 
   String? _changePercent(double today, double yesterday) {
     if (yesterday == 0) return null;
@@ -159,15 +486,11 @@ class _DailyReportState extends State<_DailyReport> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final t = widget.t;
-    final primaryGreen = widget.primaryGreen;
-    final pinkAccent = widget.pinkAccent;
-    final sales = widget.sales;
-    final dateStr = '${_selectedDate.day} ${_monthName(_selectedDate.month, t.isMs)} ${_selectedDate.year}';
+    final dateStr = '${selectedDate.day} ${_monthName(selectedDate.month, t.isMs)} ${selectedDate.year}';
 
-    final isToday = _selectedDate.day == DateTime.now().day &&
-        _selectedDate.month == DateTime.now().month &&
-        _selectedDate.year == DateTime.now().year;
+    final isToday = selectedDate.day == DateTime.now().day &&
+        selectedDate.month == DateTime.now().month &&
+        selectedDate.year == DateTime.now().year;
 
     final marginPct = sales.todaySales > 0
         ? (sales.todayProfit / sales.todaySales * 100).toStringAsFixed(1)
@@ -180,13 +503,12 @@ class _DailyReportState extends State<_DailyReport> {
           onTap: () async {
             final picked = await showDatePicker(
               context: context,
-              initialDate: _selectedDate,
+              initialDate: selectedDate,
               firstDate: DateTime(2020),
               lastDate: DateTime.now(),
             );
-            if (picked != null && picked != _selectedDate) {
-              setState(() => _selectedDate = picked);
-              sales.loadDailyComparison(picked);
+            if (picked != null && picked != selectedDate) {
+              onDateChanged(picked);
             }
           },
           child: _DateHeader(date: dateStr, isToday: isToday),
@@ -586,89 +908,64 @@ class _TransactionCard extends StatelessWidget {
   }
 }
 
-class _StockHistory extends StatefulWidget {
+class _StockHistory extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
   final SalesProvider sales;
+  final int quickFilter;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final void Function(int filter, {DateTime? start, DateTime? end}) onFilterChanged;
 
   const _StockHistory({
     required this.t,
     required this.primaryGreen,
     required this.sales,
+    required this.quickFilter,
+    required this.startDate,
+    required this.endDate,
+    required this.onFilterChanged,
   });
 
-  @override
-  State<_StockHistory> createState() => _StockHistoryState();
-}
-
-class _StockHistoryState extends State<_StockHistory> {
-  int _quickFilter = 0; // 0 = all, 1 = 7d, 2 = 30d, 3 = custom
-  DateTime? _startDate;
-  DateTime? _endDate;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.sales.loadStockMovements();
-  }
-
-  void _applyFilter(int filter) {
-    setState(() {
-      _quickFilter = filter;
-      if (filter == 0) {
-        _startDate = null;
-        _endDate = null;
-        widget.sales.loadStockMovements();
-      } else if (filter == 1) {
-        _endDate = DateTime.now();
-        _startDate = _endDate!.subtract(const Duration(days: 7));
-        widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
-      } else if (filter == 2) {
-        _endDate = DateTime.now();
-        _startDate = _endDate!.subtract(const Duration(days: 30));
-        widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
-      }
-    });
-  }
-
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: _endDate ?? DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-        _quickFilter = 3;
-      });
-      widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+  void _applyFilter(BuildContext context, int filter) {
+    if (filter == 0) {
+      onFilterChanged(0);
+    } else if (filter == 1) {
+      final end = DateTime.now();
+      onFilterChanged(1, start: end.subtract(const Duration(days: 7)), end: end);
+    } else if (filter == 2) {
+      final end = DateTime.now();
+      onFilterChanged(2, start: end.subtract(const Duration(days: 30)), end: end);
     }
   }
 
-  Future<void> _pickEndDate() async {
+  Future<void> _pickStartDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: _startDate ?? DateTime(2020),
+      initialDate: startDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: endDate ?? DateTime.now(),
+    );
+    if (picked != null) {
+      onFilterChanged(3, start: picked, end: endDate);
+    }
+  }
+
+  Future<void> _pickEndDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: endDate ?? DateTime.now(),
+      firstDate: startDate ?? DateTime(2020),
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() {
-        _endDate = picked;
-        _quickFilter = 3;
-      });
-      widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+      onFilterChanged(3, start: startDate, end: picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final t = widget.t;
-    final primaryGreen = widget.primaryGreen;
-    final sales = widget.sales;
     final movements = sales.stockMovements;
 
     return Column(
@@ -679,40 +976,40 @@ class _StockHistoryState extends State<_StockHistory> {
             children: [
               _FilterChip(
                 label: t.allTime,
-                isSelected: _quickFilter == 0,
-                onTap: () => _applyFilter(0),
+                isSelected: quickFilter == 0,
+                onTap: () => _applyFilter(context, 0),
               ),
               const SizedBox(width: 6),
               _FilterChip(
                 label: t.last7Days,
-                isSelected: _quickFilter == 1,
-                onTap: () => _applyFilter(1),
+                isSelected: quickFilter == 1,
+                onTap: () => _applyFilter(context, 1),
               ),
               const SizedBox(width: 6),
               _FilterChip(
                 label: t.last30Days,
-                isSelected: _quickFilter == 2,
-                onTap: () => _applyFilter(2),
+                isSelected: quickFilter == 2,
+                onTap: () => _applyFilter(context, 2),
               ),
               const SizedBox(width: 6),
               GestureDetector(
-                onTap: _pickStartDate,
+                onTap: () => _pickStartDate(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   decoration: BoxDecoration(
-                    color: _quickFilter == 3 ? colors.subtleGreen : colors.card,
+                    color: quickFilter == 3 ? colors.subtleGreen : colors.card,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
+                    border: Border.all(color: quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 12, color: _startDate != null ? primaryGreen : colors.gray),
+                      Icon(Icons.calendar_today, size: 12, color: startDate != null ? primaryGreen : colors.gray),
                       const SizedBox(width: 4),
                       Text(
-                        _startDate != null
-                            ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+                        startDate != null
+                            ? '${startDate!.day}/${startDate!.month}/${startDate!.year}'
                             : t.fromDate,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _startDate != null ? primaryGreen : colors.gray),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: startDate != null ? primaryGreen : colors.gray),
                       ),
                     ],
                   ),
@@ -720,32 +1017,32 @@ class _StockHistoryState extends State<_StockHistory> {
               ),
               const SizedBox(width: 6),
               GestureDetector(
-                onTap: _pickEndDate,
+                onTap: () => _pickEndDate(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   decoration: BoxDecoration(
-                    color: _quickFilter == 3 ? colors.subtleGreen : colors.card,
+                    color: quickFilter == 3 ? colors.subtleGreen : colors.card,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
+                    border: Border.all(color: quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 12, color: _endDate != null ? primaryGreen : colors.gray),
+                      Icon(Icons.calendar_today, size: 12, color: endDate != null ? primaryGreen : colors.gray),
                       const SizedBox(width: 4),
                       Text(
-                        _endDate != null
-                            ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                        endDate != null
+                            ? '${endDate!.day}/${endDate!.month}/${endDate!.year}'
                             : t.toDate,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _endDate != null ? primaryGreen : colors.gray),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: endDate != null ? primaryGreen : colors.gray),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (_quickFilter == 3) ...[
+              if (quickFilter == 3) ...[
                 const SizedBox(width: 6),
                 GestureDetector(
-                  onTap: () => _applyFilter(0),
+                  onTap: () => _applyFilter(context, 0),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
                     decoration: BoxDecoration(
@@ -772,20 +1069,46 @@ class _StockHistoryState extends State<_StockHistory> {
           )
         else
           ...movements.map((m) {
-            final isRestock = m['type'] == 'restock';
+            final type = m['type'] as String? ?? '';
             final itemName = m['inventory_items']?['name'] ?? t.unknownItem;
             final qty = (m['quantity'] as num).toDouble();
             final movedAt = DateTime.parse(m['moved_at'] as String);
             final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';
 
+            final bool isUp;
+            final Color entryColor;
+            final Color entryBg;
+            final IconData entryIcon;
+            final String entrySubtitle;
+
+            if (type == 'restock') {
+              isUp = true;
+              entryColor = primaryGreen;
+              entryBg = colors.subtleGreen;
+              entryIcon = Icons.add_circle_outline;
+              entrySubtitle = t.restockEntry;
+            } else if (type == 'adjustment') {
+              isUp = qty > 0;
+              entryColor = isUp ? primaryGreen : Colors.red;
+              entryBg = isUp ? colors.subtleGreen : colors.subtleRed;
+              entryIcon = isUp ? Icons.add_circle_outline : Icons.remove_circle_outline;
+              entrySubtitle = t.adjustmentEntry;
+            } else {
+              isUp = false;
+              entryColor = Colors.red;
+              entryBg = colors.subtleRed;
+              entryIcon = Icons.remove_circle_outline;
+              entrySubtitle = t.deductionEntry;
+            }
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _StockLog(
-                icon: isRestock ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                iconColor: isRestock ? primaryGreen : Colors.red,
-                bgColor: isRestock ? colors.subtleGreen : colors.subtleRed,
-                title: '${isRestock ? "+" : "-"}${qty.abs().toStringAsFixed(0)} $itemName',
-                subtitle: isRestock ? t.restockEntry : t.deductionEntry,
+                icon: entryIcon,
+                iconColor: entryColor,
+                bgColor: entryBg,
+                title: '${isUp ? "+" : "-"}${qty.abs().toStringAsFixed(0)} $itemName',
+                subtitle: entrySubtitle,
                 timestamp: timestamp,
               ),
             );
@@ -902,55 +1225,39 @@ class _StockLog extends StatelessWidget {
   }
 }
 
-class _MonthlySummary extends StatefulWidget {
+class _MonthlySummary extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
   final SalesProvider sales;
+  final DateTime selectedMonth;
+  final bool canGoNext;
+  final ValueChanged<int> onMonthChanged;
 
   const _MonthlySummary({
     required this.t,
     required this.primaryGreen,
     required this.sales,
+    required this.selectedMonth,
+    required this.canGoNext,
+    required this.onMonthChanged,
   });
 
   @override
-  State<_MonthlySummary> createState() => _MonthlySummaryState();
-}
-
-class _MonthlySummaryState extends State<_MonthlySummary> {
-  late DateTime _selectedMonth = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    widget.sales.loadMonthlyComparison(_selectedMonth);
-  }
-
-  void _goToMonth(int monthsDelta) {
-    setState(() {
-      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + monthsDelta, 1);
-    });
-    widget.sales.loadMonthlyComparison(_selectedMonth);
-  }
-
-  bool get _canGoNext => DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).isBefore(DateTime.now());
-
-  @override
   Widget build(BuildContext context) {
-    final t = widget.t;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _MonthlyHeader(
           t: t,
-          primaryGreen: widget.primaryGreen,
-          sales: widget.sales,
-          selectedMonth: _selectedMonth,
-          onPrevious: () => _goToMonth(-1),
-          onNext: _canGoNext ? () => _goToMonth(1) : null,
+          primaryGreen: primaryGreen,
+          sales: sales,
+          selectedMonth: selectedMonth,
+          canGoNext: canGoNext,
+          onPrevious: () => onMonthChanged(-1),
+          onNext: canGoNext ? () => onMonthChanged(1) : null,
         ),
         const SizedBox(height: 16),
-        _WeeklyChart(primaryGreen: widget.primaryGreen, sales: widget.sales),
+        _WeeklyChart(primaryGreen: primaryGreen, sales: sales),
         const SizedBox(height: 16),
         _Legend(t: t),
       ],
@@ -963,6 +1270,7 @@ class _MonthlyHeader extends StatelessWidget {
   final Color primaryGreen;
   final SalesProvider sales;
   final DateTime selectedMonth;
+  final bool canGoNext;
   final VoidCallback onPrevious;
   final VoidCallback? onNext;
 
@@ -971,6 +1279,7 @@ class _MonthlyHeader extends StatelessWidget {
     required this.primaryGreen,
     required this.sales,
     required this.selectedMonth,
+    required this.canGoNext,
     required this.onPrevious,
     this.onNext,
   });
@@ -1016,7 +1325,7 @@ class _MonthlyHeader extends StatelessWidget {
                 child: Icon(
                   Icons.chevron_right,
                   size: 24,
-                  color: onNext != null ? colors.gray : colors.gray.withAlpha(50),
+                  color: canGoNext ? colors.gray : colors.gray.withAlpha(50),
                 ),
               ),
             ],

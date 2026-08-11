@@ -110,6 +110,7 @@ class Translations {
   String get revenue => isMs ? 'Hasil' : 'Revenue';
   String get restockEntry => isMs ? 'Restok Masuk' : 'Restock In';
   String get deductionEntry => isMs ? 'Jualan Keluar' : 'Sales Out';
+  String get adjustmentEntry => isMs ? 'Pelarasan' : 'Adjustment';
   String get monthlyRevenue => isMs ? 'Jumlah Pendapatan' : 'Total Revenue';
   String get legendRevenue => isMs ? 'Pendapatan Kasar' : 'Gross Revenue';
   String get legendCost => isMs ? 'Kos Bahan' : 'Ingredient Cost';
@@ -135,6 +136,10 @@ class Translations {
   String get allTime => isMs ? 'Sepanjang Masa' : 'All Time';
   String get last7Days => isMs ? '7 Hari Lepas' : '7 Days';
   String get last30Days => isMs ? '30 Hari Lepas' : '30 Days';
+  String get exportPdfTitle => isMs ? 'Eksport Laporan sebagai PDF' : 'Export Report as PDF';
+  String get generatePdf => isMs ? 'Jana PDF' : 'Generate PDF';
+  String get allReports => isMs ? 'Semua Laporan' : 'All Reports';
+  String get allReportsSubtitle => isMs ? 'Gabungan harian, stok, dan bulanan' : 'Daily, stock & monthly combined';
 
   // Login
   String get appTitle => 'Beverage IMS';
