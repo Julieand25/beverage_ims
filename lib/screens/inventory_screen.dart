@@ -162,8 +162,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     const redColor = Color(0xFFD32F2F);
     final itemUnitLabel = _unitLabel(item.unit);
 
-    final stepLabels = [t.stepAdjustType, t.stepAdjustDetails, t.stepAdjustNote];
-
     double calcCostPerUnit() {
       final count = double.tryParse(itemCountCtrl.text) ?? 1;
       final rawSize = double.tryParse(perItemSizeCtrl.text) ?? 0;
@@ -258,9 +256,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(t.stepOf(stepLabels[currentStep], currentStep + 1, 3),
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
             content: SizedBox(
@@ -529,10 +524,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
     var currentStep = 0;
     const primaryGreen = Color(0xFF5BA154);
 
-    final stepLabels = [t.stepItemInfo, t.stepPricing, t.stepMinStock];
-
     bool canProceed() {
       if (currentStep == 0) return nameCtrl.text.trim().isNotEmpty;
+      if (currentStep == 1) {
+        final p = double.tryParse(priceCtrl.text);
+        return p != null && p > 0;
+      }
+      if (currentStep == 2) {
+        final m = double.tryParse(minStockCtrl.text);
+        return m != null && m >= 0;
+      }
       return true;
     }
 
@@ -564,15 +565,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(t.addNewItem, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(t.stepOf(stepLabels[currentStep], currentStep + 1, 3),
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
+          title: Text(t.addNewItem, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           content: SizedBox(
             width: double.maxFinite,
             child: _buildStep(
@@ -672,25 +665,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            InputDecorator(
-              decoration: _dialogInputDecoration(t.unit),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<ItemUnit>(
-                  value: unit,
-                  isDense: true,
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(value: ItemUnit.g, child: Text('g')),
-                    DropdownMenuItem(value: ItemUnit.ml, child: Text('ml')),
-                    DropdownMenuItem(value: ItemUnit.unit, child: Text('unit')),
-                    DropdownMenuItem(value: ItemUnit.kg, child: Text('kg')),
-                    DropdownMenuItem(value: ItemUnit.l, child: Text('L')),
-                  ],
-                  onChanged: (v) => setDialogState(() => setUnit(v!)),
-                ),
-              ),
-            ),
           ],
         );
       case 1:
@@ -699,7 +673,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
           children: [
             _dialogField(t.itemsPerPack, itemCountCtrl, isNumber: true),
             const SizedBox(height: 12),
-            _dialogField('${t.qtyPerItem} ($unitLabel)', perItemSizeCtrl, isNumber: true),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: perItemSizeCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    decoration: _dialogInputDecoration('${t.qtyPerItem} ($unitLabel)'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: InputDecorator(
+                    decoration: _dialogInputDecoration(''),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<ItemUnit>(
+                        value: unit,
+                        isDense: true,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: ItemUnit.g, child: Text('g')),
+                          DropdownMenuItem(value: ItemUnit.ml, child: Text('ml')),
+                          DropdownMenuItem(value: ItemUnit.unit, child: Text('unit')),
+                          DropdownMenuItem(value: ItemUnit.kg, child: Text('kg')),
+                          DropdownMenuItem(value: ItemUnit.l, child: Text('L')),
+                        ],
+                        onChanged: (v) => setDialogState(() => setUnit(v!)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -744,14 +752,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _dialogField(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, priceCtrl, isNumber: true),
+            TextField(
+              controller: priceCtrl,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel),
+              onChanged: (_) => setDialogState(() {}),
+            ),
           ],
         );
       case 2:
         return ListView(
           shrinkWrap: true,
           children: [
-            _dialogField('${t.minStock} ($unitLabel)', minStockCtrl, isNumber: true),
+            TextField(
+              controller: minStockCtrl,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              decoration: _dialogInputDecoration('${t.minStock} ($unitLabel)'),
+              onChanged: (_) => setDialogState(() {}),
+            ),
           ],
         );
       default:
@@ -930,7 +950,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _dialogField(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, priceCtrl, isNumber: true),
+            TextField(
+              controller: priceCtrl,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel),
+              onChanged: (_) => setDialogState(() {}),
+            ),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
