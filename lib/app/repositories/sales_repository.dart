@@ -11,8 +11,9 @@ abstract class SalesRepository {
   });
   Future<Map<String, dynamic>> getDailyStats({required DateTime date});
   Future<List<Map<String, dynamic>>> getBestSellers({required DateTime date});
-  Future<Map<String, dynamic>> getMonthlyStats();
-  Future<List<Map<String, dynamic>>> getStockMovements();
+  Future<List<Map<String, dynamic>>> getDailyTransactions({required DateTime date});
+  Future<Map<String, dynamic>> getMonthlyStats({required DateTime month});
+  Future<List<Map<String, dynamic>>> getStockMovements({DateTime? startDate, DateTime? endDate});
 }
 
 class SupabaseSalesRepository implements SalesRepository {
@@ -115,10 +116,24 @@ class SupabaseSalesRepository implements SalesRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getMonthlyStats() async {
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
-    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59).toIso8601String();
+  Future<List<Map<String, dynamic>>> getDailyTransactions({required DateTime date}) async {
+    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+
+    final transactions = await _client
+        .from('sales')
+        .select('*, recipes(name)')
+        .gte('sold_at', startOfDay)
+        .lte('sold_at', endOfDay)
+        .order('sold_at', ascending: false);
+
+    return (transactions as List).cast<Map<String, dynamic>>();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMonthlyStats({required DateTime month}) async {
+    final startOfMonth = DateTime(month.year, month.month, 1).toIso8601String();
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
 
     final salesThisMonth = await _client
         .from('sales')
@@ -162,13 +177,24 @@ class SupabaseSalesRepository implements SalesRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getStockMovements() async {
-    final response = await _client
+  Future<List<Map<String, dynamic>>> getStockMovements({DateTime? startDate, DateTime? endDate}) async {
+    PostgrestFilterBuilder filter = _client
         .from('stock_movements')
-        .select('*, inventory_items(name)')
-        .order('moved_at', ascending: false)
-        .limit(30);
+        .select('*, inventory_items(name)');
 
+    if (startDate != null) {
+      filter = filter.gte('moved_at', startDate.toIso8601String());
+    }
+    if (endDate != null) {
+      filter = filter.lte('moved_at', DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59).toIso8601String());
+    }
+
+    PostgrestTransformBuilder query = filter;
+    if (startDate == null && endDate == null) {
+      query = query.limit(30);
+    }
+
+    final response = await query.order('moved_at', ascending: false);
     return (response as List).cast<Map<String, dynamic>>();
   }
 }

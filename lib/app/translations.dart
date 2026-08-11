@@ -117,6 +117,24 @@ class Translations {
   String get week2 => isMs ? 'Mng 2' : 'Wk 2';
   String get week3 => isMs ? 'Mng 3' : 'Wk 3';
   String get week4 => isMs ? 'Mng 4' : 'Wk 4';
+  String get profitMargin => isMs ? 'Margin' : 'Margin';
+  String get vsYesterday => isMs ? 'vs Semalam' : 'vs Yesterday';
+  String get vsLastMonth => isMs ? 'vs Bulan Lepas' : 'vs Last Month';
+  String get dailyTransactions => isMs ? 'Transaksi Jualan' : 'Sales Transactions';
+  String get transactionTime => isMs ? 'Masa' : 'Time';
+  String get noTransactions => isMs ? 'Tiada transaksi' : 'No transactions';
+  String get previousMonth => isMs ? 'Bulan Lepas' : 'Previous';
+  String get nextMonth => isMs ? 'Bulan Depan' : 'Next';
+  String get filterByDate => isMs ? 'Tapis Tarikh' : 'Filter by Date';
+  String get fromDate => isMs ? 'Dari' : 'From';
+  String get toDate => isMs ? 'Hingga' : 'To';
+  String get applyFilter => isMs ? 'Guna' : 'Apply';
+  String get clearFilter => isMs ? 'Kosongkan' : 'Clear';
+  String get salesRevenue => isMs ? 'Pendapatan' : 'Revenue';
+  String get amtCups => isMs ? 'Bil Cawan' : 'Cups';
+  String get allTime => isMs ? 'Sepanjang Masa' : 'All Time';
+  String get last7Days => isMs ? '7 Hari Lepas' : '7 Days';
+  String get last30Days => isMs ? '30 Hari Lepas' : '30 Days';
 
   // Login
   String get appTitle => 'Beverage IMS';

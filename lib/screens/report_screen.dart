@@ -137,6 +137,26 @@ class _DailyReportState extends State<_DailyReport> {
   late DateTime _selectedDate = DateTime.now();
 
   @override
+  void initState() {
+    super.initState();
+    widget.sales.loadDailyComparison(_selectedDate);
+  }
+
+  String? _changePercent(double today, double yesterday) {
+    if (yesterday == 0) return null;
+    final pct = ((today - yesterday) / yesterday) * 100;
+    final sign = pct >= 0 ? '+' : '';
+    return '$sign${pct.toStringAsFixed(1)}%';
+  }
+
+  String? _changePercentInt(int today, int yesterday) {
+    if (yesterday == 0) return null;
+    final pct = ((today - yesterday) / yesterday) * 100;
+    final sign = pct >= 0 ? '+' : '';
+    return '$sign${pct.toStringAsFixed(1)}%';
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final t = widget.t;
@@ -148,6 +168,10 @@ class _DailyReportState extends State<_DailyReport> {
     final isToday = _selectedDate.day == DateTime.now().day &&
         _selectedDate.month == DateTime.now().month &&
         _selectedDate.year == DateTime.now().year;
+
+    final marginPct = sales.todaySales > 0
+        ? (sales.todayProfit / sales.todaySales * 100).toStringAsFixed(1)
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,8 +186,7 @@ class _DailyReportState extends State<_DailyReport> {
             );
             if (picked != null && picked != _selectedDate) {
               setState(() => _selectedDate = picked);
-              sales.loadDailyStats(date: picked);
-              sales.loadBestSellers(date: picked);
+              sales.loadDailyComparison(picked);
             }
           },
           child: _DateHeader(date: dateStr, isToday: isToday),
@@ -175,7 +198,7 @@ class _DailyReportState extends State<_DailyReport> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 3.0,
+          childAspectRatio: 2.3,
           children: [
             _StatCard(
               icon: Icons.receipt_long,
@@ -184,6 +207,7 @@ class _DailyReportState extends State<_DailyReport> {
               title: t.dailySales,
               value: 'RM ${sales.todaySales.toStringAsFixed(2)}',
               valueColor: primaryGreen,
+              comparisonText: _changePercent(sales.todaySales, sales.yesterdaySales),
             ),
             _StatCard(
               icon: Icons.monetization_on_outlined,
@@ -192,14 +216,17 @@ class _DailyReportState extends State<_DailyReport> {
               title: t.dailyCost,
               value: 'RM ${sales.todayCogs.toStringAsFixed(2)}',
               valueColor: pinkAccent,
+              comparisonText: sales.yesterdayCogs > 0 ? _changePercent(sales.todayCogs, sales.yesterdayCogs) : null,
             ),
             _StatCard(
               icon: Icons.trending_up,
               iconColor: primaryGreen,
               bgColor: colors.subtleGreen,
               title: t.dailyProfit,
-              value: 'RM ${sales.todayProfit.toStringAsFixed(2)}',
+              value: 'RM ${sales.todayProfit.toStringAsFixed(2)}'
+                  '${marginPct != null ? '  ($marginPct%)' : ''}',
               valueColor: primaryGreen,
+              comparisonText: _changePercent(sales.todayProfit, sales.yesterdayProfit),
             ),
             _StatCard(
               icon: Icons.local_cafe_outlined,
@@ -208,6 +235,7 @@ class _DailyReportState extends State<_DailyReport> {
               title: t.dailyCups,
               value: '${sales.todayCups} ${t.cupsUnit}',
               valueColor: Colors.blue,
+              comparisonText: _changePercentInt(sales.todayCups, sales.yesterdayCups),
             ),
           ],
         ),
@@ -235,6 +263,38 @@ class _DailyReportState extends State<_DailyReport> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _BestSellerCard(rank: rank, name: name, cups: cups, revenue: revenue, primaryGreen: primaryGreen),
+            );
+          }),
+        const SizedBox(height: 20),
+        Text(
+          t.dailyTransactions.toUpperCase(),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.gray),
+        ),
+        const SizedBox(height: 8),
+        if (sales.dailyTransactions.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              t.noTransactions,
+              style: TextStyle(fontSize: 13, color: colors.gray),
+            ),
+          )
+        else
+          ...sales.dailyTransactions.map((tx) {
+            final recipeName = tx['recipes']?['name'] as String? ?? t.unknownItem;
+            final qty = tx['quantity'] as int;
+            final amount = (tx['total_amount'] as num).toDouble();
+            final soldAt = DateTime.parse(tx['sold_at'] as String);
+            final timeStr = '${soldAt.hour.toString().padLeft(2, '0')}:${soldAt.minute.toString().padLeft(2, '0')}';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _TransactionCard(
+                name: recipeName,
+                qty: qty,
+                amount: amount,
+                time: timeStr,
+                primaryGreen: primaryGreen,
+              ),
             );
           }),
       ],
@@ -296,6 +356,7 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final Color valueColor;
+  final String? comparisonText;
 
   const _StatCard({
     required this.icon,
@@ -304,11 +365,13 @@ class _StatCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.valueColor,
+    this.comparisonText,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final isUp = comparisonText != null && !comparisonText!.startsWith('-');
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -338,14 +401,40 @@ class _StatCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: valueColor,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: valueColor,
+                    ),
                   ),
                 ),
+                if (comparisonText != null) ...[
+                  const SizedBox(height: 1),
+                  Row(
+                    children: [
+                      Icon(
+                        isUp ? Icons.arrow_upward : Icons.arrow_downward,
+                        size: 9,
+                        color: isUp ? const Color(0xFF5BA154) : Colors.red,
+                      ),
+                      const SizedBox(width: 2),
+                      FittedBox(
+                        child: Text(
+                          comparisonText!,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: isUp ? const Color(0xFF5BA154) : Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -434,7 +523,70 @@ class _BestSellerCard extends StatelessWidget {
   }
 }
 
-class _StockHistory extends StatelessWidget {
+class _TransactionCard extends StatelessWidget {
+  final String name;
+  final int qty;
+  final double amount;
+  final String time;
+  final Color primaryGreen;
+
+  const _TransactionCard({
+    required this.name,
+    required this.qty,
+    required this.amount,
+    required this.time,
+    required this.primaryGreen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Translations.of(context);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: colors.subtleGreen,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.receipt_long, color: primaryGreen, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colors.text),
+                ),
+                Text(
+                  '$time  -  x$qty ${t.cupUnit}',
+                  style: TextStyle(fontSize: 11, color: colors.gray),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            'RM ${amount.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryGreen),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StockHistory extends StatefulWidget {
   final Translations t;
   final Color primaryGreen;
   final SalesProvider sales;
@@ -446,42 +598,237 @@ class _StockHistory extends StatelessWidget {
   });
 
   @override
+  State<_StockHistory> createState() => _StockHistoryState();
+}
+
+class _StockHistoryState extends State<_StockHistory> {
+  int _quickFilter = 0; // 0 = all, 1 = 7d, 2 = 30d, 3 = custom
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.sales.loadStockMovements();
+  }
+
+  void _applyFilter(int filter) {
+    setState(() {
+      _quickFilter = filter;
+      if (filter == 0) {
+        _startDate = null;
+        _endDate = null;
+        widget.sales.loadStockMovements();
+      } else if (filter == 1) {
+        _endDate = DateTime.now();
+        _startDate = _endDate!.subtract(const Duration(days: 7));
+        widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+      } else if (filter == 2) {
+        _endDate = DateTime.now();
+        _startDate = _endDate!.subtract(const Duration(days: 30));
+        widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+      }
+    });
+  }
+
+  Future<void> _pickStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: _endDate ?? DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked;
+        _quickFilter = 3;
+      });
+      widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+    }
+  }
+
+  Future<void> _pickEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? DateTime.now(),
+      firstDate: _startDate ?? DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
+        _quickFilter = 3;
+      });
+      widget.sales.loadStockMovements(startDate: _startDate, endDate: _endDate);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
+    final t = widget.t;
+    final primaryGreen = widget.primaryGreen;
+    final sales = widget.sales;
     final movements = sales.stockMovements;
 
-    if (movements.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Text(
-            t.noStockRecords,
-            style: TextStyle(fontSize: 13, color: colors.gray),
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _FilterChip(
+                label: t.allTime,
+                isSelected: _quickFilter == 0,
+                onTap: () => _applyFilter(0),
+              ),
+              const SizedBox(width: 6),
+              _FilterChip(
+                label: t.last7Days,
+                isSelected: _quickFilter == 1,
+                onTap: () => _applyFilter(1),
+              ),
+              const SizedBox(width: 6),
+              _FilterChip(
+                label: t.last30Days,
+                isSelected: _quickFilter == 2,
+                onTap: () => _applyFilter(2),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: _pickStartDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: _quickFilter == 3 ? colors.subtleGreen : colors.card,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 12, color: _startDate != null ? primaryGreen : colors.gray),
+                      const SizedBox(width: 4),
+                      Text(
+                        _startDate != null
+                            ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+                            : t.fromDate,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _startDate != null ? primaryGreen : colors.gray),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: _pickEndDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: _quickFilter == 3 ? colors.subtleGreen : colors.card,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _quickFilter == 3 ? primaryGreen : colors.gray.withAlpha(50)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 12, color: _endDate != null ? primaryGreen : colors.gray),
+                      const SizedBox(width: 4),
+                      Text(
+                        _endDate != null
+                            ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                            : t.toDate,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _endDate != null ? primaryGreen : colors.gray),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_quickFilter == 3) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _applyFilter(0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.close, size: 14, color: colors.gray),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-      );
-    }
+        const SizedBox(height: 12),
+        if (movements.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Text(
+                t.noStockRecords,
+                style: TextStyle(fontSize: 13, color: colors.gray),
+              ),
+            ),
+          )
+        else
+          ...movements.map((m) {
+            final isRestock = m['type'] == 'restock';
+            final itemName = m['inventory_items']?['name'] ?? t.unknownItem;
+            final qty = (m['quantity'] as num).toDouble();
+            final movedAt = DateTime.parse(m['moved_at'] as String);
+            final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';
 
-    return Column(
-      children: movements.map((m) {
-        final isRestock = m['type'] == 'restock';
-        final itemName = m['inventory_items']?['name'] ?? t.unknownItem;
-        final qty = (m['quantity'] as num).toDouble();
-        final movedAt = DateTime.parse(m['moved_at'] as String);
-        final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _StockLog(
+                icon: isRestock ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                iconColor: isRestock ? primaryGreen : Colors.red,
+                bgColor: isRestock ? colors.subtleGreen : colors.subtleRed,
+                title: '${isRestock ? "+" : "-"}${qty.abs().toStringAsFixed(0)} $itemName',
+                subtitle: isRestock ? t.restockEntry : t.deductionEntry,
+                timestamp: timestamp,
+              ),
+            );
+          }),
+      ],
+    );
+  }
+}
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: _StockLog(
-            icon: isRestock ? Icons.add_circle_outline : Icons.remove_circle_outline,
-            iconColor: isRestock ? primaryGreen : Colors.red,
-            bgColor: isRestock ? colors.subtleGreen : colors.subtleRed,
-            title: '${isRestock ? "+" : "-"}${qty.abs().toStringAsFixed(0)} $itemName',
-            subtitle: isRestock ? t.restockEntry : t.deductionEntry,
-            timestamp: timestamp,
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.subtleGreen : colors.card,
+          borderRadius: BorderRadius.circular(8),
+          border: isSelected
+              ? Border.all(color: const Color(0xFF5BA154))
+              : Border.all(color: colors.gray.withAlpha(50)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? const Color(0xFF5BA154) : colors.gray,
           ),
-        );
-      }).toList(),
+        ),
+      ),
     );
   }
 }
@@ -555,7 +902,7 @@ class _StockLog extends StatelessWidget {
   }
 }
 
-class _MonthlySummary extends StatelessWidget {
+class _MonthlySummary extends StatefulWidget {
   final Translations t;
   final Color primaryGreen;
   final SalesProvider sales;
@@ -567,13 +914,43 @@ class _MonthlySummary extends StatelessWidget {
   });
 
   @override
+  State<_MonthlySummary> createState() => _MonthlySummaryState();
+}
+
+class _MonthlySummaryState extends State<_MonthlySummary> {
+  late DateTime _selectedMonth = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.sales.loadMonthlyComparison(_selectedMonth);
+  }
+
+  void _goToMonth(int monthsDelta) {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + monthsDelta, 1);
+    });
+    widget.sales.loadMonthlyComparison(_selectedMonth);
+  }
+
+  bool get _canGoNext => DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).isBefore(DateTime.now());
+
+  @override
   Widget build(BuildContext context) {
+    final t = widget.t;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _MonthlyHeader(t: t, primaryGreen: primaryGreen, sales: sales),
+        _MonthlyHeader(
+          t: t,
+          primaryGreen: widget.primaryGreen,
+          sales: widget.sales,
+          selectedMonth: _selectedMonth,
+          onPrevious: () => _goToMonth(-1),
+          onNext: _canGoNext ? () => _goToMonth(1) : null,
+        ),
         const SizedBox(height: 16),
-        _WeeklyChart(primaryGreen: primaryGreen, sales: sales),
+        _WeeklyChart(primaryGreen: widget.primaryGreen, sales: widget.sales),
         const SizedBox(height: 16),
         _Legend(t: t),
       ],
@@ -585,36 +962,114 @@ class _MonthlyHeader extends StatelessWidget {
   final Translations t;
   final Color primaryGreen;
   final SalesProvider sales;
+  final DateTime selectedMonth;
+  final VoidCallback onPrevious;
+  final VoidCallback? onNext;
 
   const _MonthlyHeader({
     required this.t,
     required this.primaryGreen,
     required this.sales,
+    required this.selectedMonth,
+    required this.onPrevious,
+    this.onNext,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final now = DateTime.now();
-    final monthStr = '${_monthName(now.month, t.isMs)} ${now.year}';
+    final monthStr = '${_monthName(selectedMonth.month, t.isMs)} ${selectedMonth.year}';
+    final marginPct = sales.monthlyRevenue > 0
+        ? (sales.monthlyProfit / sales.monthlyRevenue * 100).toStringAsFixed(1)
+        : null;
+
+    String? comparison;
+    Color comparisonColor = colors.gray;
+    if (sales.lastMonthRevenue > 0) {
+      final pct = ((sales.monthlyRevenue - sales.lastMonthRevenue) / sales.lastMonthRevenue * 100);
+      final sign = pct >= 0 ? '+' : '';
+      comparison = '${t.vsLastMonth}: $sign${pct.toStringAsFixed(1)}%';
+      comparisonColor = pct >= 0 ? const Color(0xFF5BA154) : Colors.red;
+    }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
-      child: Row(
+      child: Column(
         children: [
-          Icon(Icons.calendar_month, size: 20, color: colors.gray),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(monthStr, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.text)),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onPrevious,
+                child: Icon(Icons.chevron_left, size: 24, color: colors.gray),
+              ),
+              Expanded(
+                child: Text(
+                  monthStr,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.text),
+                ),
+              ),
+              GestureDetector(
+                onTap: onNext,
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 24,
+                  color: onNext != null ? colors.gray : colors.gray.withAlpha(50),
+                ),
+              ),
+            ],
           ),
-          Text(
-            'RM ${sales.monthlyRevenue.toStringAsFixed(2)}',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    'RM ${sales.monthlyRevenue.toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryGreen),
+                  ),
+                  Text(t.monthlyRevenue, style: TextStyle(fontSize: 11, color: colors.gray)),
+                  if (marginPct != null)
+                    Text(
+                      '${t.profitMargin}: $marginPct%',
+                      style: TextStyle(fontSize: 10, color: colors.gray),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 32),
+              Column(
+                children: [
+                  Text(
+                    'RM ${sales.monthlyProfit.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: sales.monthlyProfit >= 0 ? primaryGreen : Colors.red,
+                    ),
+                  ),
+                  Text(t.dailyProfit, style: TextStyle(fontSize: 11, color: colors.gray)),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-          Text(t.monthlyRevenue, style: TextStyle(fontSize: 11, color: colors.gray)),
+          if (comparison != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  comparisonColor == const Color(0xFF5BA154) ? Icons.arrow_upward : Icons.arrow_downward,
+                  size: 12,
+                  color: comparisonColor,
+                ),
+                const SizedBox(width: 4),
+                Text(comparison, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: comparisonColor)),
+              ],
+            ),
+          ],
         ],
       ),
     );
