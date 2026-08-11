@@ -557,8 +557,12 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                title: Text(t.insufficientStockTitle),
-                                content: Text(t.insufficientStockSaleBody),
+                                title: Text(t.insufficientStockTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                content: Text(
+                                  t.insufficientStockSaleBody(
+                                    insufficientItems.map((i) => '\u2022 ${i['name']}').join('\n'),
+                                  ),
+                                ),
                                 actions: [
                                   TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
                                   ElevatedButton(
