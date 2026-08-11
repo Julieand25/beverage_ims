@@ -116,7 +116,7 @@ class _TabToggle extends StatelessWidget {
   }
 }
 
-class _DailyReport extends StatelessWidget {
+class _DailyReport extends StatefulWidget {
   final Translations t;
   final Color primaryGreen;
   final Color pinkAccent;
@@ -130,15 +130,44 @@ class _DailyReport extends StatelessWidget {
   });
 
   @override
+  State<_DailyReport> createState() => _DailyReportState();
+}
+
+class _DailyReportState extends State<_DailyReport> {
+  late DateTime _selectedDate = DateTime.now();
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final now = DateTime.now();
-    final dateStr = '${now.day} ${_monthName(now.month, t.isMs)} ${now.year}';
+    final t = widget.t;
+    final primaryGreen = widget.primaryGreen;
+    final pinkAccent = widget.pinkAccent;
+    final sales = widget.sales;
+    final dateStr = '${_selectedDate.day} ${_monthName(_selectedDate.month, t.isMs)} ${_selectedDate.year}';
+
+    final isToday = _selectedDate.day == DateTime.now().day &&
+        _selectedDate.month == DateTime.now().month &&
+        _selectedDate.year == DateTime.now().year;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DateHeader(date: dateStr),
+        GestureDetector(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now(),
+            );
+            if (picked != null && picked != _selectedDate) {
+              setState(() => _selectedDate = picked);
+              sales.loadDailyStats(date: picked);
+              sales.loadBestSellers(date: picked);
+            }
+          },
+          child: _DateHeader(date: dateStr, isToday: isToday),
+        ),
         const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 2,
@@ -224,7 +253,8 @@ String _monthName(int month, bool isMs) {
 
 class _DateHeader extends StatelessWidget {
   final String date;
-  const _DateHeader({required this.date});
+  final bool isToday;
+  const _DateHeader({required this.date, this.isToday = false});
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +268,21 @@ class _DateHeader extends StatelessWidget {
           Icon(Icons.calendar_today, size: 16, color: colors.gray),
           const SizedBox(width: 8),
           Text(date, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.text)),
+          if (isToday)
+            Container(
+              margin: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5BA154).withAlpha(30),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Today',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF5BA154)),
+              ),
+            ),
+          const Spacer(),
+          Icon(Icons.chevron_right, size: 16, color: colors.gray),
         ],
       ),
     );

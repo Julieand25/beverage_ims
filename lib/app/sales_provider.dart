@@ -45,8 +45,8 @@ class SalesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadDailyStats() async {
-    final stats = await _repo.getDailyStats();
+  Future<void> loadDailyStats({DateTime? date}) async {
+    final stats = await _repo.getDailyStats(date: date ?? DateTime.now());
     _todaySales = (stats['total_sales'] as num).toDouble();
     _todayCups = stats['total_cups'] as int;
     _todayCogs = (stats['total_cogs'] as num).toDouble();
@@ -54,8 +54,8 @@ class SalesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadBestSellers() async {
-    _bestSellers = await _repo.getBestSellers();
+  Future<void> loadBestSellers({DateTime? date}) async {
+    _bestSellers = await _repo.getBestSellers(date: date ?? DateTime.now());
     notifyListeners();
   }
 

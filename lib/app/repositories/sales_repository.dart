@@ -9,8 +9,8 @@ abstract class SalesRepository {
     required double totalAmount,
     required String userId,
   });
-  Future<Map<String, dynamic>> getDailyStats();
-  Future<List<Map<String, dynamic>>> getBestSellers();
+  Future<Map<String, dynamic>> getDailyStats({required DateTime date});
+  Future<List<Map<String, dynamic>>> getBestSellers({required DateTime date});
   Future<Map<String, dynamic>> getMonthlyStats();
   Future<List<Map<String, dynamic>>> getStockMovements();
 }
@@ -39,10 +39,9 @@ class SupabaseSalesRepository implements SalesRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getDailyStats() async {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+  Future<Map<String, dynamic>> getDailyStats({required DateTime date}) async {
+    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
 
     final salesToday = await _client
         .from('sales')
@@ -83,10 +82,9 @@ class SupabaseSalesRepository implements SalesRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getBestSellers() async {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+  Future<List<Map<String, dynamic>>> getBestSellers({required DateTime date}) async {
+    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
 
     final salesToday = await _client
         .from('sales')
