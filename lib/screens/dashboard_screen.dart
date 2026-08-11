@@ -314,6 +314,36 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
     return qty * price;
   }
 
+  List<Map<String, dynamic>> _checkStockSufficiency(RecipeProvider recipes, InventoryProvider inventory) {
+    if (_selectedRecipeId == null) return [];
+    final recipe = recipes.recipes.firstWhere(
+      (r) => r.id == _selectedRecipeId,
+      orElse: () => recipes.recipes.first,
+    );
+    final qty = int.tryParse(quantityController.text) ?? 0;
+    if (qty <= 0) return [];
+
+    String unitStr(ItemUnit u) => u.name == 'l' ? 'L' : u.name;
+
+    final insufficient = <Map<String, dynamic>>[];
+    for (final ing in recipe.ingredients) {
+      final item = inventory.items.firstWhere(
+        (i) => i.id == ing.inventoryItemId,
+        orElse: () => InventoryItem(id: '', name: '', category: ItemCategory.bahan, unit: ItemUnit.g, stock: double.infinity, minStock: 0, costPerUnit: 0),
+      );
+      final needed = ing.quantity * qty;
+      if (item.stock < needed) {
+        insufficient.add({
+          'name': item.name,
+          'need': needed,
+          'stock': item.stock,
+          'unit': unitStr(item.unit),
+        });
+      }
+    }
+    return insufficient;
+  }
+
   @override
   void dispose() {
     quantityController.dispose();
@@ -517,25 +547,68 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                           final price = double.tryParse(priceController.text) ?? 0;
                           if (qty <= 0 || price <= 0) return;
 
-                          setState(() => _isSaving = true);
                           final auth = context.read<AuthProvider>();
+                          final inventory = context.read<InventoryProvider>();
+                          final recipeProvider = context.read<RecipeProvider>();
+                          final insufficientItems = _checkStockSufficiency(recipeProvider, inventory);
+
+                          if (insufficientItems.isNotEmpty) {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Text(t.insufficientStockTitle),
+                                content: Text(t.insufficientStockSaleBody),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BA154)),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(t.save, style: const TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed != true) return;
+                          }
+
+                          setState(() => _isSaving = true);
                           final salesProvider = context.read<SalesProvider>();
                           final selectedRecipe = recipes.firstWhere((r) => r.id == _selectedRecipeId);
 
-                          await salesProvider.recordSale(
-                            recipeId: selectedRecipe.id,
-                            recipeName: selectedRecipe.name,
-                            quantity: qty,
-                            unitPrice: price,
-                            totalAmount: qty * price,
-                            userId: auth.currentUser!.id,
-                            userName: auth.currentUser!.name,
-                          );
-                          await context.read<InventoryProvider>().loadAll();
+                          try {
+                            await salesProvider.recordSale(
+                              recipeId: selectedRecipe.id,
+                              recipeName: selectedRecipe.name,
+                              quantity: qty,
+                              unitPrice: price,
+                              totalAmount: qty * price,
+                              userId: auth.currentUser!.id,
+                              userName: auth.currentUser!.name,
+                            );
+                            await context.read<InventoryProvider>().loadAll();
 
-                          if (!mounted) return;
-                          setState(() => _isSaving = false);
-                          Navigator.pop(context);
+                            if (!mounted) return;
+                            setState(() => _isSaving = false);
+                            Navigator.pop(context);
+                          } catch (e) {
+                            if (!mounted) return;
+                            setState(() => _isSaving = false);
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Text(t.insufficientStockTitle),
+                                content: Text(e.toString()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text(t.cancel),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: saveButtonColor,

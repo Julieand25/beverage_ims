@@ -194,6 +194,13 @@ class Translations {
       isMs ? 'Tiada resipi dijumpai' : 'No recipes found';
   String get allStockSufficient =>
       isMs ? 'Semua stok mencukupi' : 'All stock sufficient';
+  String get insufficientStockTitle =>
+      isMs ? 'Stok Tidak Mencukupi!' : 'Insufficient Stock!';
+  String insufficientStockDetail(String items) =>
+      isMs ? 'Stok tidak cukup untuk:$items' : 'Not enough stock for:$items';
+  String get insufficientStockSaleBody =>
+      isMs ? 'Sesetengah bahan tidak cukup stok. Stok akan ditetapkan kepada 0. Teruskan?'
+          : 'Some ingredients have insufficient stock. Stock will be set to 0. Continue?';
   String get noSalesToday =>
       isMs ? 'Tiada jualan hari ini' : 'No sales today';
   String get noStockRecords =>
