@@ -1356,14 +1356,14 @@ class _InventoryCard extends StatelessWidget {
     const softRedBg = Color(0xFFFFEBEE);
     const textRed = Color(0xFFD32F2F);
 
-    final isLow = item.isLowStock;
-    final isOut = item.stock <= 0;
-    final statusBgColor = isOut ? softRedBg : (isLow ? softOrangeBg : softGreenBg);
-    final statusTextColor = isOut ? textRed : (isLow ? textOrange : textGreen);
-    final statusText = isOut ? t.nearlyOut : (isLow ? t.lowStock : t.sufficient);
+    final isNearlyOut = item.isNearlyOut;
+    final isLow = item.isLowStock && !item.isNearlyOut;
+    final statusBgColor = isNearlyOut ? softRedBg : (isLow ? softOrangeBg : softGreenBg);
+    final statusTextColor = isNearlyOut ? textRed : (isLow ? textOrange : textGreen);
+    final statusText = isNearlyOut ? t.nearlyOut : (isLow ? t.lowStock : t.sufficient);
 
     final ratio = item.minStock > 0 ? (item.stock / item.minStock).clamp(0.0, 1.5) : 1.5;
-    final barColor = isOut ? textRed : (isLow ? textOrange : textGreen);
+    final barColor = isNearlyOut ? textRed : (isLow ? textOrange : textGreen);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

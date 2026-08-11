@@ -22,5 +22,6 @@ class InventoryItem {
   });
 
   bool get isLowStock => stock <= minStock;
+  bool get isNearlyOut => minStock > 0 && stock < minStock * 0.5;
   double get stockValue => stock * costPerUnit;
 }

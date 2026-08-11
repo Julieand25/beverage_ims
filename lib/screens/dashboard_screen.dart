@@ -184,7 +184,7 @@ class DashboardScreen extends StatelessWidget {
                             _StockItemRow(
                               name: item.name,
                               qty: '${item.stock.toStringAsFixed(0)} $unitLabel',
-                              statusText: item.stock <= 0 ? t.nearlyOut : t.low,
+                              statusText: item.isNearlyOut ? t.nearlyOut : t.low,
                               statusColor: item.stock <= 0 ? Colors.red : Colors.orange,
                               statusBgColor: item.stock <= 0 ? colors.subtleRed : const Color(0xFFFFF3E0),
                             ),

@@ -20,7 +20,7 @@ class Translations {
   String get inventoryValue => isMs ? 'Nilai Inventori' : 'Inventory Value';
   String get stockStatus => isMs ? 'STATUS STOK' : 'STOCK STATUS';
   String get viewAll => isMs ? 'Lihat Semua >' : 'View All >';
-  String get nearlyOut => isMs ? 'Hampir Habis' : 'Nearly Out';
+  String get nearlyOut => isMs ? 'Kritikal' : 'Critical';
   String get low => isMs ? 'Rendah' : 'Low';
   String get recordSale => isMs ? 'Rekod Jualan' : 'Record Sale';
   String get bestSellingMenu =>
