@@ -89,6 +89,10 @@ class Translations {
   String get addIngredient => isMs ? 'Tambah Bahan' : 'Add Ingredient';
   String get deleteRecipe => isMs ? 'Padam Resipi' : 'Delete Recipe';
   String get deleteConfirm => isMs ? 'Padamkan resipi ini?' : 'Delete this recipe?';
+  String deleteItemConfirm(String name) =>
+      isMs ? 'Padam $name? Ia akan dikeluarkan dari resipi.' : 'Delete $name? It will be removed from recipes.';
+  String get editItem => isMs ? 'Ubah Item' : 'Edit Item';
+  String get manageStock => isMs ? 'Urus Stok' : 'Manage Stock';
   String get perCup => isMs ? '/cawan' : '/cup';
   String get totalCostLabel => isMs ? 'Jumlah Kos' : 'Total Cost';
 
@@ -234,6 +238,12 @@ class Translations {
   String stockClampedBody(String name) =>
       isMs ? 'Pengurangan melebihi stok semasa "$name". Stok akan ditetapkan kepada 0. Teruskan?'
           : 'Deduction exceeds current stock of "$name". Stock will be set to 0. Continue?';
+  String get confirmAdjustTitle =>
+      isMs ? 'Sahkan' : 'Confirm';
+  String confirmAdjustAdd(String qty, String name) =>
+      isMs ? 'Tambah $qty $name?' : 'Add $qty of $name?';
+  String confirmAdjustRemove(String qty, String name) =>
+      isMs ? 'Kurang $qty $name?' : 'Remove $qty of $name?';
   String get loginError =>
       isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password';
   String get connectionError =>

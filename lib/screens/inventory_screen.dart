@@ -19,16 +19,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final _scrollController = ScrollController();
   bool _didFocusItem = false;
 
-  void _showRestockDialog({InventoryItem? selectedItem}) {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext ctx) {
-        return _RestockDialog(initialItem: selectedItem);
-      },
-    );
-  }
 
   void _scrollToItem(String itemId) {
     final provider = context.read<InventoryProvider>();
@@ -74,7 +64,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(t.edit, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          title: Text(t.editItem, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView(
@@ -160,7 +150,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     var currentStep = 0;
     const primaryGreen = Color(0xFF5BA154);
     const redColor = Color(0xFFD32F2F);
-    final itemUnitLabel = _unitLabel(item.unit);
 
     double calcCostPerUnit() {
       final count = double.tryParse(itemCountCtrl.text) ?? 1;
@@ -184,7 +173,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
       if (currentStep == 1) {
         final count = double.tryParse(itemCountCtrl.text) ?? 0;
         final size = double.tryParse(perItemSizeCtrl.text) ?? 0;
-        return count > 0 && size > 0;
+        final price = double.tryParse(priceCtrl.text) ?? 0;
+        return count > 0 && size > 0 && price > 0;
       }
       return true;
     }
@@ -192,6 +182,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
     void doSave() async {
       var changeQty = calcChangeQty();
       if (changeQty == 0) return;
+
+      final count = itemCountCtrl.text;
+      final size = perItemSizeCtrl.text;
+      final suLabel = _unitLabel(sizeUnit);
+      final qtyText = '$count × $size$suLabel';
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(t.confirmAdjustTitle),
+          content: Text(isAdd
+              ? t.confirmAdjustAdd(qtyText, item.name)
+              : t.confirmAdjustRemove(qtyText, item.name)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: primaryGreen),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(t.save, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+
       final auth = context.read<AuthProvider>();
       if (auth.currentUser == null) return;
 
@@ -240,23 +256,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(item.name,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.text),
-                      ),
-                    ),
-                    Text(
-                      '${t.quantity}: ${item.stock.toStringAsFixed(0)} $itemUnitLabel',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.gray),
-                    ),
-                  ],
-                ),
-              ],
+            title: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '${t.manageStock} - ', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  TextSpan(text: item.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal)),
+                ],
+              ),
             ),
             content: SizedBox(
               width: double.maxFinite,
@@ -321,45 +327,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   void _confirmDeleteItem(BuildContext context, InventoryItem item) {
     final t = Translations.of(context);
+    final colors = Theme.of(context).extension<AppColors>()!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(t.delete),
-        content: FutureBuilder<int>(
-          future: context.read<InventoryProvider>().getRecipeUsageCount(item.id),
-          builder: (context, snapshot) {
-            final count = snapshot.data ?? 0;
-            if (count > 0) {
-              return Text(
-                t.isMs
-                    ? '${item.name} digunakan dalam $count resipi. Tidak boleh dipadam.'
-                    : '${item.name} is used in $count recipe(s). Cannot delete.',
-              );
-            }
-            return Text('${t.deleteConfirm} "${item.name}"?');
-          },
-        ),
+        content: Text(t.deleteItemConfirm(item.name), style: TextStyle(color: colors.text)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
-          FutureBuilder<int>(
-            future: context.read<InventoryProvider>().getRecipeUsageCount(item.id),
-            builder: (context, snapshot) {
-              final count = snapshot.data ?? 0;
-              if (count > 0) {
-                return TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text('OK'),
-                );
-              }
-              return TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.read<InventoryProvider>().deleteItem(item.id);
-                },
-                child: Text(t.delete, style: const TextStyle(color: Colors.red)),
-              );
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<InventoryProvider>().deleteItem(item.id);
             },
+            child: Text(t.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -490,16 +471,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         itemCount: provider.filteredItems.length,
                         itemBuilder: (context, index) {
                           final item = provider.filteredItems[index];
-                          return GestureDetector(
+                          return _InventoryCard(
                             key: ValueKey('item_${item.id}'),
-                            onTap: isAdmin ? () => _showRestockDialog(selectedItem: item) : null,
-                            child: _InventoryCard(
-                              item: item,
-                              isAdmin: isAdmin,
-                              onEdit: () => _showEditItemDialog(context, item),
-                              onAdjust: () => _showAdjustStockDialog(context, item),
-                              onDelete: () => _confirmDeleteItem(context, item),
-                            ),
+                            item: item,
+                            isAdmin: isAdmin,
+                            onEdit: () => _showEditItemDialog(context, item),
+                            onAdjust: () => _showAdjustStockDialog(context, item),
+                            onDelete: () => _confirmDeleteItem(context, item),
                           );
                         },
                       ),
@@ -802,11 +780,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double currentValue,
     double afterValue,
   ) {
-    final itemUnitLabel = _unitLabel(item.unit);
-    final changeLabel = isAdd
-        ? '+${_displayQty(changeQty)} $itemUnitLabel'
-        : '${_displayQty(changeQty)} $itemUnitLabel';
-    final changeColor = isAdd ? primaryGreen : redColor;
 
     switch (step) {
       case 0:
@@ -957,25 +930,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel),
               onChanged: (_) => setDialogState(() {}),
             ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.card,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: colors.border),
-              ),
-              child: Column(
-                children: [
-                  _previewRow('${t.quantity}:', '${item.stock.toStringAsFixed(0)} $itemUnitLabel', 'RM ${currentValue.toStringAsFixed(2)}', colors),
-                  Divider(color: colors.border, height: 1),
-                  const SizedBox(height: 6),
-                  _previewRow(t.isMs ? 'Perubahan:' : 'Change:', changeLabel, 'RM ${(afterValue - currentValue).abs().toStringAsFixed(2)}', colors, valueColor: changeColor),
-                  const SizedBox(height: 2),
-                  _previewRow(t.isMs ? 'Selepas:' : 'After:', '${afterStock.toStringAsFixed(0)} $itemUnitLabel', 'RM ${afterValue.toStringAsFixed(2)}', colors, valueColor: primaryGreen),
-                ],
-              ),
-            ),
+
           ],
         );
       case 2:
@@ -999,363 +954,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 }
 
-class _RestockDialog extends StatefulWidget {
-  final InventoryItem? initialItem;
-  const _RestockDialog({this.initialItem});
-
-  @override
-  State<_RestockDialog> createState() => _RestockDialogState();
-}
-
-class _RestockDialogState extends State<_RestockDialog> {
-  String? selectedItemId;
-  late TextEditingController qtyCtrl;
-  late TextEditingController costCtrl;
-  late TextEditingController minStockCtrl;
-  late TextEditingController dateCtrl;
-  late TextEditingController noteCtrl;
-  String selectedUnit = 'g';
-
-  @override
-  void initState() {
-    super.initState();
-    final provider = context.read<InventoryProvider>();
-
-    if (widget.initialItem != null) {
-      selectedItemId = widget.initialItem!.id;
-      qtyCtrl = TextEditingController(text: widget.initialItem!.stock.toStringAsFixed(0));
-      costCtrl = TextEditingController();
-      minStockCtrl = TextEditingController(text: widget.initialItem!.minStock.toStringAsFixed(0));
-      selectedUnit = _unitLabel(widget.initialItem!.unit);
-    } else {
-      selectedItemId = provider.items.isNotEmpty ? provider.items.first.id : null;
-      qtyCtrl = TextEditingController(text: '10');
-      costCtrl = TextEditingController();
-      minStockCtrl = TextEditingController(text: '0');
-    }
-
-    dateCtrl = TextEditingController(text: '16/07/2026');
-    noteCtrl = TextEditingController(text: 'Dibeli dari Eco Shop');
-  }
-
-  @override
-  void dispose() {
-    qtyCtrl.dispose();
-    costCtrl.dispose();
-    minStockCtrl.dispose();
-    dateCtrl.dispose();
-    noteCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Translations.of(context);
-    final provider = context.watch<InventoryProvider>();
-    final colors = Theme.of(context).extension<AppColors>()!;
-    final selectedItem = selectedItemId != null
-        ? provider.items.firstWhere((i) => i.id == selectedItemId)
-        : null;
-    const primaryGreen = Color(0xFF5BA154);
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      backgroundColor: colors.card,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 24),
-                Text(
-                  t.addStock,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colors.text,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Icon(Icons.close, color: colors.gray, size: 22),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
-            Text(
-              t.chooseIngredient,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: colors.inputBg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedItemId,
-                  isExpanded: true,
-                  icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
-                  style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w600),
-                  items: provider.items.map((item) {
-                    return DropdownMenuItem<String>(
-                      value: item.id,
-                      child: Text(item.name),
-                    );
-                  }).toList(),
-                   onChanged: (val) {
-                    setState(() {
-                      selectedItemId = val;
-                      if (val != null) {
-                        final item = provider.items.firstWhere((i) => i.id == val);
-                        selectedUnit = _unitLabel(item.unit);
-                      }
-                    });
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Text(
-              t.quantity,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: qtyCtrl,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      fillColor: colors.inputBg,
-                      filled: true,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: colors.inputBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedUnit,
-                        isExpanded: true,
-                        icon: Icon(Icons.keyboard_arrow_down, color: colors.gray),
-                        style: TextStyle(fontSize: 14, color: colors.text, fontWeight: FontWeight.w600),
-                        items: <String>['g', 'kg', 'ml', 'L', 'unit'].map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => selectedUnit = val);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            Text(
-              t.totalPurchaseAmount,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: costCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: colors.inputBg,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Text(
-              selectedItem != null ? '${t.minStock} (${_unitLabel(selectedItem.unit)})' : t.minStock,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: minStockCtrl,
-              keyboardType: TextInputType.number,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: colors.inputBg,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Text(
-              t.purchaseDate,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: dateCtrl,
-              readOnly: true,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-              onTap: () async {
-                DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2030),
-                );
-                if (pickedDate != null) {
-                  setState(() {
-                    dateCtrl.text =
-                        "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
-                  });
-                }
-              },
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: colors.inputBg,
-                filled: true,
-                suffixIcon: Icon(Icons.calendar_today_outlined, color: colors.gray, size: 20),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Text(
-              t.noteOptional,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.text),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: noteCtrl,
-              style: TextStyle(fontSize: 14, color: colors.text),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                fillColor: colors.inputBg,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                    if (selectedItemId != null) {
-                      final enteredQty = double.tryParse(qtyCtrl.text) ?? 0;
-                      final totalCost = double.tryParse(costCtrl.text) ?? 0;
-                      final enteredMinStock = double.tryParse(minStockCtrl.text);
-                      final minStock = enteredMinStock != null && selectedItem != null
-                          ? _toBaseQuantity(enteredMinStock, selectedUnit, selectedItem.unit)
-                          : enteredMinStock;
-                      if (enteredQty != 0) {
-                        final item = provider.items.firstWhere((i) => i.id == selectedItemId);
-                        final addedQty = _toBaseQuantity(enteredQty, selectedUnit, item.unit);
-                        final auth = context.read<AuthProvider>();
-                        if (auth.currentUser != null) {
-                          await provider.restockItem(
-                            itemId: selectedItemId!,
-                            addedQty: addedQty,
-                            totalCost: totalCost,
-                            userId: auth.currentUser!.id,
-                            minStock: minStock,
-                            purchaseDate: dateCtrl.text,
-                            note: noteCtrl.text,
-                          );
-                        }
-                      }
-                    }
-                  Navigator.of(context, rootNavigator: true).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  t.save,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _InventoryCard extends StatelessWidget {
   final InventoryItem item;
   final bool isAdmin;
@@ -1364,6 +962,7 @@ class _InventoryCard extends StatelessWidget {
   final VoidCallback? onDelete;
 
   const _InventoryCard({
+    super.key,
     required this.item,
     this.isAdmin = false,
     this.onEdit,
@@ -1557,23 +1156,6 @@ double _toBaseQuantity(double qty, String fromUnit, ItemUnit baseUnit) {
     return qty * volUnits[fromUnit]! / volUnits[baseLabel]!;
   }
   return qty;
-}
-
-Widget _previewRow(String label, String qty, String value, AppColors colors, {Color? valueColor}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      children: [
-        SizedBox(width: 70, child: Text(label, style: TextStyle(fontSize: 12, color: colors.gray))),
-        Expanded(child: Text(qty, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: valueColor ?? colors.text))),
-        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: valueColor ?? colors.text)),
-      ],
-    ),
-  );
-}
-
-String _displayQty(double qty) {
-  return qty > 0 ? '+${qty.toStringAsFixed(0)}' : qty.toStringAsFixed(0);
 }
 
 InputDecoration _dialogInputDecoration(String label) {
