@@ -1,15 +1,24 @@
-import 'package:crypto/crypto.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/user.dart' show User;
 
 abstract class AuthRepository {
+  Stream<AuthState> get authStateChanges;
   Future<User?> login(String email, String password);
   Future<void> logout();
-  Future<bool> changePassword(String userId, String currentPassword, String newPassword);
+  Future<bool> changePassword(
+    String userId,
+    String currentPassword,
+    String newPassword,
+  );
   Future<User?> getStoredSession();
-  Future<User> registerUser(String name, String email, String password, String role);
+  Future<void> requestPasswordReset(String email, {required String redirectTo});
+  Future<void> updatePassword(String newPassword);
+  Future<User> registerUser(
+    String name,
+    String email,
+    String password,
+    String role,
+  );
   Future<List<User>> fetchAllUsers();
   Future<void> updateUserRole(String userId, String role);
   Future<void> toggleUserActive(String userId, bool isActive);
@@ -17,111 +26,136 @@ abstract class AuthRepository {
 }
 
 class SupabaseAuthRepository implements AuthRepository {
-  static const _sessionKey = 'auth_user_id';
   final SupabaseClient _client;
 
   const SupabaseAuthRepository(this._client);
 
-  String _hashPassword(String password) {
-    return sha256.convert(utf8.encode(password)).toString();
+  static const _profileColumns =
+      'id,name,email,role,is_active,last_open,created_at,auth_user_id';
+
+  @override
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+
+  Future<User?> _profileForAuthUser(String authUserId) async {
+    final response = await _client
+        .from('users')
+        .select(_profileColumns)
+        .eq('auth_user_id', authUserId)
+        .maybeSingle();
+
+    return response == null ? null : User.fromJson(response);
+  }
+
+  Future<User?> _activeProfileForCurrentSession() async {
+    final authUser = _client.auth.currentUser;
+    if (authUser == null) return null;
+
+    final profile = await _profileForAuthUser(authUser.id);
+    if (profile == null || !profile.isActive) {
+      await _client.auth.signOut();
+      return null;
+    }
+    return profile;
   }
 
   @override
   Future<User?> login(String email, String password) async {
-    final hash = _hashPassword(password);
-    final response = await _client
+    final response = await _client.auth.signInWithPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
+
+    if (response.user == null) return null;
+
+    final user = await _profileForAuthUser(response.user!.id);
+    if (user == null || !user.isActive) {
+      await _client.auth.signOut();
+      return null;
+    }
+
+    await _client
         .from('users')
-        .select()
-        .eq('email', email)
-        .eq('password_hash', hash)
-        .maybeSingle();
+        .update({'last_open': DateTime.now().toIso8601String()})
+        .eq('id', user.id);
 
-    if (response == null) return null;
-
-    final user = User.fromJson(response);
-    if (!user.isActive) return null;
-
-    try {
-      await _client
-          .from('users')
-          .update({'last_open': DateTime.now().toIso8601String()})
-          .eq('id', user.id);
-    } catch (_) {}
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_sessionKey, user.id);
     return user;
   }
 
   @override
-  Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_sessionKey);
+  Future<void> logout() => _client.auth.signOut();
+
+  @override
+  Future<User?> getStoredSession() => _activeProfileForCurrentSession();
+
+  @override
+  Future<void> requestPasswordReset(
+    String email, {
+    required String redirectTo,
+  }) {
+    return _client.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      redirectTo: redirectTo,
+    );
   }
 
   @override
-  Future<User?> getStoredSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString(_sessionKey);
-    if (userId == null) return null;
-
-    final response = await _client
-        .from('users')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (response == null) {
-      await prefs.remove(_sessionKey);
-      return null;
-    }
-
-    return User.fromJson(response);
+  Future<void> updatePassword(String newPassword) async {
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
   @override
-  Future<bool> changePassword(String userId, String currentPassword, String newPassword) async {
-    final currentHash = _hashPassword(currentPassword);
-    final user = await _client
+  Future<bool> changePassword(
+    String userId,
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final profile = await _client
         .from('users')
-        .select()
+        .select('email')
         .eq('id', userId)
-        .eq('password_hash', currentHash)
         .maybeSingle();
+    final email = profile?['email'] as String?;
+    if (email == null) return false;
 
-    if (user == null) return false;
+    final response = await _client.auth.signInWithPassword(
+      email: email,
+      password: currentPassword,
+    );
+    if (response.user == null) return false;
 
-    final newHash = _hashPassword(newPassword);
-    await _client
-        .from('users')
-        .update({'password_hash': newHash})
-        .eq('id', userId);
-
+    await updatePassword(newPassword);
     return true;
   }
 
   @override
-  Future<User> registerUser(String name, String email, String password, String role) async {
-    final hash = _hashPassword(password);
-    final response = await _client
-        .from('users')
-        .insert({
-          'name': name,
-          'email': email,
-          'password_hash': hash,
-          'role': role,
-        })
-        .select()
-        .single();
+  Future<User> registerUser(
+    String name,
+    String email,
+    String password,
+    String role,
+  ) async {
+    final response = await _client.functions.invoke(
+      'create_staff_user',
+      body: {
+        'name': name.trim(),
+        'email': email.trim().toLowerCase(),
+        'password': password,
+      },
+    );
 
-    return User.fromJson(response);
+    final data = response.data;
+    if (data is! Map<String, dynamic> ||
+        data['user'] is! Map<String, dynamic>) {
+      throw StateError('Invalid staff registration response');
+    }
+    return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
   @override
   Future<List<User>> fetchAllUsers() async {
     final response = await _client
         .from('users')
-        .select()
+        .select(_profileColumns)
         .order('name');
 
     return (response as List).map((json) => User.fromJson(json)).toList();
@@ -129,10 +163,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> updateUserRole(String userId, String role) async {
-    await _client
-        .from('users')
-        .update({'role': role})
-        .eq('id', userId);
+    await _client.from('users').update({'role': role}).eq('id', userId);
   }
 
   @override
@@ -145,9 +176,6 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> updateUserName(String userId, String name) async {
-    await _client
-        .from('users')
-        .update({'name': name})
-        .eq('id', userId);
+    await _client.from('users').update({'name': name}).eq('id', userId);
   }
 }

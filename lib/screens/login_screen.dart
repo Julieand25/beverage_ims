@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool obscurePassword = true;
   bool _isLoggingIn = false;
+  bool _isSendingReset = false;
 
   @override
   void dispose() {
@@ -64,10 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/sipsync.png',
-                  height: 96,
-                ),
+                Image.asset('assets/sipsync.png', height: 96),
                 const SizedBox(height: 12),
                 Text(
                   t.appTitle,
@@ -116,11 +114,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 14, color: colors.text),
                         decoration: InputDecoration(
                           hintText: t.emailHint,
-                          hintStyle: TextStyle(fontSize: 14, color: colors.gray),
-                          prefixIcon: Icon(Icons.email_outlined, size: 20, color: colors.gray),
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: colors.gray,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            size: 20,
+                            color: colors.gray,
+                          ),
                           filled: true,
                           fillColor: colors.inputBg,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(color: colors.border),
@@ -147,19 +155,33 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 14, color: colors.text),
                         decoration: InputDecoration(
                           hintText: t.passwordHint,
-                          hintStyle: TextStyle(fontSize: 14, color: colors.gray),
-                          prefixIcon: Icon(Icons.lock_outline, size: 20, color: colors.gray),
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: colors.gray,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            size: 20,
+                            color: colors.gray,
+                          ),
                           suffixIcon: GestureDetector(
-                            onTap: () => setState(() => obscurePassword = !obscurePassword),
+                            onTap: () => setState(
+                              () => obscurePassword = !obscurePassword,
+                            ),
                             child: Icon(
-                              obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               size: 20,
                               color: colors.gray,
                             ),
                           ),
                           filled: true,
                           fillColor: colors.inputBg,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(color: colors.border),
@@ -174,10 +196,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
-                          onTap: () {},
+                          onTap: _isSendingReset
+                              ? null
+                              : () => _showForgotPasswordDialog(context),
                           child: Text(
                             t.forgotPassword,
-                            style: const TextStyle(fontSize: 12, color: Colors.blue),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue,
+                            ),
                           ),
                         ),
                       ),
@@ -188,34 +215,37 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _isLoggingIn
                               ? null
                               : () async {
-                                   setState(() => _isLoggingIn = true);
-                                    bool success = false;
-                                    String errorMsg = t.loginError;
-                                    try {
-                                      final auth = context.read<AuthProvider>();
-                                      success = await auth.login(
-                                        emailController.text.trim(),
-                                        passwordController.text,
-                                      );
-                                    } catch (_) {
-                                      success = false;
-                                      errorMsg = t.connectionError;
-                                    }
-                                    if (!mounted) return;
-                                    setState(() => _isLoggingIn = false);
-                                    if (success) {
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        if (context.mounted) context.go('/dashboard');
-                                      });
-                                    } else if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(errorMsg),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                 },
+                                  setState(() => _isLoggingIn = true);
+                                  bool success = false;
+                                  String errorMsg = t.loginError;
+                                  try {
+                                    final auth = context.read<AuthProvider>();
+                                    success = await auth.login(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+                                  } catch (_) {
+                                    success = false;
+                                    errorMsg = t.connectionError;
+                                  }
+                                  if (!mounted) return;
+                                  setState(() => _isLoggingIn = false);
+                                  if (success) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          if (context.mounted) {
+                                            context.go('/dashboard');
+                                          }
+                                        });
+                                  } else if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(errorMsg),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryGreen,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -251,5 +281,64 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showForgotPasswordDialog(BuildContext context) async {
+    final t = Translations.of(context);
+    final auth = context.read<AuthProvider>();
+    final controller = TextEditingController(text: emailController.text.trim());
+
+    try {
+      final email = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(t.forgotPasswordTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(t.forgotPasswordMessage),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: t.email,
+                  hintText: t.emailHint,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(t.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
+              child: Text(t.send),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted || email == null || email.isEmpty) return;
+      setState(() => _isSendingReset = true);
+
+      try {
+        await auth.requestPasswordReset(email);
+      } catch (_) {
+        // Keep the response generic so account existence is not disclosed.
+      }
+
+      if (!context.mounted) return;
+      setState(() => _isSendingReset = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.resetEmailSent)));
+    } finally {
+      controller.dispose();
+    }
   }
 }

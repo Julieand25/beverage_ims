@@ -10,6 +10,7 @@ import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
 import '../../screens/register_staff_screen.dart';
+import '../../screens/reset_password_screen.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/user_management_screen.dart';
 import '../../screens/report_screen.dart';
@@ -31,6 +32,10 @@ GoRouter createRouter({required AuthProvider authProvider}) {
       if (authProvider.isLoading) return null;
       final isLoginRoute = state.matchedLocation == '/login';
       final isSplashRoute = state.matchedLocation == '/splash';
+      final isResetPasswordRoute = state.matchedLocation == '/reset-password';
+      // Let Supabase finish processing the recovery session before the page
+      // attempts to update the password.
+      if (isResetPasswordRoute) return null;
       if (authProvider.isLoggedIn) {
         if (isLoginRoute || isSplashRoute) return '/dashboard';
         return null;
@@ -44,9 +49,10 @@ GoRouter createRouter({required AuthProvider authProvider}) {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
         path: '/change-password',
@@ -64,14 +70,8 @@ GoRouter createRouter({required AuthProvider authProvider}) {
         path: '/audit-logs',
         builder: (context, state) => const AuditLogScreen(),
       ),
-      GoRoute(
-        path: '/about',
-        builder: (context, state) => const AboutScreen(),
-      ),
-      GoRoute(
-        path: '/theme',
-        builder: (context, state) => const ThemeScreen(),
-      ),
+      GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
+      GoRoute(path: '/theme', builder: (context, state) => const ThemeScreen()),
       GoRoute(
         path: '/language',
         builder: (context, state) => const LanguageScreen(),

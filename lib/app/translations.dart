@@ -35,8 +35,7 @@ class Translations {
   String get settings => isMs ? 'Tetapan' : 'Settings';
 
   // Inventory
-  String get inventoryTitle =>
-      isMs ? 'Inventori Bahan' : 'Inventory Items';
+  String get inventoryTitle => isMs ? 'Inventori Bahan' : 'Inventory Items';
   String get searchItem => isMs ? 'Cari barang...' : 'Search item...';
   String get addItem => isMs ? 'Tambah Barang' : 'Add Item';
   String get all => isMs ? 'Semua' : 'All';
@@ -65,6 +64,7 @@ class Translations {
   String get minStock => isMs ? 'Stok Minimum' : 'Min. Stock';
   String get costPerUnit => isMs ? 'Kos Seunit' : 'Cost Per Unit';
   String get cancel => isMs ? 'Batal' : 'Cancel';
+  String get send => isMs ? 'Hantar' : 'Send';
   String get save => isMs ? 'Simpan' : 'Save';
   String get next => isMs ? 'Seterusnya' : 'Next';
   String get back => isMs ? 'Kembali' : 'Back';
@@ -74,8 +74,7 @@ class Translations {
   String get note => isMs ? 'Nota / Pembekal' : 'Note / Supplier';
 
   // Recipe
-  String get recipeTitle =>
-      isMs ? 'Resipi' : 'Recipes';
+  String get recipeTitle => isMs ? 'Resipi' : 'Recipes';
   String get beverageRecipe => isMs ? 'Resipi Minuman' : 'Beverage Recipe';
   String get searchRecipe => isMs ? 'Cari resipi...' : 'Search recipe...';
   String get addRecipe => isMs ? 'Tambah Resipi' : 'Add Recipe';
@@ -88,9 +87,11 @@ class Translations {
   String get beverageName => isMs ? 'Nama Resipi' : 'Recipe Name';
   String get addIngredient => isMs ? 'Tambah Bahan' : 'Add Ingredient';
   String get deleteRecipe => isMs ? 'Padam Resipi' : 'Delete Recipe';
-  String get deleteConfirm => isMs ? 'Padamkan resipi ini?' : 'Delete this recipe?';
-  String deleteItemConfirm(String name) =>
-      isMs ? 'Padam $name? Ia akan dikeluarkan dari resipi.' : 'Delete $name? It will be removed from recipes.';
+  String get deleteConfirm =>
+      isMs ? 'Padamkan resipi ini?' : 'Delete this recipe?';
+  String deleteItemConfirm(String name) => isMs
+      ? 'Padam $name? Ia akan dikeluarkan dari resipi.'
+      : 'Delete $name? It will be removed from recipes.';
   String get editItem => isMs ? 'Ubah Item' : 'Edit Item';
   String get manageStock => isMs ? 'Urus Stok' : 'Manage Stock';
   String get perCup => isMs ? '/cawan' : '/cup';
@@ -121,7 +122,8 @@ class Translations {
   String get profitMargin => isMs ? 'Margin' : 'Margin';
   String get vsYesterday => isMs ? 'vs Semalam' : 'vs Yesterday';
   String get vsLastMonth => isMs ? 'vs Bulan Lepas' : 'vs Last Month';
-  String get dailyTransactions => isMs ? 'Transaksi Jualan' : 'Sales Transactions';
+  String get dailyTransactions =>
+      isMs ? 'Transaksi Jualan' : 'Sales Transactions';
   String get transactionTime => isMs ? 'Masa' : 'Time';
   String get noTransactions => isMs ? 'Tiada transaksi' : 'No transactions';
   String get previousMonth => isMs ? 'Bulan Lepas' : 'Previous';
@@ -136,10 +138,13 @@ class Translations {
   String get allTime => isMs ? 'Sepanjang Masa' : 'All Time';
   String get last7Days => isMs ? '7 Hari Lepas' : '7 Days';
   String get last30Days => isMs ? '30 Hari Lepas' : '30 Days';
-  String get exportPdfTitle => isMs ? 'Eksport Laporan sebagai PDF' : 'Export Report as PDF';
+  String get exportPdfTitle =>
+      isMs ? 'Eksport Laporan sebagai PDF' : 'Export Report as PDF';
   String get generatePdf => isMs ? 'Jana PDF' : 'Generate PDF';
   String get allReports => isMs ? 'Semua Laporan' : 'All Reports';
-  String get allReportsSubtitle => isMs ? 'Gabungan harian, stok, dan bulanan' : 'Daily, stock & monthly combined';
+  String get allReportsSubtitle => isMs
+      ? 'Gabungan harian, stok, dan bulanan'
+      : 'Daily, stock & monthly combined';
 
   // Login
   String get appTitle => 'Beverage IMS';
@@ -149,31 +154,40 @@ class Translations {
   String get email => isMs ? 'Emel' : 'Email';
   String get emailHint => isMs ? 'Masukkan emel' : 'Enter email';
   String get password => isMs ? 'Kata Laluan' : 'Password';
-  String get passwordHint =>
-      isMs ? 'Masukkan kata laluan' : 'Enter password';
-  String get forgotPassword =>
-      isMs ? 'Lupa Kata Laluan?' : 'Forgot Password?';
+  String get passwordHint => isMs ? 'Masukkan kata laluan' : 'Enter password';
+  String get forgotPassword => isMs ? 'Lupa Kata Laluan?' : 'Forgot Password?';
+  String get forgotPasswordTitle =>
+      isMs ? 'Tetapkan Semula Kata Laluan' : 'Reset Password';
+  String get forgotPasswordMessage => isMs
+      ? 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.'
+      : 'Enter your email to receive a password reset link.';
+  String get resetEmailSent => isMs
+      ? 'Jika emel itu berdaftar, pautan tetapan semula telah dihantar.'
+      : 'If the email is registered, a password reset link has been sent.';
+  String get resetPassword =>
+      isMs ? 'Tetapkan Kata Laluan Baru' : 'Set New Password';
+  String get resetPasswordSuccess => isMs
+      ? 'Kata laluan berjaya ditetapkan. Sila log masuk.'
+      : 'Password reset successfully. Please log in.';
+  String get invalidPassword => isMs
+      ? 'Kata laluan mesti sekurang-kurangnya 6 aksara.'
+      : 'Password must be at least 6 characters.';
   String get signOut => isMs ? 'Log Keluar' : 'Sign Out';
-  String get registerStaff =>
-      isMs ? 'Daftar Pekerja' : 'Register Staff';
+  String get registerStaff => isMs ? 'Daftar Pekerja' : 'Register Staff';
   String get name => isMs ? 'Nama' : 'Name';
   String get nameHint => isMs ? 'Masukkan nama' : 'Enter name';
   String get staffRegistered =>
       isMs ? 'Pekerja berjaya didaftarkan' : 'Staff registered successfully';
-  String get aboutApp =>
-      isMs ? 'Tentang Aplikasi' : 'About App';
-  String get viewAuditLogs =>
-      isMs ? 'Lihat Log Audit' : 'View Audit Logs';
+  String get aboutApp => isMs ? 'Tentang Aplikasi' : 'About App';
+  String get viewAuditLogs => isMs ? 'Lihat Log Audit' : 'View Audit Logs';
   String get edit => isMs ? 'Ubah' : 'Edit';
   String get delete => isMs ? 'Padam' : 'Delete';
-  String get changePassword =>
-      isMs ? 'Tukar Kata Laluan' : 'Change Password';
+  String get changePassword => isMs ? 'Tukar Kata Laluan' : 'Change Password';
   String get currentPassword =>
       isMs ? 'Kata Laluan Semasa' : 'Current Password';
   String get currentPasswordHint =>
       isMs ? 'Masukkan kata laluan semasa' : 'Enter current password';
-  String get newPassword =>
-      isMs ? 'Kata Laluan Baru' : 'New Password';
+  String get newPassword => isMs ? 'Kata Laluan Baru' : 'New Password';
   String get newPasswordHint =>
       isMs ? 'Masukkan kata laluan baru' : 'Enter new password';
   String get confirmPassword =>
@@ -184,8 +198,9 @@ class Translations {
       isMs ? 'Kata laluan tidak sepadan' : 'Passwords do not match';
   String get passwordChanged =>
       isMs ? 'Kata laluan berjaya ditukar' : 'Password changed successfully';
-  String get passwordChangedMsg =>
-      isMs ? 'Kata laluan anda telah berjaya ditukar.' : 'Your password has been changed successfully.';
+  String get passwordChangedMsg => isMs
+      ? 'Kata laluan anda telah berjaya ditukar.'
+      : 'Your password has been changed successfully.';
 
   // Settings
   String get appearance => isMs ? 'Penampilan' : 'Appearance';
@@ -196,151 +211,127 @@ class Translations {
   String get malay => 'Melayu';
   String get english => isMs ? 'Inggeris' : 'English';
   String get account => isMs ? 'Akaun' : 'Account';
-  String get recordSaleTitle =>
-      isMs ? 'Rekod Jualan' : 'Record Sale';
+  String get recordSaleTitle => isMs ? 'Rekod Jualan' : 'Record Sale';
   String get selectMenu => isMs ? 'Pilih Menu' : 'Select Menu';
-  String get selectMenuHint =>
-      isMs ? 'Pilih menu...' : 'Select menu...';
-  String get qtySold =>
-      isMs ? 'Kuantiti Terjual' : 'Quantity Sold';
+  String get selectMenuHint => isMs ? 'Pilih menu...' : 'Select menu...';
+  String get qtySold => isMs ? 'Kuantiti Terjual' : 'Quantity Sold';
   String get unitPriceLabel =>
       isMs ? 'Harga Jual Seunit (RM)' : 'Unit Price (RM)';
-  String get totalSalesLabel =>
-      isMs ? 'Jumlah Jualan' : 'Total Sales';
-  String get saveRecord =>
-      isMs ? 'Simpan Rekod' : 'Save Record';
-  String get autoDeductNotice =>
-      isMs ? 'Stok bahan akan ditolak mengikut resipi secara automatik.' : 'Stock will be deducted automatically per recipe.';
+  String get totalSalesLabel => isMs ? 'Jumlah Jualan' : 'Total Sales';
+  String get saveRecord => isMs ? 'Simpan Rekod' : 'Save Record';
+  String get autoDeductNotice => isMs
+      ? 'Stok bahan akan ditolak mengikut resipi secara automatik.'
+      : 'Stock will be deducted automatically per recipe.';
   String get emptyInventory =>
       isMs ? 'Tiada barang dijumpai' : 'No items found';
-  String get emptyRecipe =>
-      isMs ? 'Tiada resipi dijumpai' : 'No recipes found';
+  String get emptyRecipe => isMs ? 'Tiada resipi dijumpai' : 'No recipes found';
   String get allStockSufficient =>
       isMs ? 'Semua stok mencukupi' : 'All stock sufficient';
   String get insufficientStockTitle =>
       isMs ? 'Stok Tidak Mencukupi!' : 'Insufficient Stock!';
-  String insufficientStockSaleBody(String items) =>
-      isMs ? 'Sesetengah bahan tidak cukup stok. Stok akan ditetapkan kepada 0.\n$items'
-          : 'Some ingredients have insufficient stock. Stock will be set to 0.\n$items';
-  String get noSalesToday =>
-      isMs ? 'Tiada jualan hari ini' : 'No sales today';
-  String get noStockRecords =>
-      isMs ? 'Tiada rekod stok' : 'No stock records';
-  String get emptyAudit =>
-      isMs ? 'Tiada rekod audit' : 'No audit records';
-  String get chooseIngredient =>
-      isMs ? 'Pilih Bahan' : 'Select Ingredient';
+  String insufficientStockSaleBody(String items) => isMs
+      ? 'Sesetengah bahan tidak cukup stok. Stok akan ditetapkan kepada 0.\n$items'
+      : 'Some ingredients have insufficient stock. Stock will be set to 0.\n$items';
+  String get noSalesToday => isMs ? 'Tiada jualan hari ini' : 'No sales today';
+  String get noStockRecords => isMs ? 'Tiada rekod stok' : 'No stock records';
+  String get emptyAudit => isMs ? 'Tiada rekod audit' : 'No audit records';
+  String get chooseIngredient => isMs ? 'Pilih Bahan' : 'Select Ingredient';
   String get createNewIngredient =>
       isMs ? 'Tambah Bahan Baru' : 'Add New Ingredient';
   String get addFromInventory =>
       isMs ? 'Pilih Dari Inventori' : 'Pick From Inventory';
-  String get noIngredientsHint =>
-      isMs ? 'Pilih dari inventori atau cipta bahan baru untuk bermula.'
-          : 'Select from inventory or add a new ingredient.';
+  String get noIngredientsHint => isMs
+      ? 'Pilih dari inventori atau cipta bahan baru untuk bermula.'
+      : 'Select from inventory or add a new ingredient.';
   String get newIngredientName =>
       isMs ? 'Nama Bahan Baru' : 'New Ingredient Name';
-  String get quantity =>
-      isMs ? 'Kuantiti' : 'Quantity';
+  String get quantity => isMs ? 'Kuantiti' : 'Quantity';
   String get purchasePriceLabel =>
       isMs ? 'Harga Beli Seunit (RM)' : 'Purchase Price Per Unit (RM)';
   String get totalPurchaseAmount =>
       isMs ? 'Jumlah Harga Beli (RM)' : 'Total Purchase Amount (RM)';
-  String get itemsPerPack =>
-      isMs ? 'Kuantiti Item' : 'Item Quantity';
-  String get qtyPerItem =>
-      isMs ? 'Sukatan Item' : 'Item Measurement';
-  String get totalPrice =>
-      isMs ? 'Jumlah (RM)' : 'Total (RM)';
-  String get pricePerItem =>
-      isMs ? 'Seunit' : 'Per Item';
-  String get totalPaidLabel =>
-      isMs ? 'Jumlah Dibayar (RM)' : 'Total Paid (RM)';
-  String get priceEachLabel =>
-      isMs ? 'Harga Seunit (RM)' : 'Price Each (RM)';
-  String get purchaseDate =>
-      isMs ? 'Tarikh Beli' : 'Purchase Date';
-  String get noteOptional =>
-      isMs ? 'Nota (pilihan)' : 'Note (optional)';
+  String get itemsPerPack => isMs ? 'Kuantiti Item' : 'Item Quantity';
+  String get qtyPerItem => isMs ? 'Sukatan Item' : 'Item Measurement';
+  String get totalPrice => isMs ? 'Jumlah (RM)' : 'Total (RM)';
+  String get pricePerItem => isMs ? 'Seunit' : 'Per Item';
+  String get totalPaidLabel => isMs ? 'Jumlah Dibayar (RM)' : 'Total Paid (RM)';
+  String get priceEachLabel => isMs ? 'Harga Seunit (RM)' : 'Price Each (RM)';
+  String get purchaseDate => isMs ? 'Tarikh Beli' : 'Purchase Date';
+  String get noteOptional => isMs ? 'Nota (pilihan)' : 'Note (optional)';
   String get stockClampedTitle =>
       isMs ? 'Stok Tidak Mencukupi' : 'Insufficient Stock';
-  String stockClampedBody(String name) =>
-      isMs ? 'Pengurangan melebihi stok semasa "$name". Stok akan ditetapkan kepada 0. Teruskan?'
-          : 'Deduction exceeds current stock of "$name". Stock will be set to 0. Continue?';
-  String get confirmAdjustTitle =>
-      isMs ? 'Sahkan' : 'Confirm';
+  String stockClampedBody(String name) => isMs
+      ? 'Pengurangan melebihi stok semasa "$name". Stok akan ditetapkan kepada 0. Teruskan?'
+      : 'Deduction exceeds current stock of "$name". Stock will be set to 0. Continue?';
+  String get confirmAdjustTitle => isMs ? 'Sahkan' : 'Confirm';
   String confirmAdjustAdd(String qty, String name) =>
       isMs ? 'Tambah $qty $name?' : 'Add $qty of $name?';
   String confirmAdjustRemove(String qty, String name) =>
       isMs ? 'Kurang $qty $name?' : 'Remove $qty of $name?';
   String get loginError =>
       isMs ? 'Emel atau kata laluan salah' : 'Invalid email or password';
-  String get connectionError =>
-      isMs ? 'Gagal menyambung ke pelayan. Sila periksa sambungan internet.'
-          : 'Could not connect to the server. Please check your internet connection.';
+  String get connectionError => isMs
+      ? 'Gagal menyambung ke pelayan. Sila periksa sambungan internet.'
+      : 'Could not connect to the server. Please check your internet connection.';
   String get wrongPassword =>
       isMs ? 'Kata laluan semasa salah' : 'Current password is incorrect';
   String get fillAllFields =>
       isMs ? 'Sila isi semua ruangan' : 'Please fill all fields';
   String get emailInvalid =>
       isMs ? 'Format emel tidak sah' : 'Invalid email format';
-  String get passwordTooShort =>
-      isMs ? 'Kata laluan mesti sekurang-kurangnya 6 aksara' : 'Password must be at least 6 characters';
-  String get staffRegisterFailed =>
-      isMs ? 'Pendaftaran gagal. Emel mungkin telah digunakan.' : 'Registration failed. Email may already be in use.';
+  String get passwordTooShort => isMs
+      ? 'Kata laluan mesti sekurang-kurangnya 6 aksara'
+      : 'Password must be at least 6 characters';
+  String get staffRegisterFailed => isMs
+      ? 'Pendaftaran gagal. Emel mungkin telah digunakan.'
+      : 'Registration failed. Email may already be in use.';
   String get cupsUnit => isMs ? 'cawan' : 'cups';
   String get cupUnit => isMs ? 'cawan' : 'cup';
   String get recordsUnit => isMs ? 'rekod' : 'records';
-  String get unknownItem =>
-      isMs ? 'Tidak Diketahui' : 'Unknown';
-  String get recipeNote =>
-      isMs ? 'Resipi ini akan digunakan setiap kali jualan direkod.' : 'This recipe will be used each time a sale is recorded.';
-  String get setMeasurement =>
-      isMs ? 'Resipi' : 'Recipes';
-  String get selectHint =>
-      isMs ? 'Pilih...' : 'Select...';
-  String get manageUsers =>
-      isMs ? 'Urus Pengguna' : 'Manage Users';
-  String get userManagementTitle =>
-      isMs ? 'Urus Pengguna' : 'User Management';
+  String get unknownItem => isMs ? 'Tidak Diketahui' : 'Unknown';
+  String get recipeNote => isMs
+      ? 'Resipi ini akan digunakan setiap kali jualan direkod.'
+      : 'This recipe will be used each time a sale is recorded.';
+  String get setMeasurement => isMs ? 'Resipi' : 'Recipes';
+  String get selectHint => isMs ? 'Pilih...' : 'Select...';
+  String get manageUsers => isMs ? 'Urus Pengguna' : 'Manage Users';
+  String get userManagementTitle => isMs ? 'Urus Pengguna' : 'User Management';
   String get roleChanged =>
       isMs ? 'Peranan berjaya ditukar' : 'Role updated successfully';
   String get statusChanged =>
       isMs ? 'Status berjaya ditukar' : 'Status updated successfully';
-  String get active =>
-      isMs ? 'Aktif' : 'Active';
-  String get deactivated =>
-      isMs ? 'Dinyahaktif' : 'Deactivated';
-  String get lastOpened =>
-      isMs ? 'Terakhir dibuka' : 'Last opened';
-  String get never =>
-      isMs ? 'Tidak pernah' : 'Never';
-  String get confirmDeactivate =>
-      isMs ? 'Nyahaktifkan pengguna ini? Mereka tidak boleh log masuk lagi.' : 'Deactivate this user? They will no longer be able to log in.';
+  String get active => isMs ? 'Aktif' : 'Active';
+  String get deactivated => isMs ? 'Dinyahaktif' : 'Deactivated';
+  String get lastOpened => isMs ? 'Terakhir dibuka' : 'Last opened';
+  String get never => isMs ? 'Tidak pernah' : 'Never';
+  String get confirmDeactivate => isMs
+      ? 'Nyahaktifkan pengguna ini? Mereka tidak boleh log masuk lagi.'
+      : 'Deactivate this user? They will no longer be able to log in.';
   String get confirmActivate =>
       isMs ? 'Aktifkan semula pengguna ini?' : 'Reactivate this user?';
-  String get deactivateUser =>
-      isMs ? 'Nyahaktifkan' : 'Deactivate';
-  String get activateUser =>
-      isMs ? 'Aktifkan' : 'Activate';
-  String get changeRole =>
-      isMs ? 'Tukar Peranan' : 'Change Role';
-  String get role =>
-      isMs ? 'Peranan' : 'Role';
-  String get status =>
-      isMs ? 'Status' : 'Status';
-  String get editName =>
-      isMs ? 'Edit Nama' : 'Edit Name';
-  String get nameUpdated =>
-      isMs ? 'Nama dikemaskini' : 'Name updated';
-  String get nameUpdateFailed =>
-      isMs ? 'Gagal mengemaskini nama. Sila cuba lagi.' : 'Failed to update name. Please try again.';
-  String get roleUpdateFailed =>
-      isMs ? 'Gagal menukar peranan. Sila cuba lagi.' : 'Failed to update role. Please try again.';
-  String get statusUpdateFailed =>
-      isMs ? 'Gagal menukar status. Sila cuba lagi.' : 'Failed to update status. Please try again.';
-  String get lowStockAlertTitle =>
-      isMs ? 'Stok Rendah!' : 'Low Stock!';
-  String lowStockAlertBody(String name, double stock, double minStock, String unit) {
+  String get deactivateUser => isMs ? 'Nyahaktifkan' : 'Deactivate';
+  String get activateUser => isMs ? 'Aktifkan' : 'Activate';
+  String get changeRole => isMs ? 'Tukar Peranan' : 'Change Role';
+  String get role => isMs ? 'Peranan' : 'Role';
+  String get status => isMs ? 'Status' : 'Status';
+  String get editName => isMs ? 'Edit Nama' : 'Edit Name';
+  String get nameUpdated => isMs ? 'Nama dikemaskini' : 'Name updated';
+  String get nameUpdateFailed => isMs
+      ? 'Gagal mengemaskini nama. Sila cuba lagi.'
+      : 'Failed to update name. Please try again.';
+  String get roleUpdateFailed => isMs
+      ? 'Gagal menukar peranan. Sila cuba lagi.'
+      : 'Failed to update role. Please try again.';
+  String get statusUpdateFailed => isMs
+      ? 'Gagal menukar status. Sila cuba lagi.'
+      : 'Failed to update status. Please try again.';
+  String get lowStockAlertTitle => isMs ? 'Stok Rendah!' : 'Low Stock!';
+  String lowStockAlertBody(
+    String name,
+    double stock,
+    double minStock,
+    String unit,
+  ) {
     var unitStr = unit;
     if (unit == 'g') unitStr = 'g';
     if (unit == 'kg') unitStr = 'kg';
@@ -350,10 +341,10 @@ class Translations {
         ? '$name - baki $stock$unitStr (min: $minStock$unitStr)'
         : '$name - $stock$unitStr left (min: $minStock$unitStr)';
   }
+
   String get notificationPermissionTitle =>
       isMs ? 'Benarkan Pemberitahuan' : 'Allow Notifications';
-  String get notificationPermissionBody =>
-      isMs
-          ? 'Dapatkan amaran segera apabila stok rendah.'
-          : 'Get instant alerts when stock runs low.';
+  String get notificationPermissionBody => isMs
+      ? 'Dapatkan amaran segera apabila stok rendah.'
+      : 'Get instant alerts when stock runs low.';
 }
