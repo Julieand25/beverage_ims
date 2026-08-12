@@ -219,38 +219,6 @@ class _AuditLogCard extends StatelessWidget {
     }
   }
 
-  String _actionEmoji(String action) {
-    switch (action) {
-      case 'LOGIN':
-        return '\u{1F511}';
-      case 'SIGN_OUT':
-        return '\u{1F44B}';
-      case 'ADD_ITEM':
-      case 'RESTOCK_ITEM':
-        return '\u{1F4E6}';
-      case 'STOCK_ADJUST':
-        return '\u{2699}';
-      case 'ADD_RECIPE':
-        return '\u{1F4CB}';
-      case 'EDIT_ITEM':
-      case 'EDIT_RECIPE':
-        return '\u{270F}';
-      case 'DELETE_ITEM':
-      case 'DELETE_RECIPE':
-        return '\u{1F5D1}';
-      case 'RECORD_SALE':
-        return '\u{1F4B0}';
-      case 'CHANGE_PASSWORD':
-        return '\u{1F512}';
-      case 'REGISTER_STAFF':
-        return '\u{1F464}';
-      case 'UPDATE_NAME':
-        return '\u{1F4DD}';
-      default:
-        return '\u{1F4CC}';
-    }
-  }
-
   String _actionLabel(String action) {
     switch (action) {
       case 'LOGIN': return 'Login';
@@ -307,17 +275,6 @@ class _AuditLogCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: actionColor.withAlpha(25),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(_actionEmoji(log.action), style: const TextStyle(fontSize: 20)),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
