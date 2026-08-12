@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'models/audit_log.dart';
+import 'repositories/audit_repository.dart';
 import 'repositories/sales_repository.dart';
 
 class SalesProvider extends ChangeNotifier {
   final SalesRepository _repo;
+  final AuditRepository _auditRepo;
 
   double _todaySales = 0;
   int _todayCups = 0;
@@ -44,7 +47,7 @@ class SalesProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get stockMovements => _stockMovements;
   bool get isLoading => _isLoading;
 
-  SalesProvider({required this._repo}) {
+  SalesProvider({required this._repo, required this._auditRepo}) {
     loadAll();
   }
 
@@ -138,6 +141,15 @@ class SalesProvider extends ChangeNotifier {
       totalAmount: totalAmount,
       userId: userId,
     );
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'RECORD_SALE',
+      targetType: 'sales',
+      targetId: recipeId,
+      details: {'recipe': recipeName, 'qty': quantity, 'amount': totalAmount.toStringAsFixed(2)},
+      timestamp: DateTime.now(),
+    ));
     await loadAll();
   }
 }

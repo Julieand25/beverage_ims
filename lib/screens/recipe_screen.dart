@@ -494,6 +494,8 @@ class RecipeScreen extends StatelessWidget {
                                 unit: row.newUnit,
                                 userId:
                                     auth.currentUser!.id,
+                                userName:
+                                    auth.currentUser!.name,
                               );
                               if (created != null) {
                                 row.itemId = created.id;

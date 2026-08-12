@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'models/audit_log.dart';
 import 'models/inventory_item.dart';
+import 'repositories/audit_repository.dart';
 import 'repositories/inventory_repository.dart';
 
 class InventoryProvider extends ChangeNotifier {
   final InventoryRepository _repo;
+  final AuditRepository _auditRepo;
   List<InventoryItem> _items = [];
   String _searchQuery = '';
   ItemCategory? _selectedCategory;
@@ -28,7 +31,7 @@ class InventoryProvider extends ChangeNotifier {
     return result;
   }
 
-  InventoryProvider({required this._repo}) {
+  InventoryProvider({required this._repo, required this._auditRepo}) {
     loadAll();
   }
 
@@ -56,6 +59,7 @@ class InventoryProvider extends ChangeNotifier {
     required double minStock,
     required double costPerUnit,
     required String userId,
+    required String userName,
   }) async {
     final item = InventoryItem(
       id: '',
@@ -68,6 +72,15 @@ class InventoryProvider extends ChangeNotifier {
     );
     final created = await _repo.addItem(item, userId: userId);
     _items.add(created);
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'ADD_ITEM',
+      targetType: 'inventory',
+      targetId: created.id,
+      details: {'name': name, 'category': category.name, 'unit': unit.name},
+      timestamp: DateTime.now(),
+    ));
     notifyListeners();
     return created;
   }
@@ -77,6 +90,7 @@ class InventoryProvider extends ChangeNotifier {
     required ItemCategory category,
     required ItemUnit unit,
     required String userId,
+    required String userName,
   }) async {
     return addItem(
       name: name,
@@ -86,6 +100,7 @@ class InventoryProvider extends ChangeNotifier {
       minStock: 0,
       costPerUnit: 0,
       userId: userId,
+      userName: userName,
     );
   }
 
@@ -94,10 +109,12 @@ class InventoryProvider extends ChangeNotifier {
     required double addedQty,
     required double totalCost,
     required String userId,
+    required String userName,
     double? minStock,
     String? purchaseDate,
     String? note,
   }) async {
+    final item = _items.firstWhere((i) => i.id == itemId);
     final updated = await _repo.restockItem(itemId, addedQty, totalCost, userId: userId, minStock: minStock, purchaseDate: purchaseDate, note: note);
     final index = _items.indexWhere((i) => i.id == itemId);
     if (index != -1) {
@@ -105,6 +122,15 @@ class InventoryProvider extends ChangeNotifier {
       _items[index].costPerUnit = updated.costPerUnit;
       _items[index].minStock = updated.minStock;
     }
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'RESTOCK_ITEM',
+      targetType: 'inventory',
+      targetId: itemId,
+      details: {'name': item.name, 'qty': addedQty.toString(), 'total_cost': totalCost.toStringAsFixed(2)},
+      timestamp: DateTime.now(),
+    ));
     notifyListeners();
   }
 
@@ -112,30 +138,57 @@ class InventoryProvider extends ChangeNotifier {
     required String itemId,
     required double changeQty,
     required String userId,
+    required String userName,
     required double costPerUnit,
     required String note,
   }) async {
+    final item = _items.firstWhere((i) => i.id == itemId);
     final updated = await _repo.adjustStock(itemId, changeQty, userId: userId, costPerUnit: costPerUnit, note: note);
     final index = _items.indexWhere((i) => i.id == itemId);
     if (index != -1) {
       _items[index].stock = updated.stock;
     }
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'STOCK_ADJUST',
+      targetType: 'inventory',
+      targetId: itemId,
+      details: {'name': item.name, 'change': changeQty.toString(), 'note': note},
+      timestamp: DateTime.now(),
+    ));
     notifyListeners();
   }
 
   Future<void> updateItem({
     required String id,
+    required String userId,
+    required String userName,
     String? name,
     ItemCategory? category,
     ItemUnit? unit,
     double? minStock,
     double? costPerUnit,
   }) async {
+    final old = _items.firstWhere((i) => i.id == id);
     final updated = await _repo.updateItem(id, name: name, category: category, unit: unit, minStock: minStock, costPerUnit: costPerUnit);
     final index = _items.indexWhere((i) => i.id == id);
     if (index != -1) {
       _items[index] = updated;
     }
+    final changes = <String, String>{};
+    if (name != null && name != old.name) changes['name'] = '${old.name} → $name';
+    if (category != null && category != old.category) changes['category'] = category.name;
+    if (minStock != null && minStock != old.minStock) changes['min_stock'] = minStock.toString();
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'EDIT_ITEM',
+      targetType: 'inventory',
+      targetId: id,
+      details: {'name': updated.name, 'changes': changes},
+      timestamp: DateTime.now(),
+    ));
     notifyListeners();
   }
 
@@ -143,9 +196,23 @@ class InventoryProvider extends ChangeNotifier {
     return _repo.getRecipeUsageCount(itemId);
   }
 
-  Future<void> deleteItem(String id) async {
+  Future<void> deleteItem({
+    required String id,
+    required String userId,
+    required String userName,
+  }) async {
+    final item = _items.firstWhere((i) => i.id == id);
     await _repo.deleteItem(id);
     _items.removeWhere((i) => i.id == id);
+    _auditRepo.addLog(AuditLog(
+      userId: userId,
+      userName: userName,
+      action: 'DELETE_ITEM',
+      targetType: 'inventory',
+      targetId: id,
+      details: {'name': item.name, 'category': item.category.name},
+      timestamp: DateTime.now(),
+    ));
     notifyListeners();
   }
 }

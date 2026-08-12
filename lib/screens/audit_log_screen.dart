@@ -15,6 +15,8 @@ class AuditLogScreen extends StatefulWidget {
 
 class _AuditLogScreenState extends State<AuditLogScreen> {
   DateTime? _selectedDate;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -22,6 +24,12 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuditProvider>().loadAll();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate(BuildContext context) async {
@@ -42,13 +50,25 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
     final provider = context.watch<AuditProvider>();
     final colors = Theme.of(context).extension<AppColors>()!;
 
-    final filteredLogs = _selectedDate == null
-        ? provider.logs
-        : provider.logs.where((log) {
-            return log.timestamp.year == _selectedDate!.year &&
-                log.timestamp.month == _selectedDate!.month &&
-                log.timestamp.day == _selectedDate!.day;
-          }).toList();
+    var filteredLogs = provider.logs;
+
+    if (_selectedDate != null) {
+      filteredLogs = filteredLogs.where((log) {
+        return log.timestamp.year == _selectedDate!.year &&
+            log.timestamp.month == _selectedDate!.month &&
+            log.timestamp.day == _selectedDate!.day;
+      }).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      filteredLogs = filteredLogs.where((log) {
+        return log.userName.toLowerCase().contains(q) ||
+            log.action.toLowerCase().contains(q) ||
+            log.targetType.toLowerCase().contains(q) ||
+            log.details.values.any((v) => v.toString().toLowerCase().contains(q));
+      }).toList();
+    }
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -81,6 +101,37 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border),
+                ),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: t.searchItem,
+                    hintStyle: TextStyle(fontSize: 14, color: colors.gray),
+                    prefixIcon: Icon(Icons.search, size: 20, color: colors.gray),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              _searchCtrl.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                            child: Icon(Icons.close, size: 18, color: colors.gray),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ),
             if (_selectedDate != null)
               Container(
                 width: double.infinity,
@@ -144,18 +195,25 @@ class _AuditLogCard extends StatelessWidget {
       case 'SIGN_OUT':
         return Colors.blue;
       case 'ADD_ITEM':
-      case 'RESTOCK':
+      case 'RESTOCK_ITEM':
       case 'ADD_RECIPE':
         return const Color(0xFF5BA154);
+      case 'STOCK_ADJUST':
+        return Colors.teal;
+      case 'EDIT_ITEM':
       case 'EDIT_RECIPE':
-      case 'DELETE_RECIPE':
         return Colors.orange;
+      case 'DELETE_ITEM':
+      case 'DELETE_RECIPE':
+        return Colors.red;
       case 'RECORD_SALE':
         return const Color(0xFFE27387);
       case 'CHANGE_PASSWORD':
         return Colors.purple;
       case 'REGISTER_STAFF':
-        return Colors.teal;
+        return Colors.indigo;
+      case 'UPDATE_NAME':
+        return Colors.cyan;
       default:
         return Colors.grey;
     }
@@ -164,58 +222,76 @@ class _AuditLogCard extends StatelessWidget {
   String _actionEmoji(String action) {
     switch (action) {
       case 'LOGIN':
-        return '🔑';
+        return '\u{1F511}';
       case 'SIGN_OUT':
-        return '👋';
+        return '\u{1F44B}';
       case 'ADD_ITEM':
-      case 'RESTOCK':
-        return '📦';
+      case 'RESTOCK_ITEM':
+        return '\u{1F4E6}';
+      case 'STOCK_ADJUST':
+        return '\u{2699}';
       case 'ADD_RECIPE':
+        return '\u{1F4CB}';
+      case 'EDIT_ITEM':
       case 'EDIT_RECIPE':
+        return '\u{270F}';
+      case 'DELETE_ITEM':
       case 'DELETE_RECIPE':
-        return '📋';
+        return '\u{1F5D1}';
       case 'RECORD_SALE':
-        return '💰';
+        return '\u{1F4B0}';
       case 'CHANGE_PASSWORD':
-        return '🔒';
+        return '\u{1F512}';
       case 'REGISTER_STAFF':
-        return '👤';
+        return '\u{1F464}';
+      case 'UPDATE_NAME':
+        return '\u{1F4DD}';
       default:
-        return '📌';
+        return '\u{1F4CC}';
     }
   }
 
   String _actionLabel(String action) {
     switch (action) {
-      case 'LOGIN':
-        return 'Login';
-      case 'SIGN_OUT':
-        return 'Sign Out';
-      case 'ADD_ITEM':
-        return 'Add Item';
-      case 'RESTOCK':
-        return 'Restock';
-      case 'ADD_RECIPE':
-        return 'Add Recipe';
-      case 'EDIT_RECIPE':
-        return 'Edit Recipe';
-      case 'DELETE_RECIPE':
-        return 'Delete Recipe';
-      case 'RECORD_SALE':
-        return 'Record Sale';
-      case 'CHANGE_PASSWORD':
-        return 'Change Password';
-      case 'REGISTER_STAFF':
-        return 'Register Staff';
-      default:
-        return action;
+      case 'LOGIN': return 'Login';
+      case 'SIGN_OUT': return 'Sign Out';
+      case 'ADD_ITEM': return 'Add Item';
+      case 'RESTOCK_ITEM': return 'Restock';
+      case 'STOCK_ADJUST': return 'Adjust Stock';
+      case 'ADD_RECIPE': return 'Add Recipe';
+      case 'EDIT_ITEM': return 'Edit Item';
+      case 'EDIT_RECIPE': return 'Edit Recipe';
+      case 'DELETE_ITEM': return 'Delete Item';
+      case 'DELETE_RECIPE': return 'Delete Recipe';
+      case 'RECORD_SALE': return 'Record Sale';
+      case 'CHANGE_PASSWORD': return 'Change Password';
+      case 'REGISTER_STAFF': return 'Register Staff';
+      case 'UPDATE_NAME': return 'Update Name';
+      default: return action;
     }
+  }
+
+  String _detailsText() {
+    if (log.details.isEmpty) return '';
+    final parts = <String>[];
+    log.details.forEach((k, v) {
+      if (v is Map) {
+        final sub = v.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+        if (sub.isNotEmpty) parts.add(sub);
+      } else if (v is String && v.isNotEmpty) {
+        parts.add(v);
+      } else if (v is num) {
+        parts.add(v.toString());
+      }
+    });
+    return parts.join('  |  ');
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final actionColor = _actionColor(log.action);
+    final details = _detailsText();
 
     final timeStr =
         '${log.timestamp.day.toString().padLeft(2, '0')}/${log.timestamp.month.toString().padLeft(2, '0')}/${log.timestamp.year} '
@@ -229,6 +305,7 @@ class _AuditLogCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 40,
@@ -290,6 +367,15 @@ class _AuditLogCard extends StatelessWidget {
                     ],
                   ],
                 ),
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    details,
+                    style: TextStyle(fontSize: 11, color: colors.gray, fontStyle: FontStyle.italic),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),

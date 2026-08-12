@@ -122,6 +122,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 if (auth.currentUser == null) return;
                 await context.read<InventoryProvider>().updateItem(
                   id: item.id,
+                  userId: auth.currentUser!.id,
+                  userName: auth.currentUser!.name,
                   name: nameCtrl.text.trim(),
                   category: category,
                   unit: unit,
@@ -238,6 +240,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         itemId: item.id,
         changeQty: changeQty,
         userId: auth.currentUser!.id,
+        userName: auth.currentUser!.name,
         costPerUnit: cost > 0 ? cost : item.costPerUnit,
         note: noteCtrl.text.isNotEmpty ? noteCtrl.text : (isAdd ? 'Manual add' : 'Manual deduction'),
       );
@@ -338,7 +341,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<InventoryProvider>().deleteItem(item.id);
+              final auth = context.read<AuthProvider>();
+              if (auth.currentUser != null) {
+                context.read<InventoryProvider>().deleteItem(
+                  id: item.id,
+                  userId: auth.currentUser!.id,
+                  userName: auth.currentUser!.name,
+                );
+              }
             },
             child: Text(t.delete, style: const TextStyle(color: Colors.red)),
           ),
@@ -534,6 +544,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             minStock: double.tryParse(minStockCtrl.text) ?? 0,
             costPerUnit: costPerUnit,
             userId: auth.currentUser!.id,
+            userName: auth.currentUser!.name,
           );
       Navigator.of(context, rootNavigator: true).pop();
     }

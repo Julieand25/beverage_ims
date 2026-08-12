@@ -25,33 +25,40 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final client = Supabase.instance.client;
+    final auditRepo = SupabaseAuditRepository(client);
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(
-          create: (_) => AuditProvider(repo: SupabaseAuditRepository(client)),
+          create: (_) => AuditProvider(repo: auditRepo),
         ),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
             authRepo: SupabaseAuthRepository(client),
-            auditRepo: SupabaseAuditRepository(client),
+            auditRepo: auditRepo,
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => InventoryProvider(repo: SupabaseInventoryRepository(client)),
+          create: (_) => InventoryProvider(
+            repo: SupabaseInventoryRepository(client),
+            auditRepo: auditRepo,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => RecipeProvider(repo: SupabaseRecipeRepository(client)),
         ),
         ChangeNotifierProvider(
-          create: (_) => SalesProvider(repo: SupabaseSalesRepository(client)),
+          create: (_) => SalesProvider(
+            repo: SupabaseSalesRepository(client),
+            auditRepo: auditRepo,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => UserProvider(
             authRepo: SupabaseAuthRepository(client),
-            auditRepo: SupabaseAuditRepository(client),
+            auditRepo: auditRepo,
           ),
         ),
       ],
