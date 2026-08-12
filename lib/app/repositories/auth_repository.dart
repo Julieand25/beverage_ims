@@ -122,10 +122,15 @@ class SupabaseAuthRepository implements AuthRepository {
     final email = profile?['email'] as String?;
     if (email == null) return false;
 
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: currentPassword,
-    );
+    final AuthResponse response;
+    try {
+      response = await _client.auth.signInWithPassword(
+        email: email.trim().toLowerCase(),
+        password: currentPassword,
+      );
+    } on AuthException {
+      return false;
+    }
     if (response.user == null) return false;
 
     await updatePassword(newPassword);
