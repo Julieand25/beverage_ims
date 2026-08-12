@@ -13,7 +13,9 @@ class AuditProvider extends ChangeNotifier {
   }
 
   Future<void> loadAll() async {
-    _logs = await _repo.getAll();
+    final logs = await _repo.getAll();
+    logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _logs = logs;
     notifyListeners();
   }
 
