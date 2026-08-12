@@ -6,6 +6,7 @@ import '../../screens/language_screen.dart';
 import '../../screens/theme_screen.dart';
 import '../../screens/change_password_screen.dart';
 import '../../screens/dashboard_screen.dart';
+import '../../screens/forgot_password_screen.dart';
 import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
@@ -33,9 +34,11 @@ GoRouter createRouter({required AuthProvider authProvider}) {
       final isLoginRoute = state.matchedLocation == '/login';
       final isSplashRoute = state.matchedLocation == '/splash';
       final isResetPasswordRoute = state.matchedLocation == '/reset-password';
+      final isForgotPasswordRoute =
+          state.matchedLocation == '/forgot-password';
       // Let Supabase finish processing the recovery session before the page
       // attempts to update the password.
-      if (isResetPasswordRoute) return null;
+      if (isResetPasswordRoute || isForgotPasswordRoute) return null;
       if (authProvider.isLoggedIn) {
         if (isLoginRoute || isSplashRoute) return '/dashboard';
         return null;
@@ -50,6 +53,10 @@ GoRouter createRouter({required AuthProvider authProvider}) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/reset-password',
         builder: (context, state) => const ResetPasswordScreen(),

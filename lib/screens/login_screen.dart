@@ -17,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool obscurePassword = true;
   bool _isLoggingIn = false;
-  bool _isSendingReset = false;
 
   @override
   void dispose() {
@@ -196,9 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
-                          onTap: _isSendingReset
-                              ? null
-                              : () => _showForgotPasswordDialog(context),
+                          onTap: () => context.push('/forgot-password'),
                           child: Text(
                             t.forgotPassword,
                             style: const TextStyle(
@@ -283,62 +280,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _showForgotPasswordDialog(BuildContext context) async {
-    final t = Translations.of(context);
-    final auth = context.read<AuthProvider>();
-    final controller = TextEditingController(text: emailController.text.trim());
-
-    try {
-      final email = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(t.forgotPasswordTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(t.forgotPasswordMessage),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                keyboardType: TextInputType.emailAddress,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: t.email,
-                  hintText: t.emailHint,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(t.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, controller.text.trim()),
-              child: Text(t.send),
-            ),
-          ],
-        ),
-      );
-
-      if (!mounted || email == null || email.isEmpty) return;
-      setState(() => _isSendingReset = true);
-
-      try {
-        await auth.requestPasswordReset(email);
-      } catch (_) {
-        // Keep the response generic so account existence is not disclosed.
-      }
-
-      if (!context.mounted) return;
-      setState(() => _isSendingReset = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(t.resetEmailSent)));
-    } finally {
-      controller.dispose();
-    }
-  }
 }
