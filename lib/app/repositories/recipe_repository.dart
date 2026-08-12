@@ -13,16 +13,21 @@ class SupabaseRecipeRepository implements RecipeRepository {
 
   const SupabaseRecipeRepository(this._client);
 
-  Recipe _fromJson(Map<String, dynamic> json, List<Map<String, dynamic>> ingredients) {
+  Recipe _fromJson(
+    Map<String, dynamic> json,
+    List<Map<String, dynamic>> ingredients,
+  ) {
     return Recipe(
       id: json['id'] as String,
       name: json['name'] as String,
       sellingPrice: (json['selling_price'] as num).toDouble(),
       ingredients: ingredients
-          .map((i) => RecipeIngredient(
-                inventoryItemId: i['inventory_item_id'] as String,
-                quantity: (i['quantity'] as num).toDouble(),
-              ))
+          .map(
+            (i) => RecipeIngredient(
+              inventoryItemId: i['inventory_item_id'] as String,
+              quantity: (i['quantity'] as num).toDouble(),
+            ),
+          )
           .toList(),
     );
   }
@@ -37,26 +42,32 @@ class SupabaseRecipeRepository implements RecipeRepository {
 
     final recipes = (await q) as List;
 
-    final result = <Recipe>[];
-    for (final r in recipes) {
-      final recipeJson = r as Map<String, dynamic>;
-      final ingredients = await _client
-          .from('recipe_ingredients')
-          .select()
-          .eq('recipe_id', recipeJson['id']);
-      result.add(_fromJson(recipeJson, (ingredients as List).cast<Map<String, dynamic>>()));
-    }
-
-    return result;
+    return Future.wait(
+      recipes.map((r) async {
+        final recipeJson = r as Map<String, dynamic>;
+        final ingredients = await _client
+            .from('recipe_ingredients')
+            .select()
+            .eq('recipe_id', recipeJson['id']);
+        return _fromJson(
+          recipeJson,
+          (ingredients as List).cast<Map<String, dynamic>>(),
+        );
+      }),
+    );
   }
 
   @override
   Future<Recipe> addRecipe(Recipe recipe, {required String userId}) async {
-    final recipeData = await _client.from('recipes').insert({
-      'name': recipe.name,
-      'selling_price': recipe.sellingPrice,
-      'created_by': userId,
-    }).select().single();
+    final recipeData = await _client
+        .from('recipes')
+        .insert({
+          'name': recipe.name,
+          'selling_price': recipe.sellingPrice,
+          'created_by': userId,
+        })
+        .select()
+        .single();
 
     final recipeId = recipeData['id'] as String;
 
@@ -73,18 +84,27 @@ class SupabaseRecipeRepository implements RecipeRepository {
         .select()
         .eq('recipe_id', recipeId);
 
-    return _fromJson(recipeData, (ingredients as List).cast<Map<String, dynamic>>());
+    return _fromJson(
+      recipeData,
+      (ingredients as List).cast<Map<String, dynamic>>(),
+    );
   }
 
   @override
   Future<Recipe> updateRecipe(Recipe recipe) async {
-    await _client.from('recipes').update({
-      'name': recipe.name,
-      'selling_price': recipe.sellingPrice,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', recipe.id);
+    await _client
+        .from('recipes')
+        .update({
+          'name': recipe.name,
+          'selling_price': recipe.sellingPrice,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', recipe.id);
 
-    await _client.from('recipe_ingredients').delete().eq('recipe_id', recipe.id);
+    await _client
+        .from('recipe_ingredients')
+        .delete()
+        .eq('recipe_id', recipe.id);
 
     for (final ing in recipe.ingredients) {
       await _client.from('recipe_ingredients').insert({
@@ -94,13 +114,20 @@ class SupabaseRecipeRepository implements RecipeRepository {
       });
     }
 
-    final recipeData = await _client.from('recipes').select().eq('id', recipe.id).single();
+    final recipeData = await _client
+        .from('recipes')
+        .select()
+        .eq('id', recipe.id)
+        .single();
     final ingredients = await _client
         .from('recipe_ingredients')
         .select()
         .eq('recipe_id', recipe.id);
 
-    return _fromJson(recipeData, (ingredients as List).cast<Map<String, dynamic>>());
+    return _fromJson(
+      recipeData,
+      (ingredients as List).cast<Map<String, dynamic>>(),
+    );
   }
 
   @override

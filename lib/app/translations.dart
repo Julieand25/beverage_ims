@@ -85,7 +85,7 @@ class Translations {
   String get ingredientsTitle => isMs ? 'Bahan-Bahan' : 'Ingredients';
   String get editRecipe => isMs ? 'Edit Resipi' : 'Edit Recipe';
   String get newRecipe => isMs ? 'Resipi Baru' : 'New Recipe';
-  String get beverageName => isMs ? 'Nama Minuman' : 'Beverage Name';
+  String get beverageName => isMs ? 'Nama Resipi' : 'Recipe Name';
   String get addIngredient => isMs ? 'Tambah Bahan' : 'Add Ingredient';
   String get deleteRecipe => isMs ? 'Padam Resipi' : 'Delete Recipe';
   String get deleteConfirm => isMs ? 'Padamkan resipi ini?' : 'Delete this recipe?';
