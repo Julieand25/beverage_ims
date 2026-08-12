@@ -88,34 +88,16 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                   const Divider(),
                   _ExportTile(
-                    title: t.dailyReport,
-                    subtitle: '${_dailyDate.day} ${_monthName(_dailyDate.month, t.isMs)} ${_dailyDate.year}',
+                    title: t.monthlySummary,
+                    subtitle: '${_monthName(_monthlyMonth.month, t.isMs)} ${_monthlyMonth.year}',
                     isSelected: selectedExport == 0,
                     onTap: () => setModalState(() => selectedExport = 0),
                   ),
                   _ExportTile(
-                    title: t.stockHistory,
-                    subtitle: _stockQuickFilter == 0
-                        ? t.allTime
-                        : _stockQuickFilter == 1
-                            ? t.last7Days
-                            : _stockQuickFilter == 2
-                                ? t.last30Days
-                                : '${_dateStr(_stockStartDate)} - ${_dateStr(_stockEndDate)}',
-                    isSelected: selectedExport == 1,
-                    onTap: () => setModalState(() => selectedExport = 1),
-                  ),
-                  _ExportTile(
-                    title: t.monthlySummary,
-                    subtitle: '${_monthName(_monthlyMonth.month, t.isMs)} ${_monthlyMonth.year}',
-                    isSelected: selectedExport == 2,
-                    onTap: () => setModalState(() => selectedExport = 2),
-                  ),
-                  _ExportTile(
                     title: t.allReports,
                     subtitle: t.allReportsSubtitle,
-                    isSelected: selectedExport == 3,
-                    onTap: () => setModalState(() => selectedExport = 3),
+                    isSelected: selectedExport == 1,
+                    onTap: () => setModalState(() => selectedExport = 1),
                   ),
                   const SizedBox(height: 12),
                   Padding(
@@ -168,39 +150,7 @@ class _ReportScreenState extends State<ReportScreen> {
     Uint8List bytes;
 
     switch (option) {
-      case 0: // Daily
-        await sales.loadDailyComparison(_dailyDate);
-        bytes = await ReportPdfExporter.generateDailyReport(
-          date: _dailyDate,
-          isMs: isMs,
-          sales: sales.todaySales,
-          cost: sales.todayCogs,
-          profit: sales.todayProfit,
-          cups: sales.todayCups,
-          yesterdaySales: sales.yesterdaySales,
-          yesterdayCogs: sales.yesterdayCogs,
-          yesterdayProfit: sales.yesterdayProfit,
-          yesterdayCups: sales.yesterdayCups,
-          bestSellers: sales.bestSellers,
-          transactions: sales.dailyTransactions,
-          unknownItemLabel: t.unknownItem,
-          cupUnit: t.cupUnit,
-        );
-        break;
-      case 1: // Stock
-        await sales.loadStockMovements(startDate: _stockStartDate, endDate: _stockEndDate);
-        bytes = await ReportPdfExporter.generateStockHistory(
-          isMs: isMs,
-          movements: sales.stockMovements,
-          unknownItemLabel: t.unknownItem,
-          restockLabel: t.restockEntry,
-          deductionLabel: t.deductionEntry,
-          adjustmentLabel: t.adjustmentEntry,
-          startDate: _stockStartDate,
-          endDate: _stockEndDate,
-        );
-        break;
-      case 2: // Monthly
+      case 0: // Monthly
         await sales.loadMonthlyComparison(_monthlyMonth);
         bytes = await ReportPdfExporter.generateMonthlySummary(
           month: _monthlyMonth,
@@ -214,7 +164,7 @@ class _ReportScreenState extends State<ReportScreen> {
           weeklyStats: sales.weeklyStats,
         );
         break;
-      case 3: // All
+      case 1: // All
         await Future.wait([
           sales.loadDailyComparison(_dailyDate),
           sales.loadStockMovements(startDate: _stockStartDate, endDate: _stockEndDate),
@@ -256,11 +206,6 @@ class _ReportScreenState extends State<ReportScreen> {
     }
 
     await ReportPdfExporter.previewPdf(bytes);
-  }
-
-  String _dateStr(DateTime? d) {
-    if (d == null) return '-';
-    return '${d.day}/${d.month}/${d.year}';
   }
 
   @override
