@@ -10,6 +10,7 @@ import '../../screens/inventory_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/recipe_screen.dart';
 import '../../screens/register_staff_screen.dart';
+import '../../screens/splash_screen.dart';
 import '../../screens/user_management_screen.dart';
 import '../../screens/report_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -24,16 +25,25 @@ class AppRouter {
 GoRouter createRouter({required AuthProvider authProvider}) {
   final router = GoRouter(
     navigatorKey: AppRouter.navigatorKey,
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: authProvider,
     redirect: (context, state) {
       if (authProvider.isLoading) return null;
       final isLoginRoute = state.matchedLocation == '/login';
-      if (!authProvider.isLoggedIn && !isLoginRoute) return '/login';
-      if (authProvider.isLoggedIn && isLoginRoute) return '/dashboard';
-      return null;
+      final isSplashRoute = state.matchedLocation == '/splash';
+      if (authProvider.isLoggedIn) {
+        if (isLoginRoute || isSplashRoute) return '/dashboard';
+        return null;
+      } else {
+        if (isLoginRoute) return null;
+        return '/login';
+      }
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
