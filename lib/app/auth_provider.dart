@@ -54,13 +54,15 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     if (_currentUser != null) {
       final currentId = _currentUser!.id;
-      await _auditRepo.addLog(AuditLog(
-        userId: currentId,
-        userName: _currentUser!.name,
-        action: 'SIGN_OUT',
-        targetType: 'auth',
-        timestamp: DateTime.now(),
-      ));
+      try {
+        await _auditRepo.addLog(AuditLog(
+          userId: currentId,
+          userName: _currentUser!.name,
+          action: 'SIGN_OUT',
+          targetType: 'auth',
+          timestamp: DateTime.now(),
+        ));
+      } catch (_) {}
       NotificationService.instance.removeToken(
         currentId,
         Supabase.instance.client,
@@ -79,13 +81,15 @@ class AuthProvider extends ChangeNotifier {
       newPassword,
     );
     if (success) {
-      await _auditRepo.addLog(AuditLog(
-        userId: _currentUser!.id,
-        userName: _currentUser!.name,
-        action: 'CHANGE_PASSWORD',
-        targetType: 'auth',
-        timestamp: DateTime.now(),
-      ));
+      try {
+        await _auditRepo.addLog(AuditLog(
+          userId: _currentUser!.id,
+          userName: _currentUser!.name,
+          action: 'CHANGE_PASSWORD',
+          targetType: 'auth',
+          timestamp: DateTime.now(),
+        ));
+      } catch (_) {}
     }
     return success;
   }

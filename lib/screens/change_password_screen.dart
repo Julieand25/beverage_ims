@@ -118,6 +118,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (currentPasswordCtrl.text.isEmpty ||
+                        newPasswordCtrl.text.isEmpty ||
+                        confirmPasswordCtrl.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(t.fillAllFields),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (newPasswordCtrl.text.length < 6) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(t.passwordTooShort),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
                     if (newPasswordCtrl.text != confirmPasswordCtrl.text) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

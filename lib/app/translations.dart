@@ -332,6 +332,12 @@ class Translations {
       isMs ? 'Edit Nama' : 'Edit Name';
   String get nameUpdated =>
       isMs ? 'Nama dikemaskini' : 'Name updated';
+  String get nameUpdateFailed =>
+      isMs ? 'Gagal mengemaskini nama. Sila cuba lagi.' : 'Failed to update name. Please try again.';
+  String get roleUpdateFailed =>
+      isMs ? 'Gagal menukar peranan. Sila cuba lagi.' : 'Failed to update role. Please try again.';
+  String get statusUpdateFailed =>
+      isMs ? 'Gagal menukar status. Sila cuba lagi.' : 'Failed to update status. Please try again.';
   String get lowStockAlertTitle =>
       isMs ? 'Stok Rendah!' : 'Low Stock!';
   String lowStockAlertBody(String name, double stock, double minStock, String unit) {

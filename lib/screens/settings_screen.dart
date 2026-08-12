@@ -47,7 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final t = Translations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? t.nameUpdated : t.staffRegisterFailed),
+        content: Text(success ? t.nameUpdated : t.nameUpdateFailed),
         backgroundColor: success ? const Color(0xFF5BA154) : Colors.red,
       ),
     );

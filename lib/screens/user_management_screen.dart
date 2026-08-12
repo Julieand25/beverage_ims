@@ -162,7 +162,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(success ? t.roleChanged : t.staffRegisterFailed),
+                  content: Text(success ? t.roleChanged : t.roleUpdateFailed),
                   backgroundColor: success ? const Color(0xFF5BA154) : Colors.red,
                 ),
               );
@@ -203,7 +203,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(success ? t.statusChanged : t.staffRegisterFailed),
+                  content: Text(success ? t.statusChanged : t.statusUpdateFailed),
                   backgroundColor: success ? const Color(0xFF5BA154) : Colors.red,
                 ),
               );
