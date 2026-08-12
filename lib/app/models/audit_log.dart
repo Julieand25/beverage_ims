@@ -29,7 +29,7 @@ class AuditLog {
         details: json['details'] is Map
             ? Map<String, dynamic>.from(json['details'] as Map)
             : {},
-        timestamp: DateTime.parse(json['timestamp'] as String),
+        timestamp: DateTime.parse(json['timestamp'] as String).toLocal(),
       );
 
   Map<String, dynamic> toJson() {
@@ -39,7 +39,7 @@ class AuditLog {
       'action': action,
       'target_type': targetType,
       'details': details,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp.toUtc().toIso8601String(),
     };
     if (targetId != null) json['target_id'] = targetId;
     return json;

@@ -41,8 +41,8 @@ class SupabaseSalesRepository implements SalesRepository {
 
   @override
   Future<Map<String, dynamic>> getDailyStats({required DateTime date}) async {
-    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+    final startOfDay = DateTime(date.year, date.month, date.day).toUtc().toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc().toIso8601String();
 
     final salesToday = await _client
         .from('sales')
@@ -84,8 +84,8 @@ class SupabaseSalesRepository implements SalesRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getBestSellers({required DateTime date}) async {
-    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+    final startOfDay = DateTime(date.year, date.month, date.day).toUtc().toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc().toIso8601String();
 
     final salesToday = await _client
         .from('sales')
@@ -117,8 +117,8 @@ class SupabaseSalesRepository implements SalesRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getDailyTransactions({required DateTime date}) async {
-    final startOfDay = DateTime(date.year, date.month, date.day).toIso8601String();
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+    final startOfDay = DateTime(date.year, date.month, date.day).toUtc().toIso8601String();
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc().toIso8601String();
 
     final transactions = await _client
         .from('sales')
@@ -132,8 +132,8 @@ class SupabaseSalesRepository implements SalesRepository {
 
   @override
   Future<Map<String, dynamic>> getMonthlyStats({required DateTime month}) async {
-    final startOfMonth = DateTime(month.year, month.month, 1).toIso8601String();
-    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
+    final startOfMonth = DateTime(month.year, month.month, 1).toUtc().toIso8601String();
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toUtc().toIso8601String();
 
     final salesThisMonth = await _client
         .from('sales')
@@ -183,10 +183,10 @@ class SupabaseSalesRepository implements SalesRepository {
         .select('*, inventory_items(name)');
 
     if (startDate != null) {
-      filter = filter.gte('moved_at', startDate.toIso8601String());
+      filter = filter.gte('moved_at', startDate.toUtc().toIso8601String());
     }
     if (endDate != null) {
-      filter = filter.lte('moved_at', DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59).toIso8601String());
+      filter = filter.lte('moved_at', DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59).toUtc().toIso8601String());
     }
 
     PostgrestTransformBuilder query = filter;

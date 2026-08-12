@@ -57,6 +57,7 @@ class SalesProvider extends ChangeNotifier {
     await Future.wait([
       loadDailyStats(),
       loadBestSellers(),
+      loadDailyTransactions(),
       loadMonthlyStats(),
       loadStockMovements(),
     ]);

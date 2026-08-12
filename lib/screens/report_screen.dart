@@ -34,6 +34,17 @@ class _ReportScreenState extends State<ReportScreen> {
     sales.loadStockMovements();
   }
 
+  Future<void> _refreshAll(SalesProvider sales) async {
+    await Future.wait([
+      sales.loadDailyComparison(_dailyDate),
+      sales.loadMonthlyComparison(_monthlyMonth),
+      sales.loadStockMovements(
+        startDate: _stockStartDate,
+        endDate: _stockEndDate,
+      ),
+    ]);
+  }
+
   void _onDateChanged(SalesProvider sales, DateTime date) {
     setState(() => _dailyDate = date);
     sales.loadDailyComparison(date);
@@ -232,9 +243,12 @@ class _ReportScreenState extends State<ReportScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () => _refreshAll(sales),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _TabToggle(
@@ -277,6 +291,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   onExportPdf: () => _showExportSheet(),
                 ),
             ],
+          ),
           ),
         ),
       ),
@@ -540,7 +555,7 @@ class _DailyReport extends StatelessWidget {
             final recipeName = tx['recipes']?['name'] as String? ?? t.unknownItem;
             final qty = tx['quantity'] as int;
             final amount = (tx['total_amount'] as num).toDouble();
-            final soldAt = DateTime.parse(tx['sold_at'] as String);
+            final soldAt = DateTime.parse(tx['sold_at'] as String).toLocal();
             final timeStr = '${soldAt.hour.toString().padLeft(2, '0')}:${soldAt.minute.toString().padLeft(2, '0')}';
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1006,7 +1021,7 @@ class _StockHistory extends StatelessWidget {
             final type = m['type'] as String? ?? '';
             final itemName = m['inventory_items']?['name'] ?? t.unknownItem;
             final qty = (m['quantity'] as num).toDouble();
-            final movedAt = DateTime.parse(m['moved_at'] as String);
+            final movedAt = DateTime.parse(m['moved_at'] as String).toLocal();
             final timestamp = '${movedAt.day} ${_monthName(movedAt.month, t.isMs)} ${movedAt.year}, ${movedAt.hour.toString().padLeft(2, '0')}:${movedAt.minute.toString().padLeft(2, '0')}';
 
             final bool isUp;

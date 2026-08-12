@@ -53,9 +53,17 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await Future.wait([
+              sales.loadAll(),
+              inventory.loadAll(),
+            ]);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -288,6 +296,7 @@ class DashboardScreen extends StatelessWidget {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -474,7 +483,7 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                               setState(() => selectedUnit = newValue);
                             }
                           },
-                          items: <String>['Cup', 'Botol', 'Peket']
+                          items: <String>['Cup', 'Box', 'Packet', 'Bottle']
                               .map<DropdownMenuItem<String>>(
                                   (String value) => DropdownMenuItem<String>(value: value, child: Text(value)))
                               .toList(),
@@ -629,35 +638,6 @@ class _RecordSaleModalState extends State<_RecordSaleModal> {
                           t.saveRecord,
                           style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                         ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE6FFFA),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFB2F5EA)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF319795), width: 1.5),
-                      ),
-                      child: const Icon(Icons.check, size: 14, color: Color(0xFF319795)),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        t.autoDeductNotice,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2C7A7B)),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
