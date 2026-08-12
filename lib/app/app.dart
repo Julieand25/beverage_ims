@@ -47,7 +47,10 @@ class App extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => RecipeProvider(repo: SupabaseRecipeRepository(client)),
+          create: (_) => RecipeProvider(
+            repo: SupabaseRecipeRepository(client),
+            auditRepo: auditRepo,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => SalesProvider(

@@ -154,7 +154,11 @@ class RecipeScreen extends StatelessWidget {
               final auth = context.read<AuthProvider>();
               if (auth.currentUser == null) return;
               try {
-                await context.read<RecipeProvider>().deleteRecipe(recipe.id);
+                await context.read<RecipeProvider>().deleteRecipe(
+                      id: recipe.id,
+                      userId: auth.currentUser!.id,
+                      userName: auth.currentUser!.name,
+                    );
               } catch (error) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -594,6 +598,8 @@ class RecipeScreen extends StatelessWidget {
                                         name: name,
                                         sellingPrice: price,
                                         ingredients: ingredients,
+                                        userId: authUser.id,
+                                        userName: authUser.name,
                                       );
                                     } else {
                                       await recipeProvider.addRecipe(
@@ -601,6 +607,7 @@ class RecipeScreen extends StatelessWidget {
                                         sellingPrice: price,
                                         ingredients: ingredients,
                                         userId: authUser.id,
+                                        userName: authUser.name,
                                       );
                                     }
 
