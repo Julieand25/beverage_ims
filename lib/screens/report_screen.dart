@@ -230,13 +230,6 @@ class _ReportScreenState extends State<ReportScreen> {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.picture_as_pdf, color: colors.text),
-            tooltip: t.exportPdfTitle,
-            onPressed: _isExporting ? null : _showExportSheet,
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -281,6 +274,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   selectedMonth: _monthlyMonth,
                   canGoNext: _canGoNextMonth,
                   onMonthChanged: (delta) => _onMonthChanged(sales, delta),
+                  onExportPdf: () => _showExportSheet(),
                 ),
             ],
           ),
@@ -1172,6 +1166,7 @@ class _MonthlySummary extends StatelessWidget {
   final DateTime selectedMonth;
   final bool canGoNext;
   final ValueChanged<int> onMonthChanged;
+  final VoidCallback onExportPdf;
 
   const _MonthlySummary({
     required this.t,
@@ -1180,6 +1175,7 @@ class _MonthlySummary extends StatelessWidget {
     required this.selectedMonth,
     required this.canGoNext,
     required this.onMonthChanged,
+    required this.onExportPdf,
   });
 
   @override
@@ -1200,6 +1196,23 @@ class _MonthlySummary extends StatelessWidget {
         _WeeklyChart(primaryGreen: primaryGreen, sales: sales),
         const SizedBox(height: 16),
         _Legend(t: t),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: onExportPdf,
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 18),
+            label: const Text(
+              'Export PDF',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5BA154),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
       ],
     );
   }
