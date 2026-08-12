@@ -60,10 +60,15 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<User?> login(String email, String password) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email.trim().toLowerCase(),
-      password: password,
-    );
+    final AuthResponse response;
+    try {
+      response = await _client.auth.signInWithPassword(
+        email: email.trim().toLowerCase(),
+        password: password,
+      );
+    } on AuthException {
+      return null;
+    }
 
     if (response.user == null) return null;
 

@@ -196,7 +196,7 @@ Each repository follows an **abstract interface + Supabase implementation** patt
 | `id` | UUID | PK |
 | `name` | TEXT | — |
 | `email` | TEXT | UNIQUE |
-| `password_hash` | TEXT | SHA‑256 |
+| `auth_user_id` | UUID | FK → `auth.users(id)` |
 | `role` | TEXT | `admin` \| `staff` |
 | `is_active` | BOOLEAN | Default `true` |
 | `last_open` | TIMESTAMPTZ | — |
