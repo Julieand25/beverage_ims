@@ -80,9 +80,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       isDense: true,
                       isExpanded: true,
                       items: const [
-                        DropdownMenuItem(value: ItemCategory.bahan, child: Text('Bahan')),
-                        DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Pembungkusan')),
-                        DropdownMenuItem(value: ItemCategory.lain, child: Text('Lain-lain')),
+                        DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients')),
+                        DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging')),
+                        DropdownMenuItem(value: ItemCategory.lain, child: Text('Others')),
                       ],
                       onChanged: (v) => setDialogState(() => category = v!),
                     ),
@@ -460,7 +460,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(
-              t.ingredients,
+              'Items',
               style: TextStyle(fontSize: 13, color: colors.gray),
             ),
           ),
@@ -646,9 +646,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   isDense: true,
                   isExpanded: true,
                   items: const [
-                    DropdownMenuItem(value: ItemCategory.bahan, child: Text('Bahan')),
-                    DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Pembungkusan')),
-                    DropdownMenuItem(value: ItemCategory.lain, child: Text('Lain-lain')),
+                    DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients')),
+                    DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging')),
+                    DropdownMenuItem(value: ItemCategory.lain, child: Text('Others')),
                   ],
                   onChanged: (v) => setDialogState(() => setCategory(v!)),
                 ),
