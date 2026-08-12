@@ -29,7 +29,31 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final t = Translations.of(context);
     final colors = Theme.of(context).extension<AppColors>()!;
+    final auth = context.watch<AuthProvider>();
     const primaryGreen = Color(0xFF5BA154);
+
+    if (auth.isLoading) {
+      return Scaffold(
+        backgroundColor: colors.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/sipsync.png', height: 96),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colors.background,

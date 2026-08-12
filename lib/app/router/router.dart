@@ -27,6 +27,7 @@ GoRouter createRouter({required AuthProvider authProvider}) {
     initialLocation: '/login',
     refreshListenable: authProvider,
     redirect: (context, state) {
+      if (authProvider.isLoading) return null;
       final isLoginRoute = state.matchedLocation == '/login';
       if (!authProvider.isLoggedIn && !isLoginRoute) return '/login';
       if (authProvider.isLoggedIn && isLoginRoute) return '/dashboard';
