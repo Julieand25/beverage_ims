@@ -39,6 +39,9 @@ GoRouter createRouter({required AuthProvider authProvider}) {
       // Let Supabase finish processing the recovery session before the page
       // attempts to update the password.
       if (isResetPasswordRoute || isForgotPasswordRoute) return null;
+      // Deep link just opened a recovery session -> show the reset screen
+      // instead of login.
+      if (authProvider.isPasswordRecovery) return '/reset-password';
       if (authProvider.isLoggedIn) {
         if (isLoginRoute || isSplashRoute) return '/dashboard';
         return null;
