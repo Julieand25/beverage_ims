@@ -70,11 +70,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       appBar: AppBar(
         backgroundColor: colors.background,
         elevation: 0,
-        title: Text(t.resetPassword),
+        leading: GestureDetector(
+          onTap: () => context.pop(),
+          child: Icon(Icons.arrow_back_ios, size: 20, color: colors.text),
+        ),
+        centerTitle: true,
+        title: Text(
+          t.resetPassword,
+          style: TextStyle(
+            color: colors.text,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
             padding: const EdgeInsets.all(24),
             child: Container(
               padding: const EdgeInsets.all(20),
@@ -85,59 +98,133 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    t.newPassword,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: passwordController,
                     obscureText: obscurePassword,
+                    style: TextStyle(fontSize: 14, color: colors.text),
                     decoration: InputDecoration(
-                      labelText: t.newPassword,
-                      suffixIcon: IconButton(
-                        onPressed: () =>
+                      hintText: t.newPasswordHint,
+                      hintStyle: TextStyle(fontSize: 14, color: colors.gray),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        size: 20,
+                        color: colors.gray,
+                      ),
+                      suffixIcon: GestureDetector(
+                        onTap: () =>
                             setState(() => obscurePassword = !obscurePassword),
-                        icon: Icon(
+                        child: Icon(
                           obscurePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
+                          size: 20,
+                          color: colors.gray,
                         ),
+                      ),
+                      filled: true,
+                      fillColor: colors.inputBg,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: colors.border),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
+                  Text(
+                    t.confirmPassword,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: confirmController,
                     obscureText: obscureConfirm,
+                    style: TextStyle(fontSize: 14, color: colors.text),
                     decoration: InputDecoration(
-                      labelText: t.confirmPassword,
-                      suffixIcon: IconButton(
-                        onPressed: () =>
+                      hintText: t.confirmPasswordHint,
+                      hintStyle: TextStyle(fontSize: 14, color: colors.gray),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        size: 20,
+                        color: colors.gray,
+                      ),
+                      suffixIcon: GestureDetector(
+                        onTap: () =>
                             setState(() => obscureConfirm = !obscureConfirm),
-                        icon: Icon(
+                        child: Icon(
                           obscureConfirm
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
+                          size: 20,
+                          color: colors.gray,
                         ),
+                      ),
+                      filled: true,
+                      fillColor: colors.inputBg,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: colors.border),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: isSaving ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isSaving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryGreen,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              t.save,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        : Text(
-                            t.save,
-                            style: const TextStyle(color: Colors.white),
-                          ),
+                    ),
                   ),
                 ],
               ),
