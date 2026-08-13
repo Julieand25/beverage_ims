@@ -341,20 +341,42 @@ class RecipeScreen extends StatelessWidget {
   }
 
   Future<void> _showRecipeDialog(BuildContext context, {Recipe? recipe}) async {
-    final t = Translations.of(context);
     final inventory = context.read<InventoryProvider>().items;
-    final recipeProvider = context.read<RecipeProvider>();
-    final colors = Theme.of(context).extension<AppColors>()!;
-    final isEdit = recipe != null;
-
-    final nameCtrl = TextEditingController(text: isEdit ? recipe.name : '');
-    final priceCtrl = TextEditingController(
-      text: isEdit ? recipe.sellingPrice.toStringAsFixed(2) : '',
+    await showDialog(
+      context: context,
+      builder: (_) => _RecipeFormDialog(recipe: recipe, inventory: inventory),
     );
+  }
 
-    final ingredientCtrls = <_IngredientRow>[];
-    var isSaving = false;
-    if (isEdit) {
+}
+
+class _RecipeFormDialog extends StatefulWidget {
+  final Recipe? recipe;
+  final List<InventoryItem> inventory;
+
+  const _RecipeFormDialog({required this.recipe, required this.inventory});
+
+  @override
+  State<_RecipeFormDialog> createState() => _RecipeFormDialogState();
+}
+
+class _RecipeFormDialogState extends State<_RecipeFormDialog> {
+  late final TextEditingController nameCtrl;
+  late final TextEditingController priceCtrl;
+  final List<_IngredientRow> ingredientCtrls = [];
+  bool isSaving = false;
+
+  bool get isEdit => widget.recipe != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final recipe = widget.recipe;
+    nameCtrl = TextEditingController(text: recipe?.name ?? '');
+    priceCtrl = TextEditingController(
+      text: recipe != null ? recipe.sellingPrice.toStringAsFixed(2) : '',
+    );
+    if (recipe != null) {
       for (final ing in recipe.ingredients) {
         ingredientCtrls.add(
           _IngredientRow(
@@ -365,311 +387,288 @@ class RecipeScreen extends StatelessWidget {
           ),
         );
       }
-    } else {}
+    }
+  }
 
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    priceCtrl.dispose();
+    for (final row in ingredientCtrls) {
+      row.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = nameCtrl.text.trim();
+    final price = double.tryParse(priceCtrl.text);
+    final authUser = context.read<AuthProvider>().currentUser;
+
+    if (name.isEmpty || price == null || price <= 0 || authUser == null) {
+      return;
+    }
+
+    setState(() => isSaving = true);
     try {
-      await showDialog(
-        context: context,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              insetPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 24,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        isEdit ? t.editRecipe : t.newRecipe,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: nameCtrl,
-                        decoration: _inputDecoration(t.beverageName, colors.text),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: priceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration(t.sellingPrice, colors.text),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            t.ingredientsTitle.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: colors.gray,
-                            ),
-                          ),
-                          Text(
-                            ingredientCtrls.length.toString(),
-                            style: TextStyle(fontSize: 12, color: colors.gray),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (ingredientCtrls.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            t.noIngredientsHint,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: colors.gray,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        )
-                      else
-                        ...ingredientCtrls.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final row = entry.value;
-                          return row.isNew
-                              ? _buildNewIngredientCard(
-                                  row,
-                                  idx,
-                                  ingredientCtrls,
-                                  setDialogState,
-                                  t,
-                                  colors,
-                                )
-                              : _buildExistingIngredientCard(
-                                  row,
-                                  idx,
-                                  ingredientCtrls,
-                                  inventory,
-                                  setDialogState,
-                                  t,
-                                  colors,
-                                );
-                        }),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => setDialogState(
-                                () => ingredientCtrls.add(_IngredientRow()),
-                              ),
-                              icon: const Icon(Icons.list_alt, size: 16),
-                              label: Text(
-                                t.addFromInventory,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF5BA154),
-                                side: const BorderSide(
-                                  color: Color(0xFF5BA154),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => setDialogState(
-                                () => ingredientCtrls.add(
-                                  _IngredientRow(isNew: true),
-                                ),
-                              ),
-                              icon: const Icon(
-                                Icons.add_circle_outline,
-                                size: 16,
-                              ),
-                              label: Text(
-                                t.createNewIngredient,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFFFF7B89),
-                                side: const BorderSide(
-                                  color: Color(0xFFFF7B89),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                                  final name = nameCtrl.text.trim();
-                                  final price = double.tryParse(priceCtrl.text);
-                                  final authUser = context
-                                      .read<AuthProvider>()
-                                      .currentUser;
+      final inventoryProvider = context.read<InventoryProvider>();
+      final recipeProvider = context.read<RecipeProvider>();
 
-                                  if (name.isEmpty ||
-                                      price == null ||
-                                      price <= 0 ||
-                                      authUser == null) {
-                                    return;
-                                  }
-
-                                  setDialogState(() => isSaving = true);
-                                  try {
-                                    final inventoryProvider = context
-                                        .read<InventoryProvider>();
-
-                                    for (final row in ingredientCtrls) {
-                                      if (!row.isNew) continue;
-                                      final ingredientName = row.nameCtrl.text
-                                          .trim();
-                                      if (ingredientName.isEmpty) continue;
-
-                                      final created = await inventoryProvider
-                                          .addItemQuick(
-                                            name: ingredientName,
-                                            category: row.newCategory,
-                                            unit: row.newUnit,
-                                            userId: authUser.id,
-                                            userName: authUser.name,
-                                          );
-                                      if (created == null) {
-                                        throw StateError(
-                                          'Unable to create ingredient "$ingredientName"',
-                                        );
-                                      }
-                                      row.itemId = created.id;
-                                    }
-
-                                    final ingredients = <RecipeIngredient>[];
-                                    for (final row in ingredientCtrls) {
-                                      final itemId = row.itemId;
-                                      final quantity = double.tryParse(
-                                        row.qtyCtrl.text,
-                                      );
-                                      if (itemId == null ||
-                                          quantity == null ||
-                                          quantity <= 0) {
-                                        continue;
-                                      }
-                                      ingredients.add(
-                                        RecipeIngredient(
-                                          inventoryItemId: itemId,
-                                          quantity: quantity,
-                                        ),
-                                      );
-                                    }
-
-                                    if (ingredients.isEmpty) {
-                                      throw StateError(
-                                        'Add at least one ingredient',
-                                      );
-                                    }
-
-                                    if (isEdit) {
-                                      await recipeProvider.updateRecipe(
-                                        id: recipe.id,
-                                        name: name,
-                                        sellingPrice: price,
-                                        ingredients: ingredients,
-                                        userId: authUser.id,
-                                        userName: authUser.name,
-                                      );
-                                    } else {
-                                      await recipeProvider.addRecipe(
-                                        name: name,
-                                        sellingPrice: price,
-                                        ingredients: ingredients,
-                                        userId: authUser.id,
-                                        userName: authUser.name,
-                                      );
-                                    }
-
-                                    if (!ctx.mounted) return;
-                                    Navigator.of(ctx).pop();
-                                  } catch (error) {
-                                    if (ctx.mounted) {
-                                      setDialogState(() => isSaving = false);
-                                    }
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Failed to save recipe: $error',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5BA154),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: isSaving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  t.save,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    } finally {
-      nameCtrl.dispose();
-      priceCtrl.dispose();
       for (final row in ingredientCtrls) {
-        row.dispose();
+        if (!row.isNew) continue;
+        final ingredientName = row.nameCtrl.text.trim();
+        if (ingredientName.isEmpty) continue;
+
+        final created = await inventoryProvider.addItemQuick(
+          name: ingredientName,
+          category: row.newCategory,
+          unit: row.newUnit,
+          userId: authUser.id,
+          userName: authUser.name,
+        );
+        if (created == null) {
+          throw StateError('Unable to create ingredient "$ingredientName"');
+        }
+        row.itemId = created.id;
+      }
+
+      final ingredients = <RecipeIngredient>[];
+      for (final row in ingredientCtrls) {
+        final itemId = row.itemId;
+        final quantity = double.tryParse(row.qtyCtrl.text);
+        if (itemId == null || quantity == null || quantity <= 0) {
+          continue;
+        }
+        ingredients.add(
+          RecipeIngredient(inventoryItemId: itemId, quantity: quantity),
+        );
+      }
+
+      if (ingredients.isEmpty) {
+        throw StateError('Add at least one ingredient');
+      }
+
+      final recipe = widget.recipe;
+      if (recipe != null) {
+        await recipeProvider.updateRecipe(
+          id: recipe.id,
+          name: name,
+          sellingPrice: price,
+          ingredients: ingredients,
+          userId: authUser.id,
+          userName: authUser.name,
+        );
+      } else {
+        await recipeProvider.addRecipe(
+          name: name,
+          sellingPrice: price,
+          ingredients: ingredients,
+          userId: authUser.id,
+          userName: authUser.name,
+        );
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        setState(() => isSaving = false);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save recipe: $error')),
+        );
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Translations.of(context);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final inventory = widget.inventory;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 24,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                isEdit ? t.editRecipe : t.newRecipe,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                decoration: _inputDecoration(t.beverageName, colors.text),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceCtrl,
+                keyboardType: TextInputType.number,
+                decoration: _inputDecoration(t.sellingPrice, colors.text),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    t.ingredientsTitle.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colors.gray,
+                    ),
+                  ),
+                  Text(
+                    ingredientCtrls.length.toString(),
+                    style: TextStyle(fontSize: 12, color: colors.gray),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (ingredientCtrls.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    t.noIngredientsHint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.gray,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                )
+              else
+                ...ingredientCtrls.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final row = entry.value;
+                  return row.isNew
+                      ? _buildNewIngredientCard(
+                          row,
+                          idx,
+                          ingredientCtrls,
+                          t,
+                          colors,
+                        )
+                      : _buildExistingIngredientCard(
+                          row,
+                          idx,
+                          ingredientCtrls,
+                          inventory,
+                          t,
+                          colors,
+                        );
+                }),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => setState(
+                        () => ingredientCtrls.add(_IngredientRow()),
+                      ),
+                      icon: const Icon(Icons.list_alt, size: 16),
+                      label: Text(
+                        t.addFromInventory,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF5BA154),
+                        side: const BorderSide(
+                          color: Color(0xFF5BA154),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => setState(
+                        () => ingredientCtrls.add(
+                          _IngredientRow(isNew: true),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.add_circle_outline,
+                        size: 16,
+                      ),
+                      label: Text(
+                        t.createNewIngredient,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFFF7B89),
+                        side: const BorderSide(
+                          color: Color(0xFFFF7B89),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5BA154),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          t.save,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildExistingIngredientCard(
@@ -677,7 +676,6 @@ class RecipeScreen extends StatelessWidget {
     int idx,
     List<_IngredientRow> ctrls,
     List<InventoryItem> inventory,
-    void Function(void Function()) setDialogState,
     Translations t,
     AppColors colors,
   ) {
@@ -733,7 +731,7 @@ class RecipeScreen extends StatelessWidget {
                         ),
                       )
                       .toList(),
-                  onChanged: (v) => setDialogState(() {
+                  onChanged: (v) => setState(() {
                     row.itemId = v;
                     row.isNew = false;
                   }),
@@ -747,7 +745,7 @@ class RecipeScreen extends StatelessWidget {
             child: TextField(
               controller: row.qtyCtrl,
               keyboardType: TextInputType.number,
-              onChanged: (_) => setDialogState(() {}),
+              onChanged: (_) => setState(() {}),
               style: TextStyle(fontSize: 13, color: colors.text),
               decoration: InputDecoration(
                 isDense: true,
@@ -765,8 +763,7 @@ class RecipeScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.close, size: 18, color: Colors.red),
-            onPressed: () => setDialogState(() {
-              row.dispose();
+            onPressed: () => setState(() {
               ctrls.removeAt(idx);
             }),
             padding: EdgeInsets.zero,
@@ -781,7 +778,6 @@ class RecipeScreen extends StatelessWidget {
     _IngredientRow row,
     int idx,
     List<_IngredientRow> ctrls,
-    void Function(void Function()) setDialogState,
     Translations t,
     AppColors colors,
   ) {
@@ -800,8 +796,7 @@ class RecipeScreen extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.close, size: 18, color: Colors.red),
-                onPressed: () => setDialogState(() {
-                  row.dispose();
+                onPressed: () => setState(() {
                   ctrls.removeAt(idx);
                 }),
                 padding: EdgeInsets.zero,
@@ -840,13 +835,16 @@ class RecipeScreen extends StatelessWidget {
                                   value: u,
                                   child: Text(
                                     _unitLabel(u),
-                                    style: TextStyle(fontSize: 13, color: colors.text),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: colors.text,
+                                    ),
                                   ),
                                 ),
                               )
                               .toList(),
                           onChanged: (v) =>
-                              setDialogState(() => row.newUnit = v!),
+                              setState(() => row.newUnit = v!),
                         ),
                       ),
                     ),
@@ -877,13 +875,16 @@ class RecipeScreen extends StatelessWidget {
                                   value: c,
                                   child: Text(
                                     _categoryDisplay(c, t),
-                                    style: TextStyle(fontSize: 13, color: colors.text),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: colors.text,
+                                    ),
                                   ),
                                 ),
                               )
                               .toList(),
                           onChanged: (v) =>
-                              setDialogState(() => row.newCategory = v!),
+                              setState(() => row.newCategory = v!),
                         ),
                       ),
                     ),
@@ -896,7 +897,7 @@ class RecipeScreen extends StatelessWidget {
           TextField(
             controller: row.qtyCtrl,
             keyboardType: TextInputType.number,
-            onChanged: (_) => setDialogState(() {}),
+            onChanged: (_) => setState(() {}),
             style: TextStyle(fontSize: 13, color: colors.text),
             decoration: InputDecoration(
               isDense: true,
