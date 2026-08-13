@@ -58,6 +58,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     var category = item.category;
     var unit = item.unit;
     const primaryGreen = Color(0xFF5BA154);
+    final colors = Theme.of(context).extension<AppColors>()!;
 
     showDialog(
       context: context,
@@ -70,19 +71,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
             child: ListView(
               shrinkWrap: true,
               children: [
-                _dialogField(t.itemName, nameCtrl),
+                _dialogField(t.itemName, nameCtrl, labelColor: colors.text),
                 const SizedBox(height: 12),
                 InputDecorator(
-                  decoration: _dialogInputDecoration(t.category),
+                  decoration: _dialogInputDecoration(t.category, colors.text),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<ItemCategory>(
                       value: category,
                       isDense: true,
                       isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients')),
-                        DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging')),
-                        DropdownMenuItem(value: ItemCategory.lain, child: Text('Others')),
+                      items: [
+                        DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemCategory.lain, child: Text('Others', style: TextStyle(color: colors.text))),
                       ],
                       onChanged: (v) => setDialogState(() => category = v!),
                     ),
@@ -90,25 +91,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
                 const SizedBox(height: 12),
                 InputDecorator(
-                  decoration: _dialogInputDecoration(t.unit),
+                  decoration: _dialogInputDecoration(t.unit, colors.text),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<ItemUnit>(
                       value: unit,
                       isDense: true,
                       isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: ItemUnit.g, child: Text('g')),
-                        DropdownMenuItem(value: ItemUnit.ml, child: Text('ml')),
-                        DropdownMenuItem(value: ItemUnit.unit, child: Text('unit')),
-                        DropdownMenuItem(value: ItemUnit.kg, child: Text('kg')),
-                        DropdownMenuItem(value: ItemUnit.l, child: Text('L')),
+                      items: [
+                        DropdownMenuItem(value: ItemUnit.g, child: Text('g', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemUnit.ml, child: Text('ml', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemUnit.unit, child: Text('unit', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemUnit.kg, child: Text('kg', style: TextStyle(color: colors.text))),
+                        DropdownMenuItem(value: ItemUnit.l, child: Text('L', style: TextStyle(color: colors.text))),
                       ],
                       onChanged: (v) => setDialogState(() => unit = v!),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                _dialogField('${t.minStock} (${_unitLabel(item.unit)})', minStockCtrl, isNumber: true),
+                _dialogField('${t.minStock} (${_unitLabel(item.unit)})', minStockCtrl, isNumber: true, labelColor: colors.text),
               ],
             ),
           ),
@@ -511,6 +512,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     var isTotalPrice = true;
     var currentStep = 0;
     const primaryGreen = Color(0xFF5BA154);
+    final colors = Theme.of(context).extension<AppColors>()!;
 
     bool canProceed() {
       if (currentStep == 0) return nameCtrl.text.trim().isNotEmpty;
@@ -569,6 +571,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               unit,
               isTotalPrice,
               primaryGreen,
+              colors,
               setDialogState,
               (v) => category = v,
               (v) => unit = v,
@@ -621,6 +624,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     ItemUnit unit,
     bool isTotalPrice,
     Color accentColor,
+    AppColors colors,
     void Function(VoidCallback) setDialogState,
     void Function(ItemCategory) setCategory,
     void Function(ItemUnit) setUnit,
@@ -634,21 +638,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: _dialogInputDecoration(t.itemName),
+              decoration: _dialogInputDecoration(t.itemName, colors.text),
               onChanged: (_) => setDialogState(() {}),
             ),
             const SizedBox(height: 12),
             InputDecorator(
-              decoration: _dialogInputDecoration(t.category),
+              decoration: _dialogInputDecoration(t.category, colors.text),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<ItemCategory>(
                   value: category,
                   isDense: true,
                   isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients')),
-                    DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging')),
-                    DropdownMenuItem(value: ItemCategory.lain, child: Text('Others')),
+                  items: [
+                    DropdownMenuItem(value: ItemCategory.bahan, child: Text('Ingredients', style: TextStyle(color: colors.text))),
+                    DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging', style: TextStyle(color: colors.text))),
+                    DropdownMenuItem(value: ItemCategory.lain, child: Text('Others', style: TextStyle(color: colors.text))),
                   ],
                   onChanged: (v) => setDialogState(() => setCategory(v!)),
                 ),
@@ -660,7 +664,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         return ListView(
           shrinkWrap: true,
           children: [
-            _dialogField(t.itemsPerPack, itemCountCtrl, isNumber: true),
+            _dialogField(t.itemsPerPack, itemCountCtrl, isNumber: true, labelColor: colors.text),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -669,26 +673,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   child: TextField(
                     controller: perItemSizeCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    decoration: _dialogInputDecoration('${t.qtyPerItem} ($unitLabel)'),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+                    decoration: _dialogInputDecoration('${t.qtyPerItem} ($unitLabel)', colors.text),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
                   child: InputDecorator(
-                    decoration: _dialogInputDecoration(''),
+                    decoration: _dialogInputDecoration('', colors.text),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<ItemUnit>(
                         value: unit,
                         isDense: true,
                         isExpanded: true,
-                        items: const [
-                          DropdownMenuItem(value: ItemUnit.g, child: Text('g')),
-                          DropdownMenuItem(value: ItemUnit.ml, child: Text('ml')),
-                          DropdownMenuItem(value: ItemUnit.unit, child: Text('unit')),
-                          DropdownMenuItem(value: ItemUnit.kg, child: Text('kg')),
-                          DropdownMenuItem(value: ItemUnit.l, child: Text('L')),
+                        items: [
+                          DropdownMenuItem(value: ItemUnit.g, child: Text('g', style: TextStyle(color: colors.text))),
+                          DropdownMenuItem(value: ItemUnit.ml, child: Text('ml', style: TextStyle(color: colors.text))),
+                          DropdownMenuItem(value: ItemUnit.unit, child: Text('unit', style: TextStyle(color: colors.text))),
+                          DropdownMenuItem(value: ItemUnit.kg, child: Text('kg', style: TextStyle(color: colors.text))),
+                          DropdownMenuItem(value: ItemUnit.l, child: Text('L', style: TextStyle(color: colors.text))),
                         ],
                         onChanged: (v) => setDialogState(() => setUnit(v!)),
                       ),
@@ -744,8 +748,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             TextField(
               controller: priceCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, colors.text),
               onChanged: (_) => setDialogState(() {}),
             ),
           ],
@@ -757,8 +761,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             TextField(
               controller: minStockCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              decoration: _dialogInputDecoration('${t.minStock} ($unitLabel)'),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+              decoration: _dialogInputDecoration('${t.minStock} ($unitLabel)', colors.text),
               onChanged: (_) => setDialogState(() {}),
             ),
           ],
@@ -849,7 +853,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               controller: itemCountCtrl,
               keyboardType: TextInputType.number,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-              decoration: _dialogInputDecoration(t.itemsPerPack),
+              decoration: _dialogInputDecoration(t.itemsPerPack, colors.text),
               onChanged: (_) => setDialogState(() {}),
             ),
             const SizedBox(height: 12),
@@ -861,7 +865,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     controller: perItemSizeCtrl,
                     keyboardType: TextInputType.number,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
-                    decoration: _dialogInputDecoration(t.qtyPerItem),
+                    decoration: _dialogInputDecoration(t.qtyPerItem, colors.text),
                     onChanged: (_) => setDialogState(() {}),
                   ),
                 ),
@@ -869,7 +873,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 Expanded(
                   flex: 2,
                   child: InputDecorator(
-                    decoration: _dialogInputDecoration(''),
+                    decoration: _dialogInputDecoration('', colors.text),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<ItemUnit>(
                         value: sizeUnit,
@@ -881,7 +885,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             if (u == ItemUnit.ml || u == ItemUnit.l) return item.unit == ItemUnit.ml || item.unit == ItemUnit.l;
                             return u == ItemUnit.unit;
                           })
-                          .map((u) => DropdownMenuItem(value: u, child: Text(_unitLabel(u))))
+                          .map((u) => DropdownMenuItem(value: u, child: Text(_unitLabel(u), style: TextStyle(color: colors.text))))
                           .toList(),
                         onChanged: (v) => setDialogState(() => setSizeUnit(v!)),
                       ),
@@ -937,8 +941,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             TextField(
               controller: priceCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.text),
+              decoration: _dialogInputDecoration(isTotalPrice ? t.totalPaidLabel : t.priceEachLabel, colors.text),
               onChanged: (_) => setDialogState(() {}),
             ),
 
@@ -952,6 +956,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               controller: noteCtrl,
               decoration: InputDecoration(
                 labelText: t.noteOptional,
+                labelStyle: TextStyle(fontSize: 13, color: colors.text),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 isDense: true,
               ),
@@ -1169,20 +1174,25 @@ double _toBaseQuantity(double qty, String fromUnit, ItemUnit baseUnit) {
   return qty;
 }
 
-InputDecoration _dialogInputDecoration(String label) {
+InputDecoration _dialogInputDecoration(String label, Color labelColor) {
   return InputDecoration(
     labelText: label,
-    labelStyle: const TextStyle(fontSize: 13),
+    labelStyle: TextStyle(fontSize: 13, color: labelColor),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     isDense: true,
   );
 }
 
-Widget _dialogField(String label, TextEditingController ctrl, {bool isNumber = false}) {
+Widget _dialogField(
+  String label,
+  TextEditingController ctrl, {
+  bool isNumber = false,
+  required Color labelColor,
+}) {
   return TextField(
     controller: ctrl,
     keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-    decoration: _dialogInputDecoration(label),
+    decoration: _dialogInputDecoration(label, labelColor),
   );
 }

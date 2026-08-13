@@ -398,13 +398,13 @@ class RecipeScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       TextField(
                         controller: nameCtrl,
-                        decoration: _inputDecoration(t.beverageName),
+                        decoration: _inputDecoration(t.beverageName, colors.text),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: priceCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: _inputDecoration(t.sellingPrice),
+                        decoration: _inputDecoration(t.sellingPrice, colors.text),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -712,7 +712,7 @@ class RecipeScreen extends StatelessWidget {
           Expanded(
             flex: 3,
             child: InputDecorator(
-              decoration: _inputDecoration(''),
+              decoration: _inputDecoration('', colors.text),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: row.itemId,
@@ -720,7 +720,7 @@ class RecipeScreen extends StatelessWidget {
                   isExpanded: true,
                   hint: Text(
                     t.selectHint,
-                    style: const TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: 13, color: colors.gray),
                   ),
                   items: inventory
                       .map(
@@ -728,7 +728,7 @@ class RecipeScreen extends StatelessWidget {
                           value: i.id,
                           child: Text(
                             i.name,
-                            style: const TextStyle(fontSize: 13),
+                            style: TextStyle(fontSize: 13, color: colors.text),
                           ),
                         ),
                       )
@@ -748,6 +748,7 @@ class RecipeScreen extends StatelessWidget {
               controller: row.qtyCtrl,
               keyboardType: TextInputType.number,
               onChanged: (_) => setDialogState(() {}),
+              style: TextStyle(fontSize: 13, color: colors.text),
               decoration: InputDecoration(
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
@@ -758,6 +759,7 @@ class RecipeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 suffixText: suffix,
+                suffixStyle: TextStyle(fontSize: 12, color: colors.gray),
               ),
             ),
           ),
@@ -809,8 +811,8 @@ class RecipeScreen extends StatelessWidget {
           ),
           TextField(
             controller: row.nameCtrl,
-            decoration: _inputDecoration(t.itemName),
-            style: const TextStyle(fontSize: 13),
+            decoration: _inputDecoration(t.itemName, colors.text),
+            style: TextStyle(fontSize: 13, color: colors.text),
           ),
           const SizedBox(height: 10),
           Row(
@@ -825,20 +827,20 @@ class RecipeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     InputDecorator(
-                      decoration: _inputDecoration(''),
+                      decoration: _inputDecoration('', colors.text),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<ItemUnit>(
                           value: row.newUnit,
                           isDense: true,
                           isExpanded: true,
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13, color: colors.text),
                           items: ItemUnit.values
                               .map(
                                 (u) => DropdownMenuItem(
                                   value: u,
                                   child: Text(
                                     _unitLabel(u),
-                                    style: const TextStyle(fontSize: 13),
+                                    style: TextStyle(fontSize: 13, color: colors.text),
                                   ),
                                 ),
                               )
@@ -862,20 +864,20 @@ class RecipeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     InputDecorator(
-                      decoration: _inputDecoration(''),
+                      decoration: _inputDecoration('', colors.text),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<ItemCategory>(
                           value: row.newCategory,
                           isDense: true,
                           isExpanded: true,
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13, color: colors.text),
                           items: ItemCategory.values
                               .map(
                                 (c) => DropdownMenuItem(
                                   value: c,
                                   child: Text(
                                     _categoryDisplay(c, t),
-                                    style: const TextStyle(fontSize: 13),
+                                    style: TextStyle(fontSize: 13, color: colors.text),
                                   ),
                                 ),
                               )
@@ -895,6 +897,7 @@ class RecipeScreen extends StatelessWidget {
             controller: row.qtyCtrl,
             keyboardType: TextInputType.number,
             onChanged: (_) => setDialogState(() {}),
+            style: TextStyle(fontSize: 13, color: colors.text),
             decoration: InputDecoration(
               isDense: true,
               hintText: t.quantity,
@@ -907,6 +910,7 @@ class RecipeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               suffixText: _unitLabel(row.newUnit),
+              suffixStyle: TextStyle(fontSize: 12, color: colors.gray),
             ),
           ),
         ],
@@ -996,10 +1000,10 @@ class _RecipeCard extends StatelessWidget {
   }
 }
 
-InputDecoration _inputDecoration(String label) {
+InputDecoration _inputDecoration(String label, Color labelColor) {
   return InputDecoration(
     labelText: label.isNotEmpty ? label : null,
-    labelStyle: const TextStyle(fontSize: 13),
+    labelStyle: TextStyle(fontSize: 13, color: labelColor),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     isDense: true,
