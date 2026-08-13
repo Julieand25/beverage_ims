@@ -1056,11 +1056,6 @@ class _InventoryCard extends StatelessWidget {
                   color: colors.text,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'RM ${item.stockValue.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 12, color: colors.gray),
-              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -1081,10 +1076,6 @@ class _InventoryCard extends StatelessWidget {
             children: [
               Text(
                 '${t.minStock}: ${item.minStock.toStringAsFixed(0)} ${_unitLabel(item.unit)}',
-                style: TextStyle(fontSize: 11, color: colors.gray),
-              ),
-              Text(
-                'RM${item.costPerUnit.toStringAsFixed(2)} / ${_unitLabel(item.unit)}',
                 style: TextStyle(fontSize: 11, color: colors.gray),
               ),
             ],
