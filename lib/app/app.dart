@@ -108,7 +108,7 @@ class _AppRouterState extends State<_AppRouter> {
           seedColor: Colors.deepPurple,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+        scaffoldBackgroundColor: const Color(0xFFE8F4FD),
         extensions: const <ThemeExtension<dynamic>>[AppColors.light],
       ),
       darkTheme: ThemeData(

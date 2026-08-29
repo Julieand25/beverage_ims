@@ -26,7 +26,7 @@ class AppColors extends ThemeExtension<AppColors> {
   });
 
   static const light = AppColors(
-    background: Color(0xFFF9F9F9),
+    background: Color(0xFFE8F4FD),
     text: Color(0xFF2C3E50),
     card: Colors.white,
     gray: Color(0xFF9E9E9E),
