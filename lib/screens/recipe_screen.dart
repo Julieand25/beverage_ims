@@ -7,6 +7,7 @@ import '../app/models/inventory_item.dart';
 import '../app/models/recipe.dart';
 import '../app/recipe_provider.dart';
 import '../app/translations.dart';
+import '../app/widgets/emoji_picker.dart';
 
 class RecipeScreen extends StatelessWidget {
   const RecipeScreen({super.key});
@@ -217,12 +218,23 @@ class RecipeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                Text(
-                  recipe.name,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.text,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (recipe.emoji.isNotEmpty)
+                        TextSpan(
+                          text: '${recipe.emoji} ',
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      TextSpan(
+                        text: recipe.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: colors.text,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -286,13 +298,27 @@ class RecipeScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            item.name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: colors.text,
-                            ),
+                          child: Row(
+                            children: [
+                              if (item.emoji.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Text(
+                                    item.emoji,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.text,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         Text(
@@ -363,6 +389,7 @@ class _RecipeFormDialog extends StatefulWidget {
 class _RecipeFormDialogState extends State<_RecipeFormDialog> {
   late final TextEditingController nameCtrl;
   late final TextEditingController priceCtrl;
+  late String emoji;
   final List<_IngredientRow> ingredientCtrls = [];
   bool isSaving = false;
 
@@ -376,6 +403,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
     priceCtrl = TextEditingController(
       text: recipe != null ? recipe.sellingPrice.toStringAsFixed(2) : '',
     );
+    emoji = (recipe?.emoji.isNotEmpty ?? false) ? recipe!.emoji : '☕';
     if (recipe != null) {
       for (final ing in recipe.ingredients) {
         ingredientCtrls.add(
@@ -425,6 +453,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
           unit: row.newUnit,
           userId: authUser.id,
           userName: authUser.name,
+          emoji: row.emoji,
         );
         if (created == null) {
           throw StateError('Unable to create ingredient "$ingredientName"');
@@ -454,6 +483,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
           id: recipe.id,
           name: name,
           sellingPrice: price,
+          emoji: emoji,
           ingredients: ingredients,
           userId: authUser.id,
           userName: authUser.name,
@@ -462,6 +492,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
         await recipeProvider.addRecipe(
           name: name,
           sellingPrice: price,
+          emoji: emoji,
           ingredients: ingredients,
           userId: authUser.id,
           userName: authUser.name,
@@ -516,7 +547,22 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                 controller: nameCtrl,
                 decoration: _inputDecoration(t.beverageName, colors.text),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              Text(
+                t.chooseEmoji,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                ),
+              ),
+              const SizedBox(height: 8),
+              EmojiPicker(
+                selected: emoji,
+                size: 32,
+                onChanged: (v) => setState(() => emoji = v),
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: priceCtrl,
                 keyboardType: TextInputType.number,
@@ -724,9 +770,24 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                       .map(
                         (i) => DropdownMenuItem(
                           value: i.id,
-                          child: Text(
-                            i.name,
-                            style: TextStyle(fontSize: 13, color: colors.text),
+                          child: Row(
+                            children: [
+                              if (i.emoji.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Text(
+                                    i.emoji,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              Flexible(
+                                child: Text(
+                                  i.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 13, color: colors.text),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       )
@@ -810,6 +871,17 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
             style: TextStyle(fontSize: 13, color: colors.text),
           ),
           const SizedBox(height: 10),
+          Text(
+            t.chooseEmoji,
+            style: TextStyle(fontSize: 11, color: colors.gray),
+          ),
+          const SizedBox(height: 6),
+          EmojiPicker(
+            selected: row.emoji,
+            size: 28,
+            onChanged: (v) => setState(() => row.emoji = v),
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -842,7 +914,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                                   ),
                                 ),
                               )
-                              .toList(),
+.toList(),
                           onChanged: (v) =>
                               setState(() => row.newUnit = v!),
                         ),
@@ -883,8 +955,10 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (v) =>
-                              setState(() => row.newCategory = v!),
+                          onChanged: (v) => setState(() {
+                            row.newCategory = v!;
+                            row.emoji = _categoryDefaultEmoji(v);
+                          }),
                         ),
                       ),
                     ),
@@ -949,6 +1023,20 @@ class _RecipeCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colors.background,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              recipe.emoji.isNotEmpty ? recipe.emoji : '☕',
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1022,6 +1110,17 @@ String _categoryDisplay(ItemCategory c, Translations t) {
   }
 }
 
+String _categoryDefaultEmoji(ItemCategory c) {
+  switch (c) {
+    case ItemCategory.bahan:
+      return '🍚';
+    case ItemCategory.pembungkusan:
+      return '🥡';
+    case ItemCategory.lain:
+      return '📦';
+  }
+}
+
 String _unitLabel(ItemUnit unit) {
   switch (unit) {
     case ItemUnit.g:
@@ -1062,6 +1161,7 @@ class _IngredientRow {
   bool isNew = false;
   ItemCategory newCategory = ItemCategory.bahan;
   ItemUnit newUnit = ItemUnit.g;
+  String emoji = '🍚';
   final TextEditingController qtyCtrl;
   final TextEditingController nameCtrl;
 

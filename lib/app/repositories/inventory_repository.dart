@@ -6,7 +6,7 @@ abstract class InventoryRepository {
   Future<InventoryItem> addItem(InventoryItem item, {required String userId});
   Future<InventoryItem> restockItem(String itemId, double addedQty, double totalCost, {required String userId, double? minStock, String? purchaseDate, String? note});
   Future<InventoryItem> adjustStock(String itemId, double changeQty, {required String userId, required double costPerUnit, required String note});
-  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit});
+  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit, String? emoji});
   Future<int> getRecipeUsageCount(String itemId);
   Future<void> deleteItem(String id);
 }
@@ -46,6 +46,17 @@ class SupabaseInventoryRepository implements InventoryRepository {
     }
   }
 
+  String _defaultEmoji(ItemCategory category) {
+    switch (category) {
+      case ItemCategory.bahan:
+        return '🍚';
+      case ItemCategory.pembungkusan:
+        return '🥡';
+      case ItemCategory.lain:
+        return '📦';
+    }
+  }
+
   InventoryItem _fromJson(Map<String, dynamic> json) => InventoryItem(
         id: json['id'] as String,
         name: json['name'] as String,
@@ -54,6 +65,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
         stock: (json['stock'] as num).toDouble(),
         minStock: (json['min_stock'] as num).toDouble(),
         costPerUnit: (json['cost_per_unit'] as num).toDouble(),
+        emoji: (json['emoji'] as String?) ?? _defaultEmoji(_parseCategory(json['category'] as String)),
       );
 
   @override
@@ -80,6 +92,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
       'stock': item.stock,
       'min_stock': item.minStock,
       'cost_per_unit': item.costPerUnit,
+      'emoji': item.emoji,
       'created_by': userId,
     }).select().single();
 
@@ -115,13 +128,14 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   @override
-  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit}) async {
+  Future<InventoryItem> updateItem(String id, {String? name, ItemCategory? category, ItemUnit? unit, double? minStock, double? costPerUnit, String? emoji}) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
     if (category != null) data['category'] = category.name;
     if (unit != null) data['unit'] = unit.name;
     if (minStock != null) data['min_stock'] = minStock;
     if (costPerUnit != null) data['cost_per_unit'] = costPerUnit;
+    if (emoji != null) data['emoji'] = emoji;
     data['updated_at'] = DateTime.now().toIso8601String();
 
     final result = await _client.from('inventory_items').update(data).eq('id', id).select().single();

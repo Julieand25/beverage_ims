@@ -10,6 +10,7 @@ class InventoryItem {
   double stock;
   double minStock;
   double costPerUnit;
+  String emoji;
 
   InventoryItem({
     required this.id,
@@ -19,6 +20,7 @@ class InventoryItem {
     required this.stock,
     required this.minStock,
     required this.costPerUnit,
+    this.emoji = '',
   });
 
   bool get isLowStock => stock <= minStock;

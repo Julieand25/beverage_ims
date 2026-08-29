@@ -47,11 +47,13 @@ class RecipeProvider extends ChangeNotifier {
     required List<RecipeIngredient> ingredients,
     required String userId,
     required String userName,
+    String emoji = '☕',
   }) async {
     final recipe = Recipe(
       id: '',
       name: name,
       sellingPrice: sellingPrice,
+      emoji: emoji,
       ingredients: ingredients,
     );
     final created = await _repo.addRecipe(recipe, userId: userId);
@@ -78,11 +80,13 @@ class RecipeProvider extends ChangeNotifier {
     required List<RecipeIngredient> ingredients,
     required String userId,
     required String userName,
+    String emoji = '☕',
   }) async {
     final recipe = Recipe(
       id: id,
       name: name,
       sellingPrice: sellingPrice,
+      emoji: emoji,
       ingredients: ingredients,
     );
     final updated = await _repo.updateRecipe(recipe);

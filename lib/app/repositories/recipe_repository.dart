@@ -21,6 +21,7 @@ class SupabaseRecipeRepository implements RecipeRepository {
       id: json['id'] as String,
       name: json['name'] as String,
       sellingPrice: (json['selling_price'] as num).toDouble(),
+      emoji: (json['emoji'] as String?) ?? '☕',
       ingredients: ingredients
           .map(
             (i) => RecipeIngredient(
@@ -64,6 +65,7 @@ class SupabaseRecipeRepository implements RecipeRepository {
         .insert({
           'name': recipe.name,
           'selling_price': recipe.sellingPrice,
+          'emoji': recipe.emoji,
           'created_by': userId,
         })
         .select()
@@ -97,6 +99,7 @@ class SupabaseRecipeRepository implements RecipeRepository {
         .update({
           'name': recipe.name,
           'selling_price': recipe.sellingPrice,
+          'emoji': recipe.emoji,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', recipe.id);

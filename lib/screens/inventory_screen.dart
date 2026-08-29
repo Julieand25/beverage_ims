@@ -5,6 +5,7 @@ import '../app/auth_provider.dart';
 import '../app/inventory_provider.dart';
 import '../app/models/inventory_item.dart';
 import '../app/translations.dart';
+import '../app/widgets/emoji_picker.dart';
 
 class InventoryScreen extends StatefulWidget {
   final String? focusItemId;
@@ -57,6 +58,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final minStockCtrl = TextEditingController(text: item.minStock.toStringAsFixed(0));
     var category = item.category;
     var unit = item.unit;
+    var emoji = item.emoji.isNotEmpty ? item.emoji : _defaultEmoji(category);
     const primaryGreen = Color(0xFF5BA154);
     final colors = Theme.of(context).extension<AppColors>()!;
 
@@ -73,6 +75,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
               children: [
                 _dialogField(t.itemName, nameCtrl, labelColor: colors.text),
                 const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      t.chooseEmoji,
+                      style: TextStyle(fontSize: 12, color: colors.gray),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(emoji, style: const TextStyle(fontSize: 18)),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                EmojiPicker(
+                  selected: emoji,
+                  size: 30,
+                  onChanged: (v) => setDialogState(() => emoji = v),
+                ),
+                const SizedBox(height: 12),
                 InputDecorator(
                   decoration: _dialogInputDecoration(t.category, colors.text),
                   child: DropdownButtonHideUnderline(
@@ -85,7 +105,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging', style: TextStyle(color: colors.text))),
                         DropdownMenuItem(value: ItemCategory.lain, child: Text('Others', style: TextStyle(color: colors.text))),
                       ],
-                      onChanged: (v) => setDialogState(() => category = v!),
+                      onChanged: (v) => setDialogState(() {
+                        category = v!;
+                        if (emoji == _defaultEmoji(ItemCategory.bahan) ||
+                            emoji == _defaultEmoji(ItemCategory.pembungkusan) ||
+                            emoji == _defaultEmoji(ItemCategory.lain)) {
+                          emoji = _defaultEmoji(v);
+                        }
+                      }),
                     ),
                   ),
                 ),
@@ -129,6 +156,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   category: category,
                   unit: unit,
                   minStock: double.tryParse(minStockCtrl.text) ?? item.minStock,
+                  emoji: emoji,
                 );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
@@ -264,7 +292,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               TextSpan(
                 children: [
                   TextSpan(text: '${t.manageStock} - ', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  TextSpan(text: item.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal)),
+                  TextSpan(text: '${item.emoji.isNotEmpty ? '${item.emoji} ' : ''}${item.name}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal)),
                 ],
               ),
             ),
@@ -509,6 +537,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final priceCtrl = TextEditingController();
     var category = ItemCategory.bahan;
     var unit = ItemUnit.g;
+    var emoji = _defaultEmoji(category);
     var isTotalPrice = true;
     var currentStep = 0;
     const primaryGreen = Color(0xFF5BA154);
@@ -547,6 +576,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             costPerUnit: costPerUnit,
             userId: auth.currentUser!.id,
             userName: auth.currentUser!.name,
+            emoji: emoji,
           );
       Navigator.of(context, rootNavigator: true).pop();
     }
@@ -569,12 +599,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
               priceCtrl,
               category,
               unit,
+              emoji,
               isTotalPrice,
               primaryGreen,
               colors,
               setDialogState,
               (v) => category = v,
               (v) => unit = v,
+              (v) => emoji = v,
               (v) => isTotalPrice = v,
             ),
           ),
@@ -622,12 +654,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
     TextEditingController priceCtrl,
     ItemCategory category,
     ItemUnit unit,
+    String emoji,
     bool isTotalPrice,
     Color accentColor,
     AppColors colors,
     void Function(VoidCallback) setDialogState,
     void Function(ItemCategory) setCategory,
     void Function(ItemUnit) setUnit,
+    void Function(String) setEmoji,
     void Function(bool) setIsTotalPrice,
   ) {
     final unitLabel = _unitLabel(unit);
@@ -642,6 +676,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
               onChanged: (_) => setDialogState(() {}),
             ),
             const SizedBox(height: 12),
+            Text(
+              t.chooseEmoji,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.text),
+            ),
+            const SizedBox(height: 8),
+            EmojiPicker(
+              selected: emoji,
+              size: 30,
+              onChanged: (v) => setDialogState(() => setEmoji(v)),
+            ),
+            const SizedBox(height: 12),
             InputDecorator(
               decoration: _dialogInputDecoration(t.category, colors.text),
               child: DropdownButtonHideUnderline(
@@ -654,7 +699,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     DropdownMenuItem(value: ItemCategory.pembungkusan, child: Text('Packaging', style: TextStyle(color: colors.text))),
                     DropdownMenuItem(value: ItemCategory.lain, child: Text('Others', style: TextStyle(color: colors.text))),
                   ],
-                  onChanged: (v) => setDialogState(() => setCategory(v!)),
+                  onChanged: (v) => setDialogState(() {
+                    setCategory(v!);
+                    setEmoji(_defaultEmoji(v));
+                  }),
                 ),
               ),
             ),
@@ -1018,6 +1066,20 @@ class _InventoryCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.background,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  item.emoji.isNotEmpty ? item.emoji : _defaultEmoji(item.category),
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   item.name,
@@ -1148,6 +1210,17 @@ String _unitLabel(ItemUnit unit) {
       return 'kg';
     case ItemUnit.l:
       return 'L';
+  }
+}
+
+String _defaultEmoji(ItemCategory category) {
+  switch (category) {
+    case ItemCategory.bahan:
+      return '🍚';
+    case ItemCategory.pembungkusan:
+      return '🥡';
+    case ItemCategory.lain:
+      return '📦';
   }
 }
 

@@ -59,6 +59,7 @@ class Translations {
       isMs ? '$step (Langkah $current/$total)' : '$step (Step $current/$total)';
   String get itemName => isMs ? 'Nama Barang' : 'Item Name';
   String get category => isMs ? 'Kategori' : 'Category';
+  String get chooseEmoji => isMs ? 'Pilih Emoji' : 'Choose Emoji';
   String get unit => isMs ? 'Unit' : 'Unit';
   String get initialStock => isMs ? 'Stok Awal' : 'Initial Stock';
   String get minStock => isMs ? 'Stok Minimum' : 'Min. Stock';

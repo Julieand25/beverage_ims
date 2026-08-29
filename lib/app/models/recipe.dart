@@ -14,6 +14,7 @@ class Recipe {
   final String id;
   String name;
   double sellingPrice;
+  String emoji;
   List<RecipeIngredient> ingredients;
 
   Recipe({
@@ -21,6 +22,7 @@ class Recipe {
     required this.name,
     required this.sellingPrice,
     required this.ingredients,
+    this.emoji = '☕',
   });
 
   double costPerServing(List<InventoryItem> inventory) {

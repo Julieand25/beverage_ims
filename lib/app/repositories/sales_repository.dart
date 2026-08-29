@@ -101,6 +101,7 @@ class SupabaseSalesRepository implements SalesRepository {
         grouped[rId] = {
           'recipe_id': rId,
           'recipe_name': recipe?['name'] ?? 'Unknown',
+          'emoji': recipe?['emoji'],
           'total_cups': 0,
           'total_revenue': 0.0,
         };

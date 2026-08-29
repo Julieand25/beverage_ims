@@ -275,7 +275,8 @@ class DashboardScreen extends StatelessWidget {
                                 : sales.bestSellers.map((b) {
                                     final name = b['recipe_name'] as String;
                                     final cups = b['total_cups'] as int;
-                                    final emoji = name.contains('Matcha') ? '🍵' : name.contains('Milk') ? '🧋' : '☕';
+                                    final emoji = (b['emoji'] as String?) ??
+                                        (name.contains('Matcha') ? '🍵' : name.contains('Milk') ? '🧋' : '☕');
                                     return Row(
                                       children: [
                                         _TopMenuItemCard(

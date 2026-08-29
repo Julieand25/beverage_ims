@@ -60,6 +60,7 @@ class InventoryProvider extends ChangeNotifier {
     required double costPerUnit,
     required String userId,
     required String userName,
+    String emoji = '',
   }) async {
     final item = InventoryItem(
       id: '',
@@ -69,6 +70,7 @@ class InventoryProvider extends ChangeNotifier {
       stock: stock,
       minStock: minStock,
       costPerUnit: costPerUnit,
+      emoji: emoji,
     );
     final created = await _repo.addItem(item, userId: userId);
     _items.add(created);
@@ -91,6 +93,7 @@ class InventoryProvider extends ChangeNotifier {
     required ItemUnit unit,
     required String userId,
     required String userName,
+    String emoji = '',
   }) async {
     return addItem(
       name: name,
@@ -101,6 +104,7 @@ class InventoryProvider extends ChangeNotifier {
       costPerUnit: 0,
       userId: userId,
       userName: userName,
+      emoji: emoji,
     );
   }
 
@@ -169,9 +173,10 @@ class InventoryProvider extends ChangeNotifier {
     ItemUnit? unit,
     double? minStock,
     double? costPerUnit,
+    String? emoji,
   }) async {
     final old = _items.firstWhere((i) => i.id == id);
-    final updated = await _repo.updateItem(id, name: name, category: category, unit: unit, minStock: minStock, costPerUnit: costPerUnit);
+    final updated = await _repo.updateItem(id, name: name, category: category, unit: unit, minStock: minStock, costPerUnit: costPerUnit, emoji: emoji);
     final index = _items.indexWhere((i) => i.id == id);
     if (index != -1) {
       _items[index] = updated;
