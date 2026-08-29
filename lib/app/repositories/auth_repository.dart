@@ -10,7 +10,7 @@ abstract class AuthRepository {
     String currentPassword,
     String newPassword,
   );
-  Future<User?> getStoredSession();
+  Future<User?> getStoredSession({bool signOutIfInvalid = true});
   Future<void> requestPasswordReset(String email, {required String redirectTo});
   Future<void> updatePassword(String newPassword);
   Future<User> registerUser(
@@ -46,13 +46,17 @@ class SupabaseAuthRepository implements AuthRepository {
     return response == null ? null : User.fromJson(response);
   }
 
-  Future<User?> _activeProfileForCurrentSession() async {
+  Future<User?> _activeProfileForCurrentSession({
+    bool signOutIfInvalid = true,
+  }) async {
     final authUser = _client.auth.currentUser;
     if (authUser == null) return null;
 
     final profile = await _profileForAuthUser(authUser.id);
     if (profile == null || !profile.isActive) {
-      await _client.auth.signOut();
+      if (signOutIfInvalid) {
+        await _client.auth.signOut();
+      }
       return null;
     }
     return profile;
@@ -90,7 +94,8 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> logout() => _client.auth.signOut();
 
   @override
-  Future<User?> getStoredSession() => _activeProfileForCurrentSession();
+  Future<User?> getStoredSession({bool signOutIfInvalid = true}) =>
+      _activeProfileForCurrentSession(signOutIfInvalid: signOutIfInvalid);
 
   @override
   Future<void> requestPasswordReset(

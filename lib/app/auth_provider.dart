@@ -29,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _restoreSession() async {
     try {
-      _currentUser = await _authRepo.getStoredSession();
+      _currentUser = await _authRepo.getStoredSession(signOutIfInvalid: false);
     } catch (_) {
       _currentUser = null;
     } finally {
@@ -49,8 +49,18 @@ class AuthProvider extends ChangeNotifier {
 
     if (state.session == null) return;
 
+    // During a password recovery we must NOT validate/load the app `users`
+    // profile. Doing so can sign out the user (e.g. when the profile is not
+    // linked via auth_user_id), which cancels the reset and bounces the user
+    // back to the login screen. The reset only needs the Auth session.
+    if (_isPasswordRecovery) {
+      _currentUser = null;
+      notifyListeners();
+      return;
+    }
+
     try {
-      _currentUser = await _authRepo.getStoredSession();
+      _currentUser = await _authRepo.getStoredSession(signOutIfInvalid: false);
     } catch (_) {
       _currentUser = null;
     }
